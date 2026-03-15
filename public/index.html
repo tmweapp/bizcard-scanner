@@ -9,35 +9,20 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📇</text></svg>">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0f172a;--bg2:#1e293b;--bg3:#334155;
-  --fg:#f8fafc;--fg2:#94a3b8;--fg3:#64748b;
-  --accent:#3b82f6;--accent2:#60a5fa;
-  --green:#22c55e;--red:#ef4444;--orange:#f59e0b;--purple:#a855f7;
-  --radius:12px;--shadow:0 4px 24px rgba(0,0,0,.3);
-}
+:root{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--fg:#f8fafc;--fg2:#94a3b8;--fg3:#64748b;--accent:#3b82f6;--accent2:#60a5fa;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;--purple:#a855f7;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,.3)}
 html{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--fg);overflow-x:hidden}
 body{min-height:100dvh;display:flex;flex-direction:column}
-
-/* Header */
 header{background:var(--bg2);border-bottom:1px solid var(--bg3);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 header h1{font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:8px}
 header h1 span{font-size:1.4rem}
-
-/* Navigation tabs */
 nav{display:flex;background:var(--bg2);border-bottom:1px solid var(--bg3);overflow-x:auto}
 nav button{flex:1;background:none;border:none;color:var(--fg3);padding:12px 16px;font-size:.9rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
 nav button.active{color:var(--accent2);border-bottom-color:var(--accent)}
 nav button:hover{color:var(--fg)}
-
-/* Main content */
 main{flex:1;padding:16px;max-width:900px;margin:0 auto;width:100%}
+.panel{display:none}.panel.active{display:block}
 
-/* Tab panels */
-.panel{display:none}
-.panel.active{display:block}
-
-/* Scanner panel */
+/* Scanner */
 .scanner-area{position:relative;width:100%;border-radius:var(--radius);overflow:hidden;background:#000;aspect-ratio:4/3;margin-bottom:16px}
 .scanner-area video{width:100%;height:100%;object-fit:cover}
 .scanner-area canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
@@ -47,66 +32,48 @@ main{flex:1;padding:16px;max-width:900px;margin:0 auto;width:100%}
 .scanner-area .guide::after{content:'Posiziona il biglietto qui';position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);color:var(--fg3);font-size:.8rem;white-space:nowrap}
 .scanner-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--fg3);gap:12px}
 .scanner-placeholder svg{width:64px;height:64px;opacity:.5}
-
-/* Scan indicator */
 .scan-indicator{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);border-radius:20px;padding:6px 14px;font-size:.75rem;z-index:10;pointer-events:none}
 .scan-indicator .dot{width:8px;height:8px;border-radius:50%;background:var(--red)}
 .scan-indicator .dot.active{background:var(--green);animation:pulse 1.5s ease infinite}
-.scan-indicator .dot.processing{background:var(--orange);animation:pulse .5s ease infinite}
+.scan-indicator .dot.processing{background:var(--orange);animation:pulse .4s ease infinite}
 .scan-indicator .dot.done{background:var(--green)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-
-/* Scan counter badge */
-.scan-counter{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);border-radius:20px;padding:6px 14px;font-size:.75rem;z-index:10;pointer-events:none;display:flex;align-items:center;gap:6px}
-
-/* Scan line */
+.scan-counter{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);border-radius:20px;padding:6px 14px;font-size:.7rem;z-index:10;pointer-events:none;display:flex;align-items:center;gap:6px;flex-direction:column;line-height:1.3}
 .scan-line{position:absolute;left:10%;right:10%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;pointer-events:none;z-index:5}
-.scan-line.active{opacity:1;animation:scanMove 2s ease-in-out infinite}
+.scan-line.active{opacity:1;animation:scanMove 1.5s ease-in-out infinite}
 @keyframes scanMove{0%{top:25%}50%{top:65%}100%{top:25%}}
 
 /* Controls */
 .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border:none;border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{background:var(--accent2)}
-.btn-primary:disabled{opacity:.5;cursor:not-allowed}
-.btn-secondary{background:var(--bg3);color:var(--fg)}
-.btn-secondary:hover{background:#475569}
-.btn-danger{background:var(--red);color:#fff}
-.btn-danger:hover{background:#dc2626}
-.btn-success{background:var(--green);color:#fff}
-.btn-success:hover{background:#16a34a}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent2)}.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-secondary{background:var(--bg3);color:var(--fg)}.btn-secondary:hover{background:#475569}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#dc2626}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#16a34a}
 .btn-small{padding:6px 12px;font-size:.8rem}
-.btn-warning{background:var(--orange);color:#fff}
-.btn-warning:hover{background:#d97706}
-
-/* Realtime toggle */
+.btn-warning{background:var(--orange);color:#fff}.btn-warning:hover{background:#d97706}
 .btn-realtime{position:relative;overflow:hidden}
 .btn-realtime.active{background:var(--green)}
-.btn-realtime.active::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);animation:shimmer 2s infinite}
+.btn-realtime.active::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);animation:shimmer 2s infinite}
 @keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
 
 /* OCR status */
 .ocr-status{background:var(--bg2);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:.9rem}
 .ocr-status .spinner{width:20px;height:20px;border:2px solid var(--bg3);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.ocr-status.ready{border-left:3px solid var(--green)}
-.ocr-status.processing{border-left:3px solid var(--orange)}
-.ocr-status.error{border-left:3px solid var(--red)}
+.ocr-status.ready{border-left:3px solid var(--green)}.ocr-status.processing{border-left:3px solid var(--orange)}.ocr-status.error{border-left:3px solid var(--red)}
 
-/* ===== ACCUMULATIVE REALTIME PANEL ===== */
+/* Realtime panel */
 .realtime-panel{background:var(--bg2);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid var(--bg3);transition:all .3s}
 .realtime-panel.has-data{border-color:var(--accent)}
 .realtime-panel.all-done{border-color:var(--green);box-shadow:0 0 20px rgba(34,197,94,.15)}
 .realtime-panel h3{font-size:.9rem;color:var(--fg2);margin-bottom:4px;display:flex;align-items:center;gap:8px}
 .rt-subtitle{font-size:.8rem;color:var(--fg3);margin-bottom:12px}
-
-/* Global progress bar */
 .global-progress{width:100%;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin-bottom:14px}
-.global-progress .fill{height:100%;border-radius:4px;transition:width .5s ease, background .5s ease;background:var(--orange)}
+.global-progress .fill{height:100%;border-radius:4px;transition:width .5s ease,background .5s ease;background:var(--orange)}
 .global-progress .fill.high{background:var(--green)}
 
-/* Realtime field row */
+/* RT field */
 .rt-field{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;margin-bottom:6px;background:var(--bg);transition:all .4s;min-height:44px;border:1px solid transparent}
 .rt-field.locked{border-color:var(--green);background:rgba(34,197,94,.05)}
 .rt-field .rt-icon{width:22px;text-align:center;font-size:.9rem;flex-shrink:0}
@@ -116,26 +83,28 @@ main{flex:1;padding:16px;max-width:900px;margin:0 auto;width:100%}
 .rt-field .rt-value.empty{color:var(--fg3);font-style:italic;font-size:.8rem}
 .rt-field .rt-value-input{background:transparent;border:1px solid var(--bg3);border-radius:6px;padding:4px 8px;color:var(--fg);font-size:.9rem;width:100%;transition:all .2s}
 .rt-field .rt-value-input:focus{outline:none;border-color:var(--accent);background:var(--bg2)}
-
-/* Confidence badge */
 .rt-confidence{font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0;min-width:42px;text-align:center;transition:all .4s}
 .rt-confidence.low{background:rgba(239,68,68,.15);color:var(--red)}
 .rt-confidence.medium{background:rgba(245,158,11,.15);color:var(--orange)}
 .rt-confidence.high{background:rgba(34,197,94,.15);color:var(--green)}
 .rt-confidence.certain{background:var(--green);color:#fff}
-
-/* Lock icon */
-.rt-lock{width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;opacity:.3;transition:all .3s}
+.rt-lock{width:20px;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;opacity:.3;transition:all .3s}
 .rt-lock.locked{opacity:1}
 
-/* ===== COMPLETION BANNER ===== */
+/* Card structure minimap */
+.card-minimap{background:var(--bg);border-radius:8px;padding:10px;margin-bottom:12px;position:relative;min-height:60px;font-size:.7rem;color:var(--fg3);overflow:hidden}
+.card-minimap .minimap-slot{position:absolute;left:8px;right:8px;padding:2px 6px;border-radius:3px;background:rgba(59,130,246,.1);border-left:2px solid var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .3s;font-size:.65rem}
+.card-minimap .minimap-slot.locked{border-left-color:var(--green);background:rgba(34,197,94,.1)}
+.card-minimap-label{font-size:.65rem;color:var(--fg3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+
+/* Completion */
 .completion-banner{background:linear-gradient(135deg,#14532d,#166534);border-radius:var(--radius);padding:20px;margin-bottom:16px;border:1px solid var(--green);animation:bannerIn .5s ease;text-align:center}
 @keyframes bannerIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 .completion-banner h3{color:var(--green);font-size:1.1rem;margin-bottom:6px}
 .completion-banner p{color:var(--fg2);font-size:.9rem;margin-bottom:16px}
 .completion-banner .controls{justify-content:center;margin-bottom:0}
 
-/* Results card (for upload mode) */
+/* Result card for upload */
 .result-card{background:var(--bg2);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
 .result-card h3{font-size:1rem;color:var(--fg2);margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .field-group{margin-bottom:12px}
@@ -145,7 +114,7 @@ main{flex:1;padding:16px;max-width:900px;margin:0 auto;width:100%}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:500px){.field-row{grid-template-columns:1fr}}
 
-/* Contact list */
+/* Contacts, export, search, settings, toast - same as before */
 .contact-list{display:flex;flex-direction:column;gap:8px}
 .contact-item{background:var(--bg2);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s}
 .contact-item:hover{background:var(--bg3)}
@@ -156,124 +125,76 @@ main{flex:1;padding:16px;max-width:900px;margin:0 auto;width:100%}
 .contact-actions{display:flex;gap:4px}
 .contact-actions button{background:none;border:none;color:var(--fg3);cursor:pointer;padding:6px;border-radius:6px;transition:all .2s}
 .contact-actions button:hover{background:var(--bg);color:var(--fg)}
-
-/* Search */
 .search-bar{position:relative;margin-bottom:16px}
 .search-bar input{width:100%;background:var(--bg2);border:1px solid var(--bg3);border-radius:8px;padding:10px 12px 10px 38px;color:var(--fg);font-size:.9rem}
 .search-bar input:focus{outline:none;border-color:var(--accent)}
 .search-bar svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--fg3)}
-
-/* Export panel */
 .export-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
 .export-card{background:var(--bg2);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .2s;border:1px solid transparent}
 .export-card:hover{border-color:var(--accent);background:var(--bg3)}
 .export-card svg{width:40px;height:40px;color:var(--accent);margin-bottom:8px}
-.export-card h4{font-size:.95rem;margin-bottom:4px}
-.export-card p{font-size:.8rem;color:var(--fg3)}
-
-/* Empty state */
+.export-card h4{font-size:.95rem;margin-bottom:4px}.export-card p{font-size:.8rem;color:var(--fg3)}
 .empty-state{text-align:center;padding:48px 20px;color:var(--fg3)}
 .empty-state svg{width:80px;height:80px;opacity:.3;margin-bottom:16px}
 .empty-state h3{color:var(--fg2);margin-bottom:8px}
-
-/* Toast */
 .toast-container{position:fixed;bottom:20px;right:20px;z-index:1000;display:flex;flex-direction:column;gap:8px}
 .toast{background:var(--bg2);border:1px solid var(--bg3);border-radius:8px;padding:12px 16px;font-size:.9rem;box-shadow:var(--shadow);animation:slideIn .3s ease;display:flex;align-items:center;gap:8px;max-width:350px}
-.toast.success{border-left:3px solid var(--green)}
-.toast.error{border-left:3px solid var(--red)}
+.toast.success{border-left:3px solid var(--green)}.toast.error{border-left:3px solid var(--red)}
 @keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-
-/* Settings */
 .settings-section{background:var(--bg2);border-radius:var(--radius);padding:20px;margin-bottom:16px}
 .settings-section h3{font-size:.95rem;margin-bottom:12px;color:var(--fg2)}
 .setting-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg3)}
-.setting-row:last-child{border:none}
-.setting-row label{font-size:.9rem}
+.setting-row:last-child{border:none}.setting-row label{font-size:.9rem}
 select{background:var(--bg);border:1px solid var(--bg3);border-radius:6px;padding:6px 10px;color:var(--fg);font-size:.85rem}
-
-/* Toggle switch */
-.toggle{position:relative;width:44px;height:24px;cursor:pointer}
-.toggle input{opacity:0;width:0;height:0}
-.toggle .slider{position:absolute;top:0;left:0;right:0;bottom:0;background:var(--bg3);border-radius:12px;transition:.3s}
-.toggle .slider::before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
-.toggle input:checked+.slider{background:var(--green)}
-.toggle input:checked+.slider::before{transform:translateX(20px)}
-
-/* Image preview */
 .image-preview{width:100%;border-radius:var(--radius);margin-bottom:16px;max-height:300px;object-fit:contain;background:#000}
-
-/* Progress bar */
 .progress-bar{width:100%;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:8px}
 .progress-bar .fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
-
-/* Mobile */
-@media(max-width:600px){
-  main{padding:12px}
-  .result-card{padding:14px}
-  .export-options{grid-template-columns:1fr 1fr}
-  .rt-field .rt-label{width:45px;font-size:.65rem}
-}
+@media(max-width:600px){main{padding:12px}.result-card{padding:14px}.export-options{grid-template-columns:1fr 1fr}.rt-field .rt-label{width:45px;font-size:.65rem}}
 </style>
 </head>
 <body>
-
-<header>
-  <h1><span>📇</span> BizCard Scanner</h1>
-</header>
-
+<header><h1><span>📇</span> BizCard Scanner</h1></header>
 <nav>
   <button class="active" data-tab="scanner">📷 Scansiona</button>
   <button data-tab="contacts">👥 Contatti</button>
   <button data-tab="export">📤 Esporta</button>
   <button data-tab="settings">⚙️ Impostazioni</button>
 </nav>
-
 <main>
-  <!-- SCANNER TAB -->
   <div class="panel active" id="panel-scanner">
     <div class="scanner-area" id="scannerArea">
       <video id="video" autoplay playsinline muted></video>
       <canvas id="overlay"></canvas>
       <div class="scan-line" id="scanLine"></div>
-      <div class="scan-indicator" id="scanIndicator" style="display:none">
-        <div class="dot" id="scanDot"></div>
-        <span id="scanLabel">LIVE</span>
-      </div>
-      <div class="scan-counter" id="scanCounter" style="display:none">
-        📸 <span id="scanCountLabel">0</span> campioni
-      </div>
+      <div class="scan-indicator" id="scanIndicator" style="display:none"><div class="dot" id="scanDot"></div><span id="scanLabel">LIVE</span></div>
+      <div class="scan-counter" id="scanCounter" style="display:none"><span id="scanCountLabel">0 campioni</span><span id="scanFPS">0 fps</span></div>
       <div class="guide" id="guide"></div>
       <div class="scanner-placeholder" id="placeholder" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><circle cx="15" cy="15" r="2"/></svg>
         <p>Camera non disponibile.<br>Usa il pulsante per caricare un'immagine.</p>
       </div>
     </div>
-
     <div class="controls">
       <button class="btn btn-realtime" id="btnRealtime" disabled>🔴 Avvia scansione</button>
       <button class="btn btn-secondary" id="btnUpload">📁 Carica immagine</button>
-      <button class="btn btn-secondary" id="btnFlip" style="display:none">🔄 Inverti camera</button>
+      <button class="btn btn-secondary" id="btnFlip" style="display:none">🔄 Inverti</button>
       <input type="file" id="fileInput" accept="image/*" style="display:none">
     </div>
+    <div class="ocr-status" id="ocrStatus" style="display:none"><div class="spinner"></div><span>Inizializzazione OCR...</span><div class="progress-bar"><div class="fill" id="ocrProgress" style="width:0"></div></div></div>
 
-    <div class="ocr-status" id="ocrStatus" style="display:none">
-      <div class="spinner"></div>
-      <span>Inizializzazione OCR...</span>
-      <div class="progress-bar"><div class="fill" id="ocrProgress" style="width:0"></div></div>
-    </div>
-
-    <!-- REALTIME ACCUMULATIVE PANEL -->
+    <!-- REALTIME PANEL -->
     <div class="realtime-panel" id="realtimePanel" style="display:none">
       <h3>🔍 Rilevamento progressivo</h3>
-      <div class="rt-subtitle" id="rtSubtitle">I campi si riempiono e si consolidano ad ogni scansione</div>
+      <div class="rt-subtitle" id="rtSubtitle">Pipeline continua — i campi si consolidano frame dopo frame</div>
       <div class="global-progress"><div class="fill" id="globalProgressFill" style="width:0"></div></div>
+      <div class="card-minimap-label">📐 Struttura biglietto rilevata</div>
+      <div class="card-minimap" id="cardMinimap" style="height:80px"></div>
       <div id="rtFields"></div>
     </div>
 
-    <!-- COMPLETION BANNER: all fields certain -->
     <div class="completion-banner" id="completionBanner" style="display:none">
       <h3>✅ Scansione completata!</h3>
-      <p>Tutti i campi rilevati sono stati verificati. Puoi salvare o modificare.</p>
+      <p id="completionText">Tutti i campi verificati.</p>
       <div class="controls">
         <button class="btn btn-success" id="btnSaveRT">💾 Salva contatto</button>
         <button class="btn btn-secondary" id="btnResetRT">🔄 Nuova scansione</button>
@@ -281,954 +202,648 @@ select{background:var(--bg);border:1px solid var(--bg3);border-radius:6px;paddin
     </div>
 
     <img class="image-preview" id="imagePreview" style="display:none">
-
-    <!-- RESULT CARD: for upload mode -->
     <div class="result-card" id="resultCard" style="display:none">
       <h3>📋 Dati estratti</h3>
-      <div class="field-row">
-        <div class="field-group"><label>Nome</label><input type="text" id="fName" placeholder="Nome e Cognome"></div>
-        <div class="field-group"><label>Azienda</label><input type="text" id="fCompany" placeholder="Nome azienda"></div>
-      </div>
-      <div class="field-group"><label>Ruolo / Titolo</label><input type="text" id="fRole" placeholder="Es. Direttore Commerciale"></div>
-      <div class="field-row">
-        <div class="field-group"><label>Email</label><input type="email" id="fEmail" placeholder="email@esempio.it"></div>
-        <div class="field-group"><label>Telefono</label><input type="tel" id="fPhone" placeholder="+39 ..."></div>
-      </div>
-      <div class="field-row">
-        <div class="field-group"><label>Sito web</label><input type="url" id="fWeb" placeholder="www.esempio.it"></div>
-        <div class="field-group"><label>P.IVA</label><input type="text" id="fPiva" placeholder="IT..."></div>
-      </div>
+      <div class="field-row"><div class="field-group"><label>Nome</label><input type="text" id="fName" placeholder="Nome e Cognome"></div><div class="field-group"><label>Azienda</label><input type="text" id="fCompany" placeholder="Nome azienda"></div></div>
+      <div class="field-group"><label>Ruolo</label><input type="text" id="fRole" placeholder="Direttore Commerciale"></div>
+      <div class="field-row"><div class="field-group"><label>Email</label><input type="email" id="fEmail" placeholder="email@esempio.it"></div><div class="field-group"><label>Telefono</label><input type="tel" id="fPhone" placeholder="+39 ..."></div></div>
+      <div class="field-row"><div class="field-group"><label>Sito web</label><input type="url" id="fWeb" placeholder="www.esempio.it"></div><div class="field-group"><label>P.IVA</label><input type="text" id="fPiva" placeholder="IT..."></div></div>
       <div class="field-group"><label>Codice Fiscale</label><input type="text" id="fCf" placeholder="RSSMRA80A01H501U"></div>
       <div class="field-group"><label>Indirizzo</label><input type="text" id="fAddress" placeholder="Via/Piazza..."></div>
-      <div class="field-group">
-        <label>Testo completo OCR</label>
-        <textarea id="fRawText" rows="3" style="width:100%;background:var(--bg);border:1px solid var(--bg3);border-radius:8px;padding:10px;color:var(--fg);font-size:.85rem;resize:vertical" readonly></textarea>
-      </div>
-      <div class="controls" style="margin-top:16px;margin-bottom:0">
-        <button class="btn btn-success" id="btnSave">✅ Salva contatto</button>
-        <button class="btn btn-secondary" id="btnClear">🗑️ Cancella</button>
-      </div>
+      <div class="field-group"><label>Testo OCR</label><textarea id="fRawText" rows="3" style="width:100%;background:var(--bg);border:1px solid var(--bg3);border-radius:8px;padding:10px;color:var(--fg);font-size:.85rem;resize:vertical" readonly></textarea></div>
+      <div class="controls" style="margin-top:16px;margin-bottom:0"><button class="btn btn-success" id="btnSave">✅ Salva</button><button class="btn btn-secondary" id="btnClear">🗑️ Cancella</button></div>
     </div>
   </div>
-
-  <!-- CONTACTS TAB -->
   <div class="panel" id="panel-contacts">
-    <div class="search-bar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="searchInput" placeholder="Cerca contatti...">
-    </div>
+    <div class="search-bar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" id="searchInput" placeholder="Cerca contatti..."></div>
     <div id="contactList" class="contact-list"></div>
-    <div class="empty-state" id="emptyContacts">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      <h3>Nessun contatto</h3>
-      <p>Scansiona un biglietto da visita per iniziare</p>
-    </div>
+    <div class="empty-state" id="emptyContacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><h3>Nessun contatto</h3><p>Scansiona un biglietto per iniziare</p></div>
   </div>
-
-  <!-- EXPORT TAB -->
   <div class="panel" id="panel-export">
     <div class="export-options">
-      <div class="export-card" id="exportVcard">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M8 7v10M16 7v10M2 12h20"/></svg>
-        <h4>vCard (.vcf)</h4>
-        <p>Compatibile con tutti i CRM e rubrica</p>
-      </div>
-      <div class="export-card" id="exportCsv">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <h4>CSV</h4>
-        <p>Per Excel, Google Sheets, database</p>
-      </div>
-      <div class="export-card" id="exportJson">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
-        <h4>JSON</h4>
-        <p>Per integrazioni API e sviluppatori</p>
-      </div>
-      <div class="export-card" id="exportWebhook">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-        <h4>Webhook CRM</h4>
-        <p>Invia direttamente al tuo CRM</p>
-      </div>
+      <div class="export-card" id="exportVcard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M8 7v10M16 7v10M2 12h20"/></svg><h4>vCard (.vcf)</h4><p>Per rubrica e CRM</p></div>
+      <div class="export-card" id="exportCsv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><h4>CSV</h4><p>Per Excel, Sheets</p></div>
+      <div class="export-card" id="exportJson"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg><h4>JSON</h4><p>Per API</p></div>
+      <div class="export-card" id="exportWebhook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><h4>Webhook CRM</h4><p>Invio diretto</p></div>
     </div>
-    <div class="empty-state" id="emptyExport" style="display:none">
-      <p>Nessun contatto da esportare. Scansiona prima dei biglietti.</p>
-    </div>
+    <div class="empty-state" id="emptyExport" style="display:none"><p>Nessun contatto da esportare.</p></div>
   </div>
-
-  <!-- SETTINGS TAB -->
   <div class="panel" id="panel-settings">
-    <div class="settings-section">
-      <h3>🌍 Lingua OCR</h3>
-      <div class="setting-row">
-        <label>Lingua principale</label>
-        <select id="ocrLang">
-          <option value="ita" selected>Italiano</option>
-          <option value="eng">English</option>
-          <option value="deu">Deutsch</option>
-          <option value="fra">Français</option>
-          <option value="spa">Español</option>
-          <option value="por">Português</option>
-        </select>
-      </div>
+    <div class="settings-section"><h3>🌍 Lingua OCR</h3><div class="setting-row"><label>Lingua principale</label><select id="ocrLang"><option value="ita" selected>Italiano</option><option value="eng">English</option><option value="deu">Deutsch</option><option value="fra">Français</option><option value="spa">Español</option><option value="por">Português</option></select></div></div>
+    <div class="settings-section"><h3>⚡ Scansione</h3>
+      <div class="setting-row"><label>Soglia certezza</label><select id="certThreshold"><option value="70">70% (veloce)</option><option value="85" selected>85% (bilanciato)</option><option value="95">95% (preciso)</option></select></div>
+      <div class="setting-row"><label>Risoluzione cattura</label><select id="captureRes"><option value="320">320px (velocissimo)</option><option value="480" selected>480px (bilanciato)</option><option value="640">640px (dettaglio)</option></select></div>
     </div>
-    <div class="settings-section">
-      <h3>⚡ Scansione in tempo reale</h3>
-      <div class="setting-row">
-        <label>Velocità scansione</label>
-        <select id="scanSpeed">
-          <option value="fast">Rapida (~1s)</option>
-          <option value="normal" selected>Normale (~1.5s)</option>
-          <option value="slow">Risparmio batteria (~3s)</option>
-        </select>
-      </div>
-      <div class="setting-row">
-        <label>Soglia certezza per blocco campo</label>
-        <select id="certThreshold">
-          <option value="70">70% (veloce)</option>
-          <option value="85" selected>85% (bilanciato)</option>
-          <option value="95">95% (preciso)</option>
-        </select>
-      </div>
-    </div>
-    <div class="settings-section">
-      <h3>🔗 Webhook CRM</h3>
-      <div class="field-group">
-        <label>URL Webhook</label>
-        <input type="url" id="webhookUrl" placeholder="https://api.tuocrm.com/webhook" style="width:100%;background:var(--bg);border:1px solid var(--bg3);border-radius:8px;padding:10px 12px;color:var(--fg);font-size:.9rem;margin-top:4px">
-      </div>
-      <div class="field-group" style="margin-top:12px">
-        <label>Header Authorization (opzionale)</label>
-        <input type="text" id="webhookAuth" placeholder="Bearer xxx..." style="width:100%;background:var(--bg);border:1px solid var(--bg3);border-radius:8px;padding:10px 12px;color:var(--fg);font-size:.9rem;margin-top:4px">
-      </div>
-      <button class="btn btn-primary btn-small" id="btnSaveSettings" style="margin-top:12px">💾 Salva impostazioni</button>
-    </div>
-    <div class="settings-section">
-      <h3>📊 Statistiche</h3>
-      <div class="setting-row"><label>Contatti salvati</label><span id="statContacts">0</span></div>
-      <div class="setting-row"><label>Scansioni effettuate</label><span id="statScans">0</span></div>
-    </div>
-    <div class="settings-section">
-      <h3>🗑️ Dati</h3>
-      <button class="btn btn-danger btn-small" id="btnClearAll">Cancella tutti i contatti</button>
-    </div>
+    <div class="settings-section"><h3>🔗 Webhook CRM</h3><div class="field-group"><label>URL Webhook</label><input type="url" id="webhookUrl" placeholder="https://api.tuocrm.com/webhook" style="width:100%;background:var(--bg);border:1px solid var(--bg3);border-radius:8px;padding:10px 12px;color:var(--fg);font-size:.9rem;margin-top:4px"></div><div class="field-group" style="margin-top:12px"><label>Authorization</label><input type="text" id="webhookAuth" placeholder="Bearer xxx..." style="width:100%;background:var(--bg);border:1px solid var(--bg3);border-radius:8px;padding:10px 12px;color:var(--fg);font-size:.9rem;margin-top:4px"></div><button class="btn btn-primary btn-small" id="btnSaveSettings" style="margin-top:12px">💾 Salva</button></div>
+    <div class="settings-section"><h3>📊 Statistiche</h3><div class="setting-row"><label>Contatti</label><span id="statContacts">0</span></div><div class="setting-row"><label>Scansioni</label><span id="statScans">0</span></div></div>
+    <div class="settings-section"><h3>🗑️ Dati</h3><button class="btn btn-danger btn-small" id="btnClearAll">Cancella tutti i contatti</button></div>
   </div>
 </main>
-
 <div class="toast-container" id="toasts"></div>
-
-<!-- Tesseract.js -->
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-
 <script>
-// ========== STATE ==========
-let contacts = [];
-let scanCount = 0;
-let worker = null;
-let workerReady = false;
-let currentStream = null;
-let facingMode = 'environment';
-let settings = { lang: 'ita', webhookUrl: '', webhookAuth: '', scanSpeed: 'normal', certThreshold: 85 };
+// ==================== STATE ====================
+let contacts=[], scanCount=0, worker=null, workerReady=false, currentStream=null, facingMode='environment';
+let settings={lang:'ita',webhookUrl:'',webhookAuth:'',certThreshold:85,captureRes:480};
 
-// ========== ACCUMULATIVE REALTIME STATE ==========
-let realtimeActive = false;
-let isProcessingFrame = false;
-let scanLoopTimer = null;
-let totalSamples = 0;  // how many frames we've analyzed
-
+// ==================== SPATIAL CARD MODEL ====================
 /*
-  ACCUMULATIVE EVIDENCE SYSTEM
-  For each field, we keep a map of { value -> count }.
-  The "best" value is the one with the highest count.
-  Confidence = (bestCount / totalSamples) * 100.
-  A field is "locked" (certain) when confidence >= threshold.
-  Once locked, we STOP updating that field — it stays forever.
-  User can manually edit any field at any time.
+  cardSlots = array of detected text regions, each with:
+  {
+    normY: 0-1 (vertical position on card, normalized),
+    normX: 0-1 (horizontal center),
+    normH: 0-1 (height),
+    evidence: { normalizedText: { count, bestRaw } },
+    bestValue: string,
+    confidence: number 0-100,
+    fieldType: string|null (name, email, phone, etc.),
+    locked: bool
+  }
+  Lines from each scan are matched to existing slots by spatial proximity.
+  New lines create new slots. This preserves the card's structure.
 */
+let cardSlots = [];
+let totalSamples = 0;
+let realtimeActive = false, isProcessingFrame = false, animFrameId = null;
+let lastFrameTime = 0, frameCount = 0, currentFPS = 0;
+// Offscreen canvas for fast capture
+let captureCanvas = null, captureCtx = null;
+
 const FIELD_CONFIG = [
-  { key: 'name',    icon: '👤', label: 'Nome' },
-  { key: 'company', icon: '🏢', label: 'Azienda' },
-  { key: 'role',    icon: '💼', label: 'Ruolo' },
-  { key: 'email',   icon: '📧', label: 'Email' },
-  { key: 'phone',   icon: '📱', label: 'Telefono' },
-  { key: 'web',     icon: '🌐', label: 'Web' },
-  { key: 'piva',    icon: '🏛️', label: 'P.IVA' },
-  { key: 'cf',      icon: '🆔', label: 'C.F.' },
-  { key: 'address', icon: '📍', label: 'Indirizzo' }
+  {key:'name',icon:'👤',label:'Nome'},{key:'company',icon:'🏢',label:'Azienda'},
+  {key:'role',icon:'💼',label:'Ruolo'},{key:'email',icon:'📧',label:'Email'},
+  {key:'phone',icon:'📱',label:'Telefono'},{key:'web',icon:'🌐',label:'Web'},
+  {key:'piva',icon:'🏛️',label:'P.IVA'},{key:'cf',icon:'🆔',label:'C.F.'},
+  {key:'address',icon:'📍',label:'Indirizzo'}
 ];
+let fieldState = {};
 
-let fieldEvidence = {};  // { fieldKey: { valueString: hitCount } }
-let fieldState = {};     // { fieldKey: { bestValue, confidence, locked, manuallyEdited } }
+// Slot Y-proximity threshold for matching (normalized 0-1)
+const SLOT_Y_MATCH = 0.08;
 
-function resetAccumulator() {
+function resetAll() {
+  cardSlots = [];
   totalSamples = 0;
-  fieldEvidence = {};
   fieldState = {};
-  FIELD_CONFIG.forEach(f => {
-    fieldEvidence[f.key] = {};
-    fieldState[f.key] = { bestValue: '', confidence: 0, locked: false, manuallyEdited: false };
-  });
+  FIELD_CONFIG.forEach(f => { fieldState[f.key] = {bestValue:'',confidence:0,locked:false,manuallyEdited:false}; });
 }
-resetAccumulator();
+resetAll();
 
-// ========== INIT ==========
+// ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
-  loadState();
-  initTabs();
-  initScanner();
-  initContacts();
-  initExport();
-  initSettings();
-  initOCR();
-  buildRealtimeFieldsUI();
-
+  loadState(); initTabs(); initScanner(); initContacts(); initExport(); initSettings(); initOCR(); buildRealtimeFieldsUI();
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && realtimeActive) pauseRealtimeScan();
-    else if (!document.hidden && realtimeActive) resumeRealtimeScan();
+    if (document.hidden && realtimeActive) pauseScan();
+    else if (!document.hidden && realtimeActive) resumeScan();
   });
 });
 
-function loadState() {
-  try {
-    const c = localStorage.getItem('bizcard_contacts');
-    if (c) contacts = JSON.parse(c);
-    const s = localStorage.getItem('bizcard_settings');
-    if (s) settings = { ...settings, ...JSON.parse(s) };
-    scanCount = parseInt(localStorage.getItem('bizcard_scans') || '0');
-  } catch (e) { console.warn('Errore caricamento stato:', e); }
+function loadState(){ try{ const c=localStorage.getItem('bizcard_contacts'); if(c) contacts=JSON.parse(c); const s=localStorage.getItem('bizcard_settings'); if(s) settings={...settings,...JSON.parse(s)}; scanCount=parseInt(localStorage.getItem('bizcard_scans')||'0'); }catch(e){} }
+function saveState(){ try{ localStorage.setItem('bizcard_contacts',JSON.stringify(contacts)); localStorage.setItem('bizcard_settings',JSON.stringify(settings)); localStorage.setItem('bizcard_scans',String(scanCount)); }catch(e){} }
+
+// ==================== TABS ====================
+function initTabs(){ document.querySelectorAll('nav button').forEach(btn=>{ btn.addEventListener('click',()=>{ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active')); document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active')); btn.classList.add('active'); document.getElementById('panel-'+btn.dataset.tab).classList.add('active'); if(btn.dataset.tab==='contacts') renderContacts(); if(btn.dataset.tab==='export') updateExportState(); if(btn.dataset.tab==='settings') updateStats(); if(btn.dataset.tab!=='scanner'&&realtimeActive) pauseScan(); }); }); }
+
+// ==================== OCR ENGINE ====================
+async function initOCR(){
+  const s=document.getElementById('ocrStatus'),p=document.getElementById('ocrProgress');
+  s.style.display='flex'; s.className='ocr-status processing'; s.querySelector('span').textContent='Caricamento OCR...';
+  try{
+    worker=await Tesseract.createWorker(settings.lang||'ita',1,{logger:m=>{if(m.status==='recognizing text')p.style.width=Math.round(m.progress*100)+'%';else if(m.status)s.querySelector('span').textContent=m.status+'...';}});
+    workerReady=true; s.className='ocr-status ready'; s.innerHTML='<span>✅ OCR pronto — '+(settings.lang||'ita').toUpperCase()+'</span>';
+    document.getElementById('btnRealtime').disabled=false; setTimeout(()=>{s.style.display='none';},2000);
+  }catch(e){s.className='ocr-status error';s.innerHTML='<span>❌ '+esc(e.message)+'</span>';}
 }
 
-function saveState() {
-  try {
-    localStorage.setItem('bizcard_contacts', JSON.stringify(contacts));
-    localStorage.setItem('bizcard_settings', JSON.stringify(settings));
-    localStorage.setItem('bizcard_scans', String(scanCount));
-  } catch (e) { console.warn('Errore salvataggio stato:', e); }
+// ==================== FIELD EXTRACTION (from text) ====================
+const RE_EMAIL=/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/;
+const RE_WEB=/(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9\-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?/i;
+const RE_PHONE=/(?:\+?\d{1,3}[\s.\-]?)?(?:\(?\d{2,4}\)?[\s.\-]?)?\d{3,4}[\s.\-]?\d{3,4}/;
+const RE_PIVA=/(?:P\.?\s*I\.?V\.?A\.?|IT)\s*[:.]?\s*(\d{11})/i;
+const RE_CF=/\b[A-Z]{6}\d{2}[A-EHLMPRST]\d{2}[A-Z]\d{3}[A-Z]\b/i;
+const RE_ADDRESS=/(?:via|viale|v\.le|corso|c\.so|piazza|p\.za|p\.zza|largo|vicolo|loc\.|strada|contrada|s\.s\.|s\.r\.|s\.p\.)\s+.+?\d/i;
+const ROLES=['ceo','cto','cfo','coo','cio','direttore','director','manager','responsabile','presidente','founder','co-founder','ingegnere','engineer','architetto','avvocato','dottore','dott','consulente','analyst','designer','developer','sales','marketing','hr','amministratore','delegato','socio','partner','legale','tecnico','commerciale','operativo'];
+const COMPANY_KEYWORDS=['srl','s.r.l','spa','s.p.a','snc','s.n.c','sas','s.a.s','ltd','llc','inc','gmbh','corp','group','gruppo','studio','associati','consulting','solutions','services','servizi','technology','technologies','soc','coop','scarl','onlus','foundation','fondazione','agenzia','agency','immobiliare','assicurazioni','industrie','edizioni','costruzioni','laboratorio','farmacia','ristorante','hotel','albergo','bar','officina','autofficina'];
+
+function isPersonName(text){
+  const t=text.trim();
+  const words=t.split(/\s+/);
+  // Person names: 2-4 words, each word starts with uppercase letter
+  if(words.length<2||words.length>4) return false;
+  // Check Title Case pattern: each word starts with uppercase, rest lowercase
+  const titleCase=words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ][a-zàèéìòùáóúa-z']*$/.test(w));
+  // Also accept ALL CAPS names (2-3 words, short)
+  const allCaps=words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ]{2,}$/.test(w)) && words.length<=3 && t.length<35;
+  // Check no company keywords
+  const low=t.toLowerCase();
+  const hasCompanyKw=COMPANY_KEYWORDS.some(kw=>low.includes(kw));
+  if(hasCompanyKw) return false;
+  // No digits in person names
+  if(/\d/.test(t)) return false;
+  // No special chars except apostrophe/hyphen/period
+  if(/[&@#\/\\(){}[\]]/.test(t)) return false;
+  if(titleCase) return true;
+  if(allCaps) return true;
+  return false;
 }
 
-// ========== TABS ==========
-function initTabs() {
-  document.querySelectorAll('nav button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
-      if (btn.dataset.tab === 'contacts') renderContacts();
-      if (btn.dataset.tab === 'export') updateExportState();
-      if (btn.dataset.tab === 'settings') updateStats();
-      if (btn.dataset.tab !== 'scanner' && realtimeActive) pauseRealtimeScan();
-    });
-  });
+function isCompanyName(text){
+  const t=text.trim();
+  const low=t.toLowerCase();
+  // Explicit company keywords
+  if(COMPANY_KEYWORDS.some(kw=>low.includes(kw))) return true;
+  // Contains & or special business chars
+  if(/[&]/.test(t)) return true;
+  // ALL CAPS with 4+ words or long text is likely company
+  const words=t.split(/\s+/);
+  const allCaps=words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ0-9&.\-]+$/.test(w));
+  if(allCaps && (words.length>=3 || t.length>20)) return true;
+  return false;
 }
 
-// ========== OCR ENGINE ==========
-async function initOCR() {
-  const statusEl = document.getElementById('ocrStatus');
-  const progressEl = document.getElementById('ocrProgress');
-  statusEl.style.display = 'flex';
-  statusEl.className = 'ocr-status processing';
-  statusEl.querySelector('span').textContent = 'Caricamento motore OCR...';
-
-  try {
-    const lang = settings.lang || 'ita';
-    worker = await Tesseract.createWorker(lang, 1, {
-      logger: m => {
-        if (m.status === 'recognizing text') {
-          progressEl.style.width = Math.round(m.progress * 100) + '%';
-        } else if (m.status) {
-          statusEl.querySelector('span').textContent = m.status + '...';
-        }
-      }
-    });
-    workerReady = true;
-    statusEl.className = 'ocr-status ready';
-    statusEl.innerHTML = '<span>✅ OCR pronto — lingua: ' + lang.toUpperCase() + '</span>';
-    document.getElementById('btnRealtime').disabled = false;
-    setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
-  } catch (e) {
-    statusEl.className = 'ocr-status error';
-    statusEl.innerHTML = '<span>❌ Errore OCR: ' + esc(e.message) + '</span>';
-  }
+function classifyLine(text){
+  const t=text.trim();if(!t||t.length<2) return null;
+  if(RE_EMAIL.test(t)) return 'email';
+  if(RE_CF.test(t)) return 'cf';
+  if(RE_PIVA.test(t)) return 'piva';
+  if(RE_ADDRESS.test(t)) return 'address';
+  const low=t.toLowerCase();
+  if(ROLES.some(r=>low.includes(r))) return 'role';
+  const ph=t.match(RE_PHONE);
+  if(ph && ph[0].replace(/\D/g,'').length>=6) return 'phone';
+  const web=t.match(RE_WEB);
+  if(web && !web[0].includes('@') && web[0].includes('.')) return 'web';
+  // Improved name vs company detection
+  const lr=(t.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙ]/g)||[]).length/t.length;
+  if(lr<.6) return null;
+  // Check explicit company indicators first
+  if(isCompanyName(t)) return 'company';
+  // Check person name pattern (Title Case, 2-4 words, no company keywords)
+  if(isPersonName(t)) return 'name';
+  // Fallback heuristics
+  const words=t.split(/\s+/);
+  if(lr>.7 && words.length>=2 && words.length<=3 && t.length<40 && !/\d/.test(t)) return 'name';
+  if(lr>.6 && t.length<60) return 'company';
+  return null;
 }
 
-// ========== FIELD EXTRACTION ==========
-const RE_EMAIL = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/;
-const RE_WEB = /(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9\-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?/i;
-const RE_PHONE = /(?:\+?\d{1,3}[\s.\-]?)?(?:\(?\d{2,4}\)?[\s.\-]?)?\d{3,4}[\s.\-]?\d{3,4}/;
-const RE_PIVA = /(?:P\.?\s*I\.?V\.?A\.?|IT)\s*[:.]?\s*(\d{11})/i;
-const RE_CF = /\b[A-Z]{6}\d{2}[A-EHLMPRST]\d{2}[A-Z]\d{3}[A-Z]\b/i;
-const RE_ADDRESS = /(?:via|viale|v\.le|corso|c\.so|piazza|p\.za|p\.zza|largo|vicolo|loc\.|strada|contrada|s\.s\.|s\.r\.|s\.p\.)\s+.+?\d/i;
-const ROLES = ['ceo','cto','cfo','coo','cio','direttore','director','manager','responsabile','presidente','founder','co-founder','ingegnere','engineer','architetto','avvocato','dottore','dott','consulente','analyst','designer','developer','sales','marketing','hr','amministratore','delegato','socio','partner','legale','tecnico','commerciale','operativo'];
-
-function extractFields(text) {
-  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 1);
-  const result = { name:'', company:'', role:'', email:'', phone:'', web:'', piva:'', cf:'', address:'' };
-  const used = new Set();
-
-  for (let i = 0; i < lines.length; i++) { const m = lines[i].match(RE_EMAIL); if (m) { result.email = m[0]; used.add(i); break; } }
-  for (let i = 0; i < lines.length; i++) { if (used.has(i)) continue; const m = lines[i].match(RE_WEB); if (m && !m[0].includes('@') && m[0].includes('.')) { result.web = m[0]; used.add(i); break; } }
-  for (let i = 0; i < lines.length; i++) { if (used.has(i)) continue; const m = lines[i].match(RE_CF); if (m) { result.cf = m[0].toUpperCase(); used.add(i); break; } }
-  for (let i = 0; i < lines.length; i++) { if (used.has(i)) continue; const m = lines[i].match(RE_PIVA); if (m) { result.piva = m[1] || m[0]; used.add(i); break; } }
-  for (let i = 0; i < lines.length; i++) { if (used.has(i)) continue; const m = lines[i].match(RE_PHONE); if (m && m[0].replace(/\D/g,'').length >= 6) { if (result.piva && m[0].includes(result.piva)) continue; result.phone = m[0]; used.add(i); break; } }
-  for (let i = 0; i < lines.length; i++) { if (used.has(i)) continue; const m = lines[i].match(RE_ADDRESS); if (m) { result.address = lines[i]; used.add(i); break; } }
-  for (let i = 0; i < lines.length; i++) { if (used.has(i)) continue; const low = lines[i].toLowerCase(); if (ROLES.some(r => low.includes(r))) { result.role = lines[i]; used.add(i); break; } }
-
-  const remaining = [];
-  for (let i = 0; i < lines.length; i++) { if (!used.has(i) && lines[i].length > 1) remaining.push(lines[i]); }
-  for (const line of remaining) {
-    const letterRatio = (line.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙ]/g) || []).length / line.length;
-    if (letterRatio > 0.7 && line.length < 50) {
-      if (!result.name) { const words = line.split(/\s+/); if (words.length >= 2 && words.length <= 5) result.name = line; else if (!result.company) result.company = line; }
-      else if (!result.company) result.company = line;
-    }
-  }
-  if (!result.name && remaining.length > 0) result.name = remaining[0];
-  return result;
+function extractFieldValue(text, type){
+  const t=text.trim();
+  if(type==='email'){const m=t.match(RE_EMAIL);return m?m[0]:t;}
+  if(type==='cf'){const m=t.match(RE_CF);return m?m[0].toUpperCase():t;}
+  if(type==='piva'){const m=t.match(RE_PIVA);return m?(m[1]||m[0]):t;}
+  if(type==='phone'){const m=t.match(RE_PHONE);return m?m[0]:t;}
+  if(type==='web'){const m=t.match(RE_WEB);return m?m[0]:t;}
+  return t;
 }
 
-// Normalize a value for comparison (trim, lowercase, collapse spaces)
-function normalizeValue(v) {
-  return (v || '').trim().toLowerCase().replace(/\s+/g, ' ');
-}
+function normalizeValue(v){return(v||'').trim().toLowerCase().replace(/\s+/g,' ');}
 
-// ========== SCANNER ==========
-function initScanner() {
-  const btnUpload = document.getElementById('btnUpload');
-  const btnFlip = document.getElementById('btnFlip');
-  const btnRealtime = document.getElementById('btnRealtime');
-  const fileInput = document.getElementById('fileInput');
-
+// ==================== SCANNER ====================
+function initScanner(){
   startCamera();
-
-  btnUpload.addEventListener('click', () => { if (realtimeActive) stopRealtimeScan(); fileInput.click(); });
-  btnFlip.addEventListener('click', () => { facingMode = facingMode === 'environment' ? 'user' : 'environment'; startCamera(); });
-  btnRealtime.addEventListener('click', toggleRealtime);
-  fileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) processImageFile(file); });
-
-  const scannerArea = document.getElementById('scannerArea');
-  scannerArea.addEventListener('dragover', e => { e.preventDefault(); scannerArea.style.opacity = '.7'; });
-  scannerArea.addEventListener('dragleave', () => { scannerArea.style.opacity = '1'; });
-  scannerArea.addEventListener('drop', e => { e.preventDefault(); scannerArea.style.opacity = '1'; const file = e.dataTransfer.files[0]; if (file && file.type.startsWith('image/')) { if (realtimeActive) stopRealtimeScan(); processImageFile(file); } });
-
-  document.getElementById('btnSave').addEventListener('click', saveContactFromUpload);
-  document.getElementById('btnClear').addEventListener('click', clearResult);
-  document.getElementById('btnSaveRT').addEventListener('click', saveContactFromRealtime);
-  document.getElementById('btnResetRT').addEventListener('click', () => { resetAndRestart(); });
+  document.getElementById('btnUpload').addEventListener('click',()=>{if(realtimeActive)stopScan();document.getElementById('fileInput').click();});
+  document.getElementById('btnFlip').addEventListener('click',()=>{facingMode=facingMode==='environment'?'user':'environment';startCamera();});
+  document.getElementById('btnRealtime').addEventListener('click',toggleScan);
+  document.getElementById('fileInput').addEventListener('change',e=>{const f=e.target.files[0];if(f)processImageFile(f);});
+  const sa=document.getElementById('scannerArea');
+  sa.addEventListener('dragover',e=>{e.preventDefault();sa.style.opacity='.7';});
+  sa.addEventListener('dragleave',()=>{sa.style.opacity='1';});
+  sa.addEventListener('drop',e=>{e.preventDefault();sa.style.opacity='1';const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/')){if(realtimeActive)stopScan();processImageFile(f);}});
+  document.getElementById('btnSave').addEventListener('click',saveContactFromUpload);
+  document.getElementById('btnClear').addEventListener('click',clearResult);
+  document.getElementById('btnSaveRT').addEventListener('click',saveContactFromRT);
+  document.getElementById('btnResetRT').addEventListener('click',resetAndRestart);
 }
 
-async function startCamera() {
-  const video = document.getElementById('video');
-  const placeholder = document.getElementById('placeholder');
-  const btnFlip = document.getElementById('btnFlip');
-  try {
-    if (currentStream) currentStream.getTracks().forEach(t => t.stop());
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
-    video.srcObject = stream;
-    currentStream = stream;
-    video.style.display = 'block';
-    placeholder.style.display = 'none';
-    btnFlip.style.display = 'inline-flex';
-  } catch (e) {
-    console.log('Camera non disponibile:', e.message);
-    video.style.display = 'none';
-    placeholder.style.display = 'flex';
-    btnFlip.style.display = 'none';
-  }
+async function startCamera(){
+  const v=document.getElementById('video'),ph=document.getElementById('placeholder'),bf=document.getElementById('btnFlip');
+  try{
+    if(currentStream)currentStream.getTracks().forEach(t=>t.stop());
+    const s=await navigator.mediaDevices.getUserMedia({video:{facingMode,width:{ideal:1280},height:{ideal:720}},audio:false});
+    v.srcObject=s;currentStream=s;v.style.display='block';ph.style.display='none';bf.style.display='inline-flex';
+  }catch(e){v.style.display='none';ph.style.display='flex';bf.style.display='none';}
 }
 
-// ========== BUILD REALTIME FIELDS UI ==========
-function buildRealtimeFieldsUI() {
-  const container = document.getElementById('rtFields');
-  container.innerHTML = FIELD_CONFIG.map(f => `
+// ==================== BUILD UI ====================
+function buildRealtimeFieldsUI(){
+  document.getElementById('rtFields').innerHTML=FIELD_CONFIG.map(f=>`
     <div class="rt-field" data-field="${f.key}" id="rtf_${f.key}">
-      <span class="rt-icon">${f.icon}</span>
-      <span class="rt-label">${f.label}</span>
-      <div class="rt-value-wrap">
-        <span class="rt-value empty" id="rtv_${f.key}">—</span>
-      </div>
+      <span class="rt-icon">${f.icon}</span><span class="rt-label">${f.label}</span>
+      <div class="rt-value-wrap"><span class="rt-value empty" id="rtv_${f.key}">—</span></div>
       <span class="rt-confidence low" id="rtc_${f.key}">0%</span>
       <span class="rt-lock" id="rtl_${f.key}">🔓</span>
-    </div>
-  `).join('');
-
-  // Make fields editable on click
-  FIELD_CONFIG.forEach(f => {
-    const row = document.getElementById('rtf_' + f.key);
-    const valueEl = document.getElementById('rtv_' + f.key);
-    row.addEventListener('dblclick', () => {
-      if (valueEl.tagName === 'INPUT') return; // already editing
-      const currentVal = fieldState[f.key].bestValue || '';
-      const wrap = row.querySelector('.rt-value-wrap');
-      wrap.innerHTML = `<input class="rt-value-input" type="text" value="${esc(currentVal)}" id="rti_${f.key}">`;
-      const input = document.getElementById('rti_' + f.key);
-      input.focus();
-      input.select();
-      input.addEventListener('blur', () => finishFieldEdit(f.key, input.value));
-      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
+    </div>`).join('');
+  FIELD_CONFIG.forEach(f=>{
+    document.getElementById('rtf_'+f.key).addEventListener('dblclick',()=>{
+      const w=document.getElementById('rtf_'+f.key).querySelector('.rt-value-wrap');
+      if(w.querySelector('input'))return;
+      const v=fieldState[f.key].bestValue||'';
+      w.innerHTML=`<input class="rt-value-input" type="text" value="${esc(v)}" id="rti_${f.key}">`;
+      const inp=document.getElementById('rti_'+f.key);inp.focus();inp.select();
+      inp.addEventListener('blur',()=>{fieldState[f.key].bestValue=inp.value.trim();fieldState[f.key].manuallyEdited=true;fieldState[f.key].locked=true;fieldState[f.key].confidence=100;refreshFieldUI(f.key);checkDone();});
+      inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();});
     });
   });
 }
 
-function finishFieldEdit(key, newValue) {
-  const trimmed = newValue.trim();
-  fieldState[key].bestValue = trimmed;
-  fieldState[key].manuallyEdited = true;
-  fieldState[key].locked = true;
-  fieldState[key].confidence = 100;
-  refreshFieldUI(key);
-  checkAllFieldsDone();
-}
+// ==================== CONTINUOUS PIPELINE SCANNING ====================
+function toggleScan(){if(realtimeActive)stopScan();else startScan();}
 
-// ========== REALTIME SCANNING ==========
-function getScanInterval() {
-  const speeds = { fast: 1000, normal: 1500, slow: 3000 };
-  return speeds[settings.scanSpeed] || 1500;
-}
-
-function toggleRealtime() {
-  if (realtimeActive) stopRealtimeScan();
-  else startRealtimeScan();
-}
-
-function startRealtimeScan() {
-  if (!workerReady || !currentStream) { toast('Camera o OCR non pronti', 'error'); return; }
-
-  realtimeActive = true;
-  resetAccumulator();
-  buildRealtimeFieldsUI(); // rebuild fresh
-
-  const btn = document.getElementById('btnRealtime');
-  btn.classList.add('active');
-  btn.textContent = '⏹️ Ferma scansione';
-
-  document.getElementById('realtimePanel').style.display = 'block';
-  document.getElementById('resultCard').style.display = 'none';
-  document.getElementById('imagePreview').style.display = 'none';
-  document.getElementById('completionBanner').style.display = 'none';
-
-  document.getElementById('scanIndicator').style.display = 'flex';
-  document.getElementById('scanCounter').style.display = 'flex';
+function startScan(){
+  if(!workerReady||!currentStream){toast('Camera o OCR non pronti','error');return;}
+  realtimeActive=true;
+  resetAll(); buildRealtimeFieldsUI();
+  document.getElementById('btnRealtime').classList.add('active');
+  document.getElementById('btnRealtime').textContent='⏹️ Ferma scansione';
+  document.getElementById('realtimePanel').style.display='block';
+  document.getElementById('resultCard').style.display='none';
+  document.getElementById('imagePreview').style.display='none';
+  document.getElementById('completionBanner').style.display='none';
+  document.getElementById('scanIndicator').style.display='flex';
+  document.getElementById('scanCounter').style.display='flex';
   document.getElementById('scanLine').classList.add('active');
   document.getElementById('guide').classList.add('detecting');
-
-  document.getElementById('globalProgressFill').style.width = '0';
-  document.getElementById('scanCountLabel').textContent = '0';
-  document.getElementById('rtSubtitle').textContent = 'I campi si riempiono e si consolidano ad ogni scansione';
-
-  scheduleScanLoop();
+  document.getElementById('globalProgressFill').style.width='0';
+  document.getElementById('cardMinimap').innerHTML='';
+  lastFrameTime=performance.now();frameCount=0;currentFPS=0;
+  // Init offscreen capture canvas
+  const res=settings.captureRes||480;
+  captureCanvas=document.createElement('canvas');
+  captureCanvas.width=res;captureCanvas.height=Math.round(res*0.6);// card aspect ~5:3
+  captureCtx=captureCanvas.getContext('2d',{willReadFrequently:true});
+  // Start pipeline: rAF captures, immediate OCR
+  pipelineLoop();
 }
 
-function stopRealtimeScan() {
-  realtimeActive = false;
-  if (scanLoopTimer) { clearTimeout(scanLoopTimer); scanLoopTimer = null; }
-
-  const btn = document.getElementById('btnRealtime');
-  btn.classList.remove('active');
-  btn.textContent = '🔴 Avvia scansione';
-
-  document.getElementById('scanIndicator').style.display = 'none';
+function stopScan(){
+  realtimeActive=false;if(animFrameId){cancelAnimationFrame(animFrameId);animFrameId=null;}
+  document.getElementById('btnRealtime').classList.remove('active');
+  document.getElementById('btnRealtime').textContent='🔴 Avvia scansione';
+  document.getElementById('scanIndicator').style.display='none';
   document.getElementById('scanLine').classList.remove('active');
-  document.getElementById('guide').classList.remove('detecting');
-  document.getElementById('guide').classList.remove('done');
+  document.getElementById('guide').classList.remove('detecting','done');
   clearOverlay();
-
-  // If we have data, show the save option
-  const hasData = FIELD_CONFIG.some(f => fieldState[f.key].bestValue);
-  if (hasData) {
-    document.getElementById('completionBanner').style.display = 'block';
-    document.getElementById('completionBanner').querySelector('h3').textContent = '📋 Scansione fermata';
-    document.getElementById('completionBanner').querySelector('p').textContent = 'Puoi salvare i dati rilevati finora, modificarli (doppio click), o riavviare.';
+  if(FIELD_CONFIG.some(f=>fieldState[f.key].bestValue)){
+    const b=document.getElementById('completionBanner');
+    b.querySelector('h3').textContent='📋 Scansione fermata';
+    document.getElementById('completionText').textContent='Puoi salvare i dati rilevati, modificarli (doppio click) o riavviare.';
+    b.style.display='block';
   }
 }
 
-function pauseRealtimeScan() {
-  if (scanLoopTimer) { clearTimeout(scanLoopTimer); scanLoopTimer = null; }
-  document.getElementById('scanDot').className = 'dot';
-  document.getElementById('scanLabel').textContent = 'PAUSA';
-}
+function pauseScan(){if(animFrameId){cancelAnimationFrame(animFrameId);animFrameId=null;}document.getElementById('scanDot').className='dot';document.getElementById('scanLabel').textContent='PAUSA';}
+function resumeScan(){if(realtimeActive&&!animFrameId)pipelineLoop();document.getElementById('scanLabel').textContent='LIVE';}
 
-function resumeRealtimeScan() {
-  if (realtimeActive && !scanLoopTimer) {
-    scheduleScanLoop();
-    document.getElementById('scanLabel').textContent = 'LIVE';
-  }
-}
+// The pipeline: rAF grabs the latest video frame → sends to OCR → immediately loops
+async function pipelineLoop(){
+  if(!realtimeActive)return;
+  if(isProcessingFrame){animFrameId=requestAnimationFrame(pipelineLoop);return;}
+  // Check completion
+  if(areAllDone()){autoComplete();return;}
 
-function scheduleScanLoop() {
-  if (!realtimeActive) return;
-  scanLoopTimer = setTimeout(realtimeScanFrame, getScanInterval());
-}
+  const video=document.getElementById('video');
+  if(!video.srcObject||video.videoWidth===0){animFrameId=requestAnimationFrame(pipelineLoop);return;}
 
-async function realtimeScanFrame() {
-  if (!realtimeActive || isProcessingFrame || !workerReady) {
-    if (realtimeActive) scheduleScanLoop();
-    return;
-  }
+  isProcessingFrame=true;
+  document.getElementById('scanDot').className='dot processing';
 
-  // Check if ALL fields with data are locked → auto-stop
-  if (areAllDetectedFieldsLocked()) {
-    autoComplete();
-    return;
-  }
+  try{
+    // Capture ROI at low resolution for speed
+    const vw=video.videoWidth,vh=video.videoHeight;
+    const roiX=Math.round(vw*0.075),roiY=Math.round(vh*0.2),roiW=Math.round(vw*0.85),roiH=Math.round(vh*0.6);
+    const cw=captureCanvas.width,ch=captureCanvas.height;
+    captureCtx.drawImage(video,roiX,roiY,roiW,roiH,0,0,cw,ch);
 
-  const video = document.getElementById('video');
-  if (!video.srcObject || video.videoWidth === 0) { scheduleScanLoop(); return; }
+    const t0=performance.now();
+    const{data}=await worker.recognize(captureCanvas);
+    const dt=performance.now()-t0;
 
-  isProcessingFrame = true;
-  const dot = document.getElementById('scanDot');
-  dot.className = 'dot processing';
-  document.getElementById('scanLabel').textContent = 'ANALISI...';
+    totalSamples++;scanCount++;
+    frameCount++;
+    const now=performance.now();
+    if(now-lastFrameTime>=1000){currentFPS=Math.round(frameCount*1000/(now-lastFrameTime));frameCount=0;lastFrameTime=now;}
 
-  try {
-    // Capture ROI
-    const canvas = document.createElement('canvas');
-    const vw = video.videoWidth, vh = video.videoHeight;
-    const roiX = Math.round(vw * 0.075), roiY = Math.round(vh * 0.2);
-    const roiW = Math.round(vw * 0.85), roiH = Math.round(vh * 0.6);
-    canvas.width = roiW; canvas.height = roiH;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, roiX, roiY, roiW, roiH, 0, 0, roiW, roiH);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    document.getElementById('scanCountLabel').textContent=totalSamples+' campioni';
+    document.getElementById('scanFPS').textContent=currentFPS+' fps · '+Math.round(dt)+'ms';
 
-    const { data } = await worker.recognize(dataUrl);
-    totalSamples++;
-    scanCount++;
-    saveState();
-
-    document.getElementById('scanCountLabel').textContent = totalSamples;
-
-    if (data.text && data.text.trim().length > 0) {
-      drawOverlay(data.words, roiX, roiY, vw, vh);
-      const fields = extractFields(data.text);
-      accumulateEvidence(fields);
+    if(data.text&&data.text.trim().length>2){
+      // Process LINES with spatial info
+      processLinesWithSpatial(data.lines,roiX,roiY,vw,vh);
+      drawOverlayFromSlots(data.words,roiX,roiY,vw,vh);
+      deriveFieldsFromSlots();
       refreshAllFieldsUI();
       updateGlobalProgress();
+      renderMinimap();
+      if(areAllDone()){autoComplete();isProcessingFrame=false;return;}
+    }
 
-      // Check auto-complete after updating
-      if (areAllDetectedFieldsLocked()) {
-        autoComplete();
-        isProcessingFrame = false;
-        return;
+    document.getElementById('scanDot').className='dot active';
+    document.getElementById('scanLabel').textContent='LIVE · #'+totalSamples;
+  }catch(e){
+    console.warn('Scan error:',e);
+    document.getElementById('scanDot').className='dot';
+  }
+
+  isProcessingFrame=false;
+  if(realtimeActive) animFrameId=requestAnimationFrame(pipelineLoop);
+}
+
+// ==================== SPATIAL LINE PROCESSING ====================
+function processLinesWithSpatial(lines,roiX,roiY,vw,vh){
+  if(!lines||!lines.length)return;
+  const roiH=vh*0.6;
+
+  lines.forEach(line=>{
+    const text=line.text.trim();
+    if(text.length<2)return;
+    const bbox=line.bbox;
+    // Normalize position relative to ROI (0-1)
+    const normY=(bbox.y0+bbox.y1)/(2*captureCanvas.height);
+    const normX=(bbox.x0+bbox.x1)/(2*captureCanvas.width);
+    const normH=(bbox.y1-bbox.y0)/captureCanvas.height;
+
+    // Classify this line
+    const fieldType=classifyLine(text);
+    const cleanValue=fieldType?extractFieldValue(text,fieldType):text;
+    const norm=normalizeValue(cleanValue);
+    if(!norm)return;
+
+    // Find matching slot by Y proximity
+    let matched=null;
+    let bestDist=Infinity;
+    for(const slot of cardSlots){
+      const dist=Math.abs(slot.normY-normY);
+      if(dist<SLOT_Y_MATCH&&dist<bestDist){
+        bestDist=dist;matched=slot;
       }
     }
 
-    dot.className = 'dot active';
-    document.getElementById('scanLabel').textContent = 'LIVE · #' + totalSamples;
-  } catch (e) {
-    console.warn('Errore scan:', e);
-    dot.className = 'dot';
-    document.getElementById('scanLabel').textContent = 'ERRORE';
-  }
-
-  isProcessingFrame = false;
-  scheduleScanLoop();
+    if(matched){
+      // Update slot position (rolling average)
+      matched.normY=matched.normY*0.8+normY*0.2;
+      matched.normX=matched.normX*0.8+normX*0.2;
+      // Add evidence
+      if(!matched.evidence[norm]) matched.evidence[norm]={count:0,bestRaw:cleanValue};
+      matched.evidence[norm].count++;
+      if(cleanValue.length>matched.evidence[norm].bestRaw.length) matched.evidence[norm].bestRaw=cleanValue;
+      // Update field type if better classification
+      if(fieldType&&!matched.fieldType) matched.fieldType=fieldType;
+      // Recalculate best
+      recalcSlot(matched);
+    }else{
+      // Create new slot
+      const newSlot={
+        normY, normX, normH,
+        evidence:{[norm]:{count:1,bestRaw:cleanValue}},
+        bestValue:cleanValue,
+        confidence:0,
+        fieldType:fieldType,
+        locked:false
+      };
+      recalcSlot(newSlot);
+      cardSlots.push(newSlot);
+      // Sort by Y position
+      cardSlots.sort((a,b)=>a.normY-b.normY);
+    }
+  });
 }
 
-// ========== ACCUMULATE EVIDENCE ==========
-function accumulateEvidence(fields) {
-  const threshold = settings.certThreshold || 85;
+function recalcSlot(slot){
+  const threshold=settings.certThreshold||85;
+  let bestN='',bestC=0,bestR='';
+  const total=Object.values(slot.evidence).reduce((s,v)=>s+v.count,0);
+  for(const[n,info]of Object.entries(slot.evidence)){
+    if(info.count>bestC){bestC=info.count;bestN=n;bestR=info.bestRaw;}
+  }
+  slot.bestValue=bestR;
+  slot.confidence=total>0?Math.round((bestC/total)*100):0;
+  if(slot.confidence>=threshold&&bestC>=3&&!slot.locked){
+    slot.locked=true;
+  }
+}
 
-  FIELD_CONFIG.forEach(fc => {
-    const key = fc.key;
-    const state = fieldState[key];
+// ==================== DERIVE FIELDS FROM SLOTS ====================
+function deriveFieldsFromSlots(){
+  const threshold=settings.certThreshold||85;
 
-    // Skip locked or manually edited fields
-    if (state.locked || state.manuallyEdited) return;
+  // For each field type, find the best matching slot
+  FIELD_CONFIG.forEach(fc=>{
+    if(fieldState[fc.key].manuallyEdited)return;
 
-    const rawValue = (fields[key] || '').trim();
-    if (!rawValue) return; // no data for this field in this frame — skip, don't penalize
+    // Find slots classified as this field type
+    const candidates=cardSlots.filter(s=>s.fieldType===fc.key);
+    if(candidates.length===0)return;
 
-    // Normalize for grouping (but keep best raw version)
-    const norm = normalizeValue(rawValue);
-    if (!norm) return;
+    // Pick the one with highest confidence
+    const best=candidates.reduce((a,b)=>a.confidence>b.confidence?a:b);
 
-    // Add evidence
-    if (!fieldEvidence[key][norm]) {
-      fieldEvidence[key][norm] = { count: 0, bestRaw: rawValue };
-    }
-    fieldEvidence[key][norm].count++;
-    // Keep the longest/best raw version
-    if (rawValue.length > fieldEvidence[key][norm].bestRaw.length) {
-      fieldEvidence[key][norm].bestRaw = rawValue;
-    }
+    fieldState[fc.key].bestValue=best.bestValue;
+    fieldState[fc.key].confidence=best.confidence;
+    fieldState[fc.key].locked=best.locked;
+  });
 
-    // Find the value with the most hits
-    let bestNorm = '', bestCount = 0, bestRaw = '';
-    for (const [n, info] of Object.entries(fieldEvidence[key])) {
-      if (info.count > bestCount) {
-        bestCount = info.count;
-        bestNorm = n;
-        bestRaw = info.bestRaw;
+  // Smart name/company disambiguation for unclassified slots
+  const unclassified=cardSlots.filter(s=>!s.fieldType&&s.bestValue);
+  if(unclassified.length>0 && (!fieldState.name.bestValue || !fieldState.company.bestValue)){
+    // Score each unclassified slot for how likely it is a person name
+    const scored=unclassified.map(s=>{
+      const v=s.bestValue;
+      let nameScore=0;
+      // Title Case pattern: strong name signal
+      const words=v.split(/\s+/);
+      const titleCase=words.length>=2 && words.length<=4 && words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ][a-zàèéìòùáóú']+$/.test(w));
+      if(titleCase) nameScore+=5;
+      // ALL CAPS short (2-3 words) can be name
+      const allCaps=words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ]{2,}$/.test(w));
+      if(allCaps && words.length>=2 && words.length<=3 && v.length<30) nameScore+=3;
+      // 2-3 words, all letters, short → likely name
+      const lr=(v.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙ]/g)||[]).length/v.length;
+      if(lr>.85 && words.length>=2 && words.length<=3 && v.length<35) nameScore+=2;
+      // No digits → more likely name
+      if(!/\d/.test(v)) nameScore+=1;
+      // Company keywords → definitely not a name
+      const low=v.toLowerCase();
+      if(COMPANY_KEYWORDS.some(kw=>low.includes(kw))) nameScore-=10;
+      // Has & or special business chars → company
+      if(/[&]/.test(v)) nameScore-=5;
+      return {slot:s, nameScore};
+    });
+    scored.sort((a,b)=>b.nameScore-a.nameScore);
+
+    // Assign the highest-scoring as name (if score > 0)
+    if(!fieldState.name.bestValue && !fieldState.name.manuallyEdited){
+      const best=scored.find(s=>s.nameScore>0);
+      if(best){
+        best.slot.fieldType='name';
+        fieldState.name.bestValue=best.slot.bestValue;
+        fieldState.name.confidence=best.slot.confidence;
+        fieldState.name.locked=best.slot.locked;
       }
     }
-
-    // Confidence = how many times we've seen the best value vs total samples
-    // But we only count samples where this field had ANY data
-    const totalFieldSamples = Object.values(fieldEvidence[key]).reduce((s, v) => s + v.count, 0);
-    const confidence = totalFieldSamples > 0 ? Math.round((bestCount / totalFieldSamples) * 100) : 0;
-
-    state.bestValue = bestRaw;
-    state.confidence = confidence;
-
-    // Lock when confident enough AND we have at least 3 samples
-    if (confidence >= threshold && bestCount >= 3) {
-      state.locked = true;
-    }
-  });
-}
-
-// ========== CHECK COMPLETION ==========
-function areAllDetectedFieldsLocked() {
-  // A field is "detected" if it has any evidence at all
-  let detectedCount = 0;
-  let lockedCount = 0;
-  FIELD_CONFIG.forEach(f => {
-    const hasEvidence = Object.keys(fieldEvidence[f.key]).length > 0 || fieldState[f.key].manuallyEdited;
-    if (hasEvidence || fieldState[f.key].bestValue) {
-      detectedCount++;
-      if (fieldState[f.key].locked) lockedCount++;
-    }
-  });
-  // Need at least 1 detected field, and all detected must be locked
-  return detectedCount > 0 && detectedCount === lockedCount && totalSamples >= 3;
-}
-
-function autoComplete() {
-  realtimeActive = false;
-  if (scanLoopTimer) { clearTimeout(scanLoopTimer); scanLoopTimer = null; }
-
-  if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
-
-  const btn = document.getElementById('btnRealtime');
-  btn.classList.remove('active');
-  btn.textContent = '🔴 Avvia scansione';
-
-  document.getElementById('scanDot').className = 'dot done';
-  document.getElementById('scanLabel').textContent = 'COMPLETO';
-  document.getElementById('scanLine').classList.remove('active');
-  document.getElementById('guide').classList.remove('detecting');
-  document.getElementById('guide').classList.add('done');
-
-  document.getElementById('rtSubtitle').textContent = '✅ Tutti i campi verificati dopo ' + totalSamples + ' campioni!';
-
-  const banner = document.getElementById('completionBanner');
-  banner.querySelector('h3').textContent = '✅ Scansione completata!';
-  banner.querySelector('p').textContent = 'Tutti i campi rilevati sono certi al 100%. Puoi salvare il contatto.';
-  banner.style.display = 'block';
-  banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-  document.getElementById('globalProgressFill').style.width = '100%';
-  document.getElementById('globalProgressFill').className = 'fill high';
-}
-
-// ========== UI REFRESH ==========
-function refreshFieldUI(key) {
-  const state = fieldState[key];
-  const row = document.getElementById('rtf_' + key);
-  const wrap = row.querySelector('.rt-value-wrap');
-  const confEl = document.getElementById('rtc_' + key);
-  const lockEl = document.getElementById('rtl_' + key);
-
-  // Value display (only update if not currently being edited)
-  const existingInput = wrap.querySelector('input');
-  if (!existingInput) {
-    const valueEl = document.getElementById('rtv_' + key);
-    if (state.bestValue) {
-      valueEl.textContent = state.bestValue;
-      valueEl.className = 'rt-value';
-    } else {
-      valueEl.textContent = '—';
-      valueEl.className = 'rt-value empty';
+    // Assign remaining as company
+    if(!fieldState.company.bestValue && !fieldState.company.manuallyEdited){
+      const remaining=scored.find(s=>!s.slot.fieldType);
+      if(remaining){
+        remaining.slot.fieldType='company';
+        fieldState.company.bestValue=remaining.slot.bestValue;
+        fieldState.company.confidence=remaining.slot.confidence;
+        fieldState.company.locked=remaining.slot.locked;
+      }
     }
   }
-
-  // Confidence badge
-  const conf = state.confidence;
-  confEl.textContent = conf + '%';
-  if (state.locked) {
-    confEl.className = 'rt-confidence certain';
-  } else if (conf >= 70) {
-    confEl.className = 'rt-confidence high';
-  } else if (conf >= 40) {
-    confEl.className = 'rt-confidence medium';
-  } else {
-    confEl.className = 'rt-confidence low';
-  }
-
-  // Lock icon
-  if (state.locked) {
-    lockEl.textContent = '🔒';
-    lockEl.className = 'rt-lock locked';
-    row.classList.add('locked');
-  } else {
-    lockEl.textContent = '🔓';
-    lockEl.className = 'rt-lock';
-    row.classList.remove('locked');
-  }
 }
 
-function refreshAllFieldsUI() {
-  FIELD_CONFIG.forEach(f => refreshFieldUI(f.key));
-}
-
-function updateGlobalProgress() {
-  const detected = FIELD_CONFIG.filter(f => Object.keys(fieldEvidence[f.key]).length > 0 || fieldState[f.key].bestValue);
-  if (detected.length === 0) {
-    document.getElementById('globalProgressFill').style.width = '0';
-    return;
-  }
-  const locked = detected.filter(f => fieldState[f.key].locked).length;
-  const pct = Math.round((locked / detected.length) * 100);
-  const fill = document.getElementById('globalProgressFill');
-  fill.style.width = pct + '%';
-  fill.className = pct >= 80 ? 'fill high' : 'fill';
-
-  const panel = document.getElementById('realtimePanel');
-  panel.classList.toggle('has-data', detected.length > 0);
-  panel.classList.toggle('all-done', pct === 100);
-}
-
-// ========== OVERLAY ==========
-function drawOverlay(words, roiX, roiY, videoW, videoH) {
-  const canvas = document.getElementById('overlay');
-  const video = document.getElementById('video');
-  const rect = video.getBoundingClientRect();
-  canvas.width = rect.width * window.devicePixelRatio;
-  canvas.height = rect.height * window.devicePixelRatio;
-  canvas.style.width = rect.width + 'px';
-  canvas.style.height = rect.height + 'px';
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-  const scaleX = rect.width / videoW, scaleY = rect.height / videoH;
-  if (!words) return;
-  words.forEach(word => {
-    if (!word.text || !word.text.trim()) return;
-    const bbox = word.bbox, conf = word.confidence;
-    const x = (bbox.x0 + roiX) * scaleX, y = (bbox.y0 + roiY) * scaleY;
-    const w = (bbox.x1 - bbox.x0) * scaleX, h = (bbox.y1 - bbox.y0) * scaleY;
-    ctx.strokeStyle = conf > 80 ? 'rgba(34,197,94,0.6)' : conf > 50 ? 'rgba(245,158,11,0.6)' : 'rgba(239,68,68,0.5)';
-    ctx.fillStyle = conf > 80 ? 'rgba(34,197,94,0.08)' : conf > 50 ? 'rgba(245,158,11,0.08)' : 'rgba(239,68,68,0.06)';
-    ctx.lineWidth = 1;
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeRect(x, y, w, h);
-  });
-}
-
-function clearOverlay() {
-  const canvas = document.getElementById('overlay');
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
-// ========== SAVE FROM REALTIME ==========
-function saveContactFromRealtime() {
-  const contact = { id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5), createdAt: new Date().toISOString() };
-  FIELD_CONFIG.forEach(f => {
-    // Check if there's an active input (user was editing)
-    const input = document.getElementById('rti_' + f.key);
-    contact[f.key] = input ? input.value.trim() : (fieldState[f.key].bestValue || '');
-  });
-  if (!contact.name && !contact.email && !contact.phone) {
-    toast('Nessun dato sufficiente da salvare', 'error');
-    return;
-  }
-  contacts.push(contact);
-  saveState();
-  toast('✅ Contatto salvato: ' + (contact.name || contact.email), 'success');
-  if (navigator.vibrate) navigator.vibrate(200);
-  resetAndRestart();
-}
-
-function resetAndRestart() {
-  resetAccumulator();
-  buildRealtimeFieldsUI();
-  document.getElementById('completionBanner').style.display = 'none';
-  document.getElementById('realtimePanel').style.display = 'none';
-  document.getElementById('scanIndicator').style.display = 'none';
-  document.getElementById('scanCounter').style.display = 'none';
-  document.getElementById('guide').classList.remove('done', 'detecting');
-  clearOverlay();
-
-  const btn = document.getElementById('btnRealtime');
-  btn.classList.remove('active');
-  btn.textContent = '🔴 Avvia scansione';
-}
-
-// ========== UPLOAD MODE (original flow) ==========
-function processImageFile(file) {
-  const reader = new FileReader();
-  reader.onload = (e) => processImage(e.target.result);
-  reader.readAsDataURL(file);
-}
-
-async function processImage(dataUrl) {
-  if (!workerReady) { toast('OCR non ancora pronto', 'error'); return; }
-  document.getElementById('realtimePanel').style.display = 'none';
-  document.getElementById('completionBanner').style.display = 'none';
-
-  const preview = document.getElementById('imagePreview');
-  const statusEl = document.getElementById('ocrStatus');
-  const resultCard = document.getElementById('resultCard');
-  preview.src = dataUrl; preview.style.display = 'block'; resultCard.style.display = 'none';
-  statusEl.style.display = 'flex';
-  statusEl.className = 'ocr-status processing';
-  statusEl.innerHTML = '<div class="spinner"></div><span>Analisi in corso...</span><div class="progress-bar"><div class="fill" id="ocrProgress" style="width:0"></div></div>';
-
-  try {
-    const { data } = await worker.recognize(dataUrl);
-    scanCount++; saveState();
-    if (!data.text || !data.text.trim()) { statusEl.className = 'ocr-status error'; statusEl.innerHTML = '<span>⚠️ Nessun testo rilevato.</span>'; return; }
-    const fields = extractFields(data.text);
-    document.getElementById('fName').value = fields.name;
-    document.getElementById('fCompany').value = fields.company;
-    document.getElementById('fRole').value = fields.role;
-    document.getElementById('fEmail').value = fields.email;
-    document.getElementById('fPhone').value = fields.phone;
-    document.getElementById('fWeb').value = fields.web;
-    document.getElementById('fPiva').value = fields.piva;
-    document.getElementById('fCf').value = fields.cf;
-    document.getElementById('fAddress').value = fields.address;
-    document.getElementById('fRawText').value = data.text;
-    resultCard.style.display = 'block';
-    statusEl.className = 'ocr-status ready';
-    statusEl.innerHTML = '<span>✅ Completata — ' + data.lines.length + ' righe, confidenza: ' + Math.round(data.confidence) + '%</span>';
-    setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
-  } catch (e) { statusEl.className = 'ocr-status error'; statusEl.innerHTML = '<span>❌ Errore: ' + esc(e.message) + '</span>'; }
-}
-
-function saveContactFromUpload() {
-  const contact = {
-    id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
-    name: document.getElementById('fName').value.trim(),
-    company: document.getElementById('fCompany').value.trim(),
-    role: document.getElementById('fRole').value.trim(),
-    email: document.getElementById('fEmail').value.trim(),
-    phone: document.getElementById('fPhone').value.trim(),
-    web: document.getElementById('fWeb').value.trim(),
-    piva: document.getElementById('fPiva').value.trim(),
-    cf: document.getElementById('fCf').value.trim(),
-    address: document.getElementById('fAddress').value.trim(),
-    createdAt: new Date().toISOString()
-  };
-  if (!contact.name && !contact.email && !contact.phone) { toast('Compila almeno nome, email o telefono', 'error'); return; }
-  contacts.push(contact); saveState(); clearResult();
-  toast('Contatto salvato: ' + (contact.name || contact.email), 'success');
-}
-
-function clearResult() {
-  document.getElementById('resultCard').style.display = 'none';
-  document.getElementById('imagePreview').style.display = 'none';
-  ['fName','fCompany','fRole','fEmail','fPhone','fWeb','fPiva','fCf','fAddress','fRawText'].forEach(id => document.getElementById(id).value = '');
-}
-
-// ========== CONTACTS ==========
-function initContacts() { document.getElementById('searchInput').addEventListener('input', renderContacts); }
-
-function renderContacts() {
-  const query = document.getElementById('searchInput').value.toLowerCase();
-  const list = document.getElementById('contactList');
-  const empty = document.getElementById('emptyContacts');
-  const filtered = contacts.filter(c => { if (!query) return true; return [c.name, c.company, c.email, c.phone, c.role].some(v => v && v.toLowerCase().includes(query)); });
-  if (filtered.length === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  list.innerHTML = filtered.map(c => {
-    const initials = (c.name || c.email || '?').substring(0, 2).toUpperCase();
-    const colors = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#22c55e','#06b6d4'];
-    const color = colors[Math.abs(hashCode(c.id)) % colors.length];
-    return `<div class="contact-item" data-id="${c.id}"><div class="contact-avatar" style="background:${color}">${esc(initials)}</div><div class="contact-info"><div class="name">${esc(c.name || 'Senza nome')}</div><div class="detail">${esc([c.role, c.company].filter(Boolean).join(' — ') || c.email || c.phone || '')}</div></div><div class="contact-actions"><button title="vCard" onclick="exportSingleVcard('${c.id}')">📋</button><button title="Elimina" onclick="deleteContact('${c.id}')">🗑️</button></div></div>`;
+// ==================== MINIMAP ====================
+function renderMinimap(){
+  const mm=document.getElementById('cardMinimap');
+  if(!cardSlots.length){mm.innerHTML='<span style="opacity:.4">In attesa di testo...</span>';return;}
+  const maxH=80;
+  mm.innerHTML=cardSlots.map(s=>{
+    const top=Math.round(s.normY*maxH-6);
+    const color=s.locked?'var(--green)':s.confidence>50?'var(--orange)':'var(--accent)';
+    const cls=s.locked?'minimap-slot locked':'minimap-slot';
+    const label=s.fieldType?s.fieldType.toUpperCase()+': ':'';
+    return `<div class="${cls}" style="top:${Math.max(0,Math.min(top,maxH-14))}px;border-left-color:${color}">${label}${esc(s.bestValue.substring(0,40))}</div>`;
   }).join('');
 }
 
-function deleteContact(id) { if (!confirm('Eliminare questo contatto?')) return; contacts = contacts.filter(c => c.id !== id); saveState(); renderContacts(); toast('Contatto eliminato', 'success'); }
+// ==================== COMPLETION ====================
+function areAllDone(){
+  const detected=FIELD_CONFIG.filter(f=>fieldState[f.key].bestValue);
+  if(detected.length===0||totalSamples<3)return false;
+  return detected.every(f=>fieldState[f.key].locked);
+}
+function checkDone(){if(areAllDone())autoComplete();}
 
-function exportSingleVcard(id) { const c = contacts.find(x => x.id === id); if (!c) return; downloadFile(contactToVcard(c), (c.name || 'contatto') + '.vcf', 'text/vcard'); toast('vCard scaricata', 'success'); }
-
-// ========== EXPORT ==========
-function initExport() {
-  document.getElementById('exportVcard').addEventListener('click', () => { if (!contacts.length) { toast('Nessun contatto', 'error'); return; } downloadFile(contacts.map(contactToVcard).join('\n'), 'contatti.vcf', 'text/vcard'); toast(contacts.length + ' contatti esportati', 'success'); });
-  document.getElementById('exportCsv').addEventListener('click', () => { if (!contacts.length) { toast('Nessun contatto', 'error'); return; } const h = ['Nome','Azienda','Ruolo','Email','Telefono','Web','P.IVA','C.F.','Indirizzo','Data']; const rows = contacts.map(c => [c.name,c.company,c.role,c.email,c.phone,c.web,c.piva,c.cf,c.address,c.createdAt].map(csvEsc)); downloadFile('\ufeff' + [h.join(','), ...rows.map(r => r.join(','))].join('\n'), 'contatti.csv', 'text/csv'); toast(contacts.length + ' contatti esportati', 'success'); });
-  document.getElementById('exportJson').addEventListener('click', () => { if (!contacts.length) { toast('Nessun contatto', 'error'); return; } downloadFile(JSON.stringify(contacts, null, 2), 'contatti.json', 'application/json'); toast(contacts.length + ' contatti esportati', 'success'); });
-  document.getElementById('exportWebhook').addEventListener('click', async () => {
-    if (!contacts.length) { toast('Nessun contatto', 'error'); return; }
-    if (!settings.webhookUrl) { toast('Configura Webhook nelle Impostazioni', 'error'); return; }
-    try {
-      const h = { 'Content-Type': 'application/json' }; if (settings.webhookAuth) h['Authorization'] = settings.webhookAuth;
-      const r = await fetch(settings.webhookUrl, { method: 'POST', headers: h, body: JSON.stringify({ contacts }) });
-      toast(r.ok ? 'Inviati al CRM!' : 'Errore CRM: ' + r.status, r.ok ? 'success' : 'error');
-    } catch (e) { toast('Errore: ' + e.message, 'error'); }
-  });
+function autoComplete(){
+  realtimeActive=false;if(animFrameId){cancelAnimationFrame(animFrameId);animFrameId=null;}
+  if(navigator.vibrate)navigator.vibrate([100,50,200]);
+  document.getElementById('btnRealtime').classList.remove('active');
+  document.getElementById('btnRealtime').textContent='🔴 Avvia scansione';
+  document.getElementById('scanDot').className='dot done';
+  document.getElementById('scanLabel').textContent='COMPLETO';
+  document.getElementById('scanLine').classList.remove('active');
+  document.getElementById('guide').classList.remove('detecting');
+  document.getElementById('guide').classList.add('done');
+  document.getElementById('rtSubtitle').textContent='✅ Tutti i campi verificati in '+totalSamples+' campioni!';
+  const b=document.getElementById('completionBanner');
+  b.querySelector('h3').textContent='✅ Scansione completata!';
+  document.getElementById('completionText').textContent='Tutti i campi certi dopo '+totalSamples+' scansioni. Salva il contatto.';
+  b.style.display='block';b.scrollIntoView({behavior:'smooth',block:'nearest'});
+  document.getElementById('globalProgressFill').style.width='100%';
+  document.getElementById('globalProgressFill').className='fill high';
 }
 
-function updateExportState() { document.getElementById('emptyExport').style.display = contacts.length === 0 ? 'block' : 'none'; }
-
-// ========== SETTINGS ==========
-function initSettings() {
-  document.getElementById('ocrLang').value = settings.lang;
-  document.getElementById('webhookUrl').value = settings.webhookUrl || '';
-  document.getElementById('webhookAuth').value = settings.webhookAuth || '';
-  document.getElementById('scanSpeed').value = settings.scanSpeed || 'normal';
-  document.getElementById('certThreshold').value = String(settings.certThreshold || 85);
-
-  document.getElementById('btnSaveSettings').addEventListener('click', () => {
-    const newLang = document.getElementById('ocrLang').value;
-    const langChanged = newLang !== settings.lang;
-    settings.lang = newLang;
-    settings.webhookUrl = document.getElementById('webhookUrl').value.trim();
-    settings.webhookAuth = document.getElementById('webhookAuth').value.trim();
-    settings.scanSpeed = document.getElementById('scanSpeed').value;
-    settings.certThreshold = parseInt(document.getElementById('certThreshold').value) || 85;
-    saveState();
-    toast('Impostazioni salvate', 'success');
-    if (langChanged && workerReady) {
-      if (realtimeActive) stopRealtimeScan();
-      workerReady = false;
-      worker.terminate().then(initOCR);
-    }
-  });
-
-  document.getElementById('btnClearAll').addEventListener('click', () => {
-    if (!confirm('Eliminare TUTTI i contatti?')) return;
-    contacts = []; saveState(); toast('Tutti i contatti eliminati', 'success');
-  });
+// ==================== UI ====================
+function refreshFieldUI(key){
+  const st=fieldState[key],row=document.getElementById('rtf_'+key),wrap=row.querySelector('.rt-value-wrap'),conf=document.getElementById('rtc_'+key),lock=document.getElementById('rtl_'+key);
+  if(!wrap.querySelector('input')){const v=document.getElementById('rtv_'+key);if(st.bestValue){v.textContent=st.bestValue;v.className='rt-value';}else{v.textContent='—';v.className='rt-value empty';}}
+  conf.textContent=st.confidence+'%';
+  conf.className=st.locked?'rt-confidence certain':st.confidence>=70?'rt-confidence high':st.confidence>=40?'rt-confidence medium':'rt-confidence low';
+  lock.textContent=st.locked?'🔒':'🔓';lock.className=st.locked?'rt-lock locked':'rt-lock';
+  row.classList.toggle('locked',st.locked);
+}
+function refreshAllFieldsUI(){FIELD_CONFIG.forEach(f=>refreshFieldUI(f.key));}
+function updateGlobalProgress(){
+  const det=FIELD_CONFIG.filter(f=>fieldState[f.key].bestValue);
+  if(!det.length){document.getElementById('globalProgressFill').style.width='0';return;}
+  const lk=det.filter(f=>fieldState[f.key].locked).length;
+  const p=Math.round(lk/det.length*100);
+  const fill=document.getElementById('globalProgressFill');
+  fill.style.width=p+'%';fill.className=p>=80?'fill high':'fill';
+  document.getElementById('realtimePanel').classList.toggle('has-data',det.length>0);
+  document.getElementById('realtimePanel').classList.toggle('all-done',p===100);
 }
 
-function updateStats() { document.getElementById('statContacts').textContent = contacts.length; document.getElementById('statScans').textContent = scanCount; }
+// ==================== OVERLAY ====================
+function drawOverlayFromSlots(words,roiX,roiY,vw,vh){
+  const c=document.getElementById('overlay'),v=document.getElementById('video'),r=v.getBoundingClientRect();
+  c.width=r.width*devicePixelRatio;c.height=r.height*devicePixelRatio;c.style.width=r.width+'px';c.style.height=r.height+'px';
+  const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.scale(devicePixelRatio,devicePixelRatio);
+  const sx=r.width/vw,sy=r.height/vh;
+  if(words)words.forEach(w=>{if(!w.text||!w.text.trim())return;const b=w.bbox,cf=w.confidence;const x=(b.x0/captureCanvas.width*vw*0.85+roiX)*sx,y=(b.y0/captureCanvas.height*vh*0.6+roiY)*sy;const ww=(b.x1-b.x0)/captureCanvas.width*vw*0.85*sx,hh=(b.y1-b.y0)/captureCanvas.height*vh*0.6*sy;ctx.strokeStyle=cf>80?'rgba(34,197,94,0.6)':cf>50?'rgba(245,158,11,0.6)':'rgba(239,68,68,0.5)';ctx.fillStyle=cf>80?'rgba(34,197,94,0.08)':cf>50?'rgba(245,158,11,0.08)':'rgba(239,68,68,0.06)';ctx.lineWidth=1;ctx.fillRect(x,y,ww,hh);ctx.strokeRect(x,y,ww,hh);});
+}
+function clearOverlay(){const c=document.getElementById('overlay');c.getContext('2d').clearRect(0,0,c.width,c.height);}
 
-// ========== UTILS ==========
-function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-function csvEsc(v) { if (!v) return ''; return (v.includes(',') || v.includes('"') || v.includes('\n')) ? '"' + v.replace(/"/g, '""') + '"' : v; }
-
-function contactToVcard(c) {
-  const l = ['BEGIN:VCARD', 'VERSION:3.0'];
-  if (c.name) { const p = c.name.split(/\s+/); const last = p.pop() || ''; l.push('N:' + last + ';' + p.join(' ') + ';;;', 'FN:' + c.name); }
-  if (c.company) l.push('ORG:' + c.company);
-  if (c.role) l.push('TITLE:' + c.role);
-  if (c.email) l.push('EMAIL;TYPE=WORK:' + c.email);
-  if (c.phone) l.push('TEL;TYPE=WORK,VOICE:' + c.phone);
-  if (c.web) l.push('URL:' + c.web);
-  if (c.address) l.push('ADR;TYPE=WORK:;;' + c.address + ';;;;');
-  if (c.piva) l.push('NOTE:P.IVA: ' + c.piva + (c.cf ? ' | C.F.: ' + c.cf : ''));
-  else if (c.cf) l.push('NOTE:C.F.: ' + c.cf);
-  l.push('END:VCARD');
-  return l.join('\r\n');
+// ==================== SAVE ====================
+function saveContactFromRT(){
+  const contact={id:Date.now().toString(36)+Math.random().toString(36).substr(2,5),createdAt:new Date().toISOString()};
+  FIELD_CONFIG.forEach(f=>{const inp=document.getElementById('rti_'+f.key);contact[f.key]=inp?inp.value.trim():(fieldState[f.key].bestValue||'');});
+  if(!contact.name&&!contact.email&&!contact.phone){toast('Dati insufficienti','error');return;}
+  contacts.push(contact);saveState();toast('✅ Salvato: '+(contact.name||contact.email),'success');
+  if(navigator.vibrate)navigator.vibrate(200);resetAndRestart();
+}
+function resetAndRestart(){
+  resetAll();buildRealtimeFieldsUI();
+  document.getElementById('completionBanner').style.display='none';
+  document.getElementById('realtimePanel').style.display='none';
+  document.getElementById('scanIndicator').style.display='none';
+  document.getElementById('scanCounter').style.display='none';
+  document.getElementById('guide').classList.remove('done','detecting');
+  clearOverlay();
+  document.getElementById('btnRealtime').classList.remove('active');
+  document.getElementById('btnRealtime').textContent='🔴 Avvia scansione';
 }
 
-function downloadFile(content, filename, mime) {
-  const blob = new Blob([content], { type: mime + ';charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+// ==================== UPLOAD MODE ====================
+function processImageFile(f){const r=new FileReader();r.onload=e=>processImage(e.target.result);r.readAsDataURL(f);}
+async function processImage(du){
+  if(!workerReady){toast('OCR non pronto','error');return;}
+  document.getElementById('realtimePanel').style.display='none';document.getElementById('completionBanner').style.display='none';
+  const pv=document.getElementById('imagePreview'),s=document.getElementById('ocrStatus'),rc=document.getElementById('resultCard');
+  pv.src=du;pv.style.display='block';rc.style.display='none';s.style.display='flex';s.className='ocr-status processing';
+  s.innerHTML='<div class="spinner"></div><span>Analisi...</span><div class="progress-bar"><div class="fill" id="ocrProgress" style="width:0"></div></div>';
+  try{const{data}=await worker.recognize(du);scanCount++;saveState();if(!data.text||!data.text.trim()){s.className='ocr-status error';s.innerHTML='<span>⚠️ Nessun testo.</span>';return;}
+  const lines=data.text.split('\n').map(l=>l.trim()).filter(l=>l.length>1);const res={name:'',company:'',role:'',email:'',phone:'',web:'',piva:'',cf:'',address:''};const used=new Set();
+  for(let i=0;i<lines.length;i++){const m=lines[i].match(RE_EMAIL);if(m){res.email=m[0];used.add(i);break;}}
+  for(let i=0;i<lines.length;i++){if(used.has(i))continue;const m=lines[i].match(RE_WEB);if(m&&!m[0].includes('@')&&m[0].includes('.')){res.web=m[0];used.add(i);break;}}
+  for(let i=0;i<lines.length;i++){if(used.has(i))continue;const m=lines[i].match(RE_CF);if(m){res.cf=m[0].toUpperCase();used.add(i);break;}}
+  for(let i=0;i<lines.length;i++){if(used.has(i))continue;const m=lines[i].match(RE_PIVA);if(m){res.piva=m[1]||m[0];used.add(i);break;}}
+  for(let i=0;i<lines.length;i++){if(used.has(i))continue;const m=lines[i].match(RE_PHONE);if(m&&m[0].replace(/\D/g,'').length>=6){res.phone=m[0];used.add(i);break;}}
+  for(let i=0;i<lines.length;i++){if(used.has(i))continue;const m=lines[i].match(RE_ADDRESS);if(m){res.address=lines[i];used.add(i);break;}}
+  for(let i=0;i<lines.length;i++){if(used.has(i))continue;if(ROLES.some(r=>lines[i].toLowerCase().includes(r))){res.role=lines[i];used.add(i);break;}}
+  const rem=[];for(let i=0;i<lines.length;i++){if(!used.has(i)&&lines[i].length>1)rem.push(lines[i]);}
+  for(const l of rem){const lr=(l.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙ]/g)||[]).length/l.length;if(lr>.7&&l.length<50){if(!res.name){const w=l.split(/\s+/);if(w.length>=2&&w.length<=5)res.name=l;else if(!res.company)res.company=l;}else if(!res.company)res.company=l;}}
+  if(!res.name&&rem.length>0)res.name=rem[0];
+  ['fName','fCompany','fRole','fEmail','fPhone','fWeb','fPiva','fCf','fAddress'].forEach((id,i)=>{document.getElementById(id).value=Object.values(res)[i];});
+  document.getElementById('fRawText').value=data.text;rc.style.display='block';
+  s.className='ocr-status ready';s.innerHTML='<span>✅ '+data.lines.length+' righe, '+Math.round(data.confidence)+'%</span>';setTimeout(()=>{s.style.display='none';},3000);
+  }catch(e){s.className='ocr-status error';s.innerHTML='<span>❌ '+esc(e.message)+'</span>';}
 }
-
-function hashCode(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return h; }
-
-function toast(msg, type = 'success') {
-  const c = document.getElementById('toasts');
-  const el = document.createElement('div'); el.className = 'toast ' + type; el.textContent = msg;
-  c.appendChild(el);
-  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3500);
+function saveContactFromUpload(){
+  const c={id:Date.now().toString(36)+Math.random().toString(36).substr(2,5),name:document.getElementById('fName').value.trim(),company:document.getElementById('fCompany').value.trim(),role:document.getElementById('fRole').value.trim(),email:document.getElementById('fEmail').value.trim(),phone:document.getElementById('fPhone').value.trim(),web:document.getElementById('fWeb').value.trim(),piva:document.getElementById('fPiva').value.trim(),cf:document.getElementById('fCf').value.trim(),address:document.getElementById('fAddress').value.trim(),createdAt:new Date().toISOString()};
+  if(!c.name&&!c.email&&!c.phone){toast('Compila almeno un campo','error');return;}
+  contacts.push(c);saveState();clearResult();toast('Salvato: '+(c.name||c.email),'success');
 }
+function clearResult(){document.getElementById('resultCard').style.display='none';document.getElementById('imagePreview').style.display='none';['fName','fCompany','fRole','fEmail','fPhone','fWeb','fPiva','fCf','fAddress','fRawText'].forEach(id=>document.getElementById(id).value='');}
+
+// ==================== CONTACTS, EXPORT, SETTINGS ====================
+function initContacts(){document.getElementById('searchInput').addEventListener('input',renderContacts);}
+function renderContacts(){const q=document.getElementById('searchInput').value.toLowerCase(),l=document.getElementById('contactList'),e=document.getElementById('emptyContacts');const f=contacts.filter(c=>!q||[c.name,c.company,c.email,c.phone,c.role].some(v=>v&&v.toLowerCase().includes(q)));if(!f.length){l.innerHTML='';e.style.display='block';return;}e.style.display='none';l.innerHTML=f.map(c=>{const ini=(c.name||c.email||'?').substring(0,2).toUpperCase();const cols=['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#22c55e','#06b6d4'];const col=cols[Math.abs(hashCode(c.id))%cols.length];return`<div class="contact-item"><div class="contact-avatar" style="background:${col}">${esc(ini)}</div><div class="contact-info"><div class="name">${esc(c.name||'Senza nome')}</div><div class="detail">${esc([c.role,c.company].filter(Boolean).join(' — ')||c.email||c.phone||'')}</div></div><div class="contact-actions"><button onclick="exportSingleVcard('${c.id}')">📋</button><button onclick="deleteContact('${c.id}')">🗑️</button></div></div>`;}).join('');}
+function deleteContact(id){if(!confirm('Eliminare?'))return;contacts=contacts.filter(c=>c.id!==id);saveState();renderContacts();toast('Eliminato','success');}
+function exportSingleVcard(id){const c=contacts.find(x=>x.id===id);if(!c)return;downloadFile(contactToVcard(c),(c.name||'contatto')+'.vcf','text/vcard');toast('vCard scaricata','success');}
+function initExport(){
+  document.getElementById('exportVcard').addEventListener('click',()=>{if(!contacts.length){toast('Nessun contatto','error');return;}downloadFile(contacts.map(contactToVcard).join('\n'),'contatti.vcf','text/vcard');toast(contacts.length+' esportati','success');});
+  document.getElementById('exportCsv').addEventListener('click',()=>{if(!contacts.length){toast('Nessun contatto','error');return;}const h=['Nome','Azienda','Ruolo','Email','Telefono','Web','P.IVA','C.F.','Indirizzo','Data'];const rows=contacts.map(c=>[c.name,c.company,c.role,c.email,c.phone,c.web,c.piva,c.cf,c.address,c.createdAt].map(csvEsc));downloadFile('\ufeff'+[h.join(','),...rows.map(r=>r.join(','))].join('\n'),'contatti.csv','text/csv');toast(contacts.length+' esportati','success');});
+  document.getElementById('exportJson').addEventListener('click',()=>{if(!contacts.length){toast('Nessun contatto','error');return;}downloadFile(JSON.stringify(contacts,null,2),'contatti.json','application/json');toast(contacts.length+' esportati','success');});
+  document.getElementById('exportWebhook').addEventListener('click',async()=>{if(!contacts.length){toast('Nessun contatto','error');return;}if(!settings.webhookUrl){toast('Configura Webhook','error');return;}try{const h={'Content-Type':'application/json'};if(settings.webhookAuth)h['Authorization']=settings.webhookAuth;const r=await fetch(settings.webhookUrl,{method:'POST',headers:h,body:JSON.stringify({contacts})});toast(r.ok?'Inviati!':'Errore: '+r.status,r.ok?'success':'error');}catch(e){toast('Errore: '+e.message,'error');}});
+}
+function updateExportState(){document.getElementById('emptyExport').style.display=contacts.length===0?'block':'none';}
+function initSettings(){
+  document.getElementById('ocrLang').value=settings.lang;document.getElementById('webhookUrl').value=settings.webhookUrl||'';document.getElementById('webhookAuth').value=settings.webhookAuth||'';document.getElementById('certThreshold').value=String(settings.certThreshold||85);document.getElementById('captureRes').value=String(settings.captureRes||480);
+  document.getElementById('btnSaveSettings').addEventListener('click',()=>{const nl=document.getElementById('ocrLang').value;const lc=nl!==settings.lang;settings.lang=nl;settings.webhookUrl=document.getElementById('webhookUrl').value.trim();settings.webhookAuth=document.getElementById('webhookAuth').value.trim();settings.certThreshold=parseInt(document.getElementById('certThreshold').value)||85;settings.captureRes=parseInt(document.getElementById('captureRes').value)||480;saveState();toast('Salvate','success');if(lc&&workerReady){if(realtimeActive)stopScan();workerReady=false;worker.terminate().then(initOCR);}});
+  document.getElementById('btnClearAll').addEventListener('click',()=>{if(!confirm('Eliminare TUTTI?'))return;contacts=[];saveState();toast('Eliminati','success');});
+}
+function updateStats(){document.getElementById('statContacts').textContent=contacts.length;document.getElementById('statScans').textContent=scanCount;}
+
+// ==================== UTILS ====================
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function csvEsc(v){if(!v)return'';return(v.includes(',')||v.includes('"')||v.includes('\n'))?'"'+v.replace(/"/g,'""')+'"':v;}
+function contactToVcard(c){const l=['BEGIN:VCARD','VERSION:3.0'];if(c.name){const p=c.name.split(/\s+/);const last=p.pop()||'';l.push('N:'+last+';'+p.join(' ')+';;;','FN:'+c.name);}if(c.company)l.push('ORG:'+c.company);if(c.role)l.push('TITLE:'+c.role);if(c.email)l.push('EMAIL;TYPE=WORK:'+c.email);if(c.phone)l.push('TEL;TYPE=WORK,VOICE:'+c.phone);if(c.web)l.push('URL:'+c.web);if(c.address)l.push('ADR;TYPE=WORK:;;'+c.address+';;;;');if(c.piva)l.push('NOTE:P.IVA: '+c.piva+(c.cf?' | C.F.: '+c.cf:''));else if(c.cf)l.push('NOTE:C.F.: '+c.cf);l.push('END:VCARD');return l.join('\r\n');}
+function downloadFile(content,filename,mime){const blob=new Blob([content],{type:mime+';charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+function hashCode(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+function toast(msg,type='success'){const c=document.getElementById('toasts');const el=document.createElement('div');el.className='toast '+type;el.textContent=msg;c.appendChild(el);setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),300);},3500);}
 </script>
 </body>
 </html>
