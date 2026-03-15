@@ -303,12 +303,40 @@ function processFile(file){var reader=new FileReader();reader.onload=function(e)
 function initRemoteMode(){
   sessionId=Math.random().toString(36).substr(2,6).toUpperCase();
   document.getElementById('sessionCode').textContent=sessionId;
-  var baseUrl=location.origin+'/phone.html?s='+sessionId;
+  var baseUrl=location.origin+'/phone?s='+sessionId;
   document.getElementById('qrUrl').textContent=baseUrl;
-  // Load QR library and generate
-  if(window.QRCode){QRCode.toCanvas(document.getElementById('qrCanvas'),baseUrl,{width:200,margin:2,color:{dark:'#000',light:'#fff'}});}
-  else{var sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';sc.onload=function(){QRCode.toCanvas(document.getElementById('qrCanvas'),baseUrl,{width:200,margin:2,color:{dark:'#000',light:'#fff'}});};document.head.appendChild(sc);}
+  generateQR(baseUrl);
   setupPeer();
+}
+function generateQR(url){
+  var canvas=document.getElementById('qrCanvas');
+  function doGenerate(){
+    try{
+      QRCode.toCanvas(canvas,url,{width:200,margin:2,color:{dark:'#000000',light:'#ffffff'}},function(err){
+        if(err){console.error('QR toCanvas error:',err);generateQRFallback(url);}
+      });
+    }catch(e){console.error('QR generation error:',e);generateQRFallback(url);}
+  }
+  if(window.QRCode&&typeof QRCode.toCanvas==='function'){doGenerate();}
+  else{
+    var sc=document.createElement('script');
+    sc.src='https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js';
+    sc.onload=function(){
+      if(window.QRCode&&typeof QRCode.toCanvas==='function'){doGenerate();}
+      else{generateQRFallback(url);}
+    };
+    sc.onerror=function(){generateQRFallback(url);};
+    document.head.appendChild(sc);
+  }
+}
+function generateQRFallback(url){
+  // Fallback: use Google Charts QR API as image
+  var canvas=document.getElementById('qrCanvas');
+  var img=new Image();
+  img.crossOrigin='anonymous';
+  img.onload=function(){canvas.width=200;canvas.height=200;canvas.getContext('2d').drawImage(img,0,0,200,200);};
+  img.onerror=function(){var ctx=canvas.getContext('2d');canvas.width=200;canvas.height=200;ctx.fillStyle='#fff';ctx.fillRect(0,0,200,200);ctx.fillStyle='#333';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('QR non disponibile',100,90);ctx.fillText('Usa il link sotto',100,110);};
+  img.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(url);
 }
 
 function setupPeer(){
