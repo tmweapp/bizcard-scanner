@@ -278,8 +278,8 @@ const FIELD_CONFIG = [
 ];
 let fieldState = {};
 
-// Slot Y-proximity threshold for matching (normalized 0-1)
-const SLOT_Y_MATCH = 0.08;
+// Slot Y-proximity threshold for matching (normalized 0-1) — wider to avoid fragmentation
+const SLOT_Y_MATCH = 0.12;
 
 function resetAll() {
   cardSlots = [];
@@ -374,16 +374,16 @@ function classifyLine(text){
   const web=t.match(RE_WEB);
   if(web && !web[0].includes('@') && web[0].includes('.')) return 'web';
   // Improved name vs company detection
-  const lr=(t.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙ]/g)||[]).length/t.length;
-  if(lr<.6) return null;
-  // Check explicit company indicators first
+  const lr=(t.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙ]/g)||[]).length/Math.max(t.length,1);
+  // Check explicit company indicators even with low letter ratio
   if(isCompanyName(t)) return 'company';
+  if(lr<.5) return null;
   // Check person name pattern (Title Case, 2-4 words, no company keywords)
   if(isPersonName(t)) return 'name';
-  // Fallback heuristics
+  // Fallback heuristics — more relaxed to catch more text
   const words=t.split(/\s+/);
-  if(lr>.7 && words.length>=2 && words.length<=3 && t.length<40 && !/\d/.test(t)) return 'name';
-  if(lr>.6 && t.length<60) return 'company';
+  if(lr>.65 && words.length>=2 && words.length<=3 && t.length<40 && !/\d/.test(t)) return 'name';
+  if(lr>.5 && t.length<60) return 'company';
   return null;
 }
 
@@ -587,8 +587,8 @@ function processLinesWithSpatial(lines,roiX,roiY,vw,vh){
       if(!matched.evidence[norm]) matched.evidence[norm]={count:0,bestRaw:cleanValue};
       matched.evidence[norm].count++;
       if(cleanValue.length>matched.evidence[norm].bestRaw.length) matched.evidence[norm].bestRaw=cleanValue;
-      // Update field type if better classification
-      if(fieldType&&!matched.fieldType) matched.fieldType=fieldType;
+      // Update field type: always apply classification (allows reclassification as text improves)
+      if(fieldType) matched.fieldType=fieldType;
       // Recalculate best
       recalcSlot(matched);
     }else{
@@ -611,13 +611,18 @@ function processLinesWithSpatial(lines,roiX,roiY,vw,vh){
 
 function recalcSlot(slot){
   const threshold=settings.certThreshold||85;
-  let bestN='',bestC=0,bestR='';
+  let bestN='',bestC=0,bestR='',secondC=0;
   const total=Object.values(slot.evidence).reduce((s,v)=>s+v.count,0);
   for(const[n,info]of Object.entries(slot.evidence)){
-    if(info.count>bestC){bestC=info.count;bestN=n;bestR=info.bestRaw;}
+    if(info.count>bestC){secondC=bestC;bestC=info.count;bestN=n;bestR=info.bestRaw;}
+    else if(info.count>secondC){secondC=info.count;}
   }
   slot.bestValue=bestR;
-  slot.confidence=total>0?Math.round((bestC/total)*100):0;
+  // Confidence: how dominant is the best reading vs all others
+  // Use max(bestC/total, bestC/(bestC+secondC)) so minor OCR variations don't tank confidence
+  const rawConf=total>0?bestC/total:0;
+  const relConf=(bestC+secondC)>0?bestC/(bestC+secondC):0;
+  slot.confidence=Math.round(Math.max(rawConf,relConf)*100);
   if(slot.confidence>=threshold&&bestC>=3&&!slot.locked){
     slot.locked=true;
   }
@@ -627,31 +632,45 @@ function recalcSlot(slot){
 function deriveFieldsFromSlots(){
   const threshold=settings.certThreshold||85;
 
-  // For each field type, find the best matching slot
+  // Step 1: Re-classify any unclassified slots that now have a bestValue
+  // This ensures classification runs continuously as OCR improves text
+  cardSlots.forEach(s=>{
+    if(!s.fieldType && s.bestValue){
+      const ft=classifyLine(s.bestValue);
+      if(ft) s.fieldType=ft;
+    }
+  });
+
+  // Step 2: For each field type, IMMEDIATELY assign the best matching slot
+  // Don't wait for high confidence — show data as soon as it's detected
   FIELD_CONFIG.forEach(fc=>{
     if(fieldState[fc.key].manuallyEdited)return;
 
     // Find slots classified as this field type
     const candidates=cardSlots.filter(s=>s.fieldType===fc.key);
-    if(candidates.length===0)return;
+    if(candidates.length===0){
+      // Don't clear existing values — keep what we had
+      return;
+    }
 
     // Pick the one with highest confidence
     const best=candidates.reduce((a,b)=>a.confidence>b.confidence?a:b);
 
+    // ALWAYS update the field — even at 0% confidence — so user sees data immediately
     fieldState[fc.key].bestValue=best.bestValue;
     fieldState[fc.key].confidence=best.confidence;
     fieldState[fc.key].locked=best.locked;
   });
 
-  // Smart name/company disambiguation for unclassified slots
+  // Step 3: Smart name/company disambiguation for unclassified slots
+  // Score ALL unclassified slots with text, not just when fields are empty
   const unclassified=cardSlots.filter(s=>!s.fieldType&&s.bestValue);
-  if(unclassified.length>0 && (!fieldState.name.bestValue || !fieldState.company.bestValue)){
-    // Score each unclassified slot for how likely it is a person name
+  if(unclassified.length>0){
     const scored=unclassified.map(s=>{
       const v=s.bestValue;
       let nameScore=0;
-      // Title Case pattern: strong name signal
       const words=v.split(/\s+/);
+      // Title Case pattern: strong name signal
       const titleCase=words.length>=2 && words.length<=4 && words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ][a-zàèéìòùáóú']+$/.test(w));
       if(titleCase) nameScore+=5;
       // ALL CAPS short (2-3 words) can be name
@@ -665,26 +684,25 @@ function deriveFieldsFromSlots(){
       // Company keywords → definitely not a name
       const low=v.toLowerCase();
       if(COMPANY_KEYWORDS.some(kw=>low.includes(kw))) nameScore-=10;
-      // Has & or special business chars → company
       if(/[&]/.test(v)) nameScore-=5;
       return {slot:s, nameScore};
     });
     scored.sort((a,b)=>b.nameScore-a.nameScore);
 
-    // Assign the highest-scoring as name (if score > 0)
-    if(!fieldState.name.bestValue && !fieldState.name.manuallyEdited){
+    // Assign best as name (even if field already has a lower-confidence value)
+    if(!fieldState.name.manuallyEdited){
       const best=scored.find(s=>s.nameScore>0);
-      if(best){
+      if(best && (!fieldState.name.bestValue || best.slot.confidence>fieldState.name.confidence)){
         best.slot.fieldType='name';
         fieldState.name.bestValue=best.slot.bestValue;
         fieldState.name.confidence=best.slot.confidence;
         fieldState.name.locked=best.slot.locked;
       }
     }
-    // Assign remaining as company
-    if(!fieldState.company.bestValue && !fieldState.company.manuallyEdited){
+    // Assign remaining best as company
+    if(!fieldState.company.manuallyEdited){
       const remaining=scored.find(s=>!s.slot.fieldType);
-      if(remaining){
+      if(remaining && (!fieldState.company.bestValue || remaining.slot.confidence>fieldState.company.confidence)){
         remaining.slot.fieldType='company';
         fieldState.company.bestValue=remaining.slot.bestValue;
         fieldState.company.confidence=remaining.slot.confidence;
