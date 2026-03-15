@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BizCard — Scanner Remoto</title>
+<meta name="theme-color" content="#0f172a">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--fg:#f8fafc;--fg2:#94a3b8;--green:#22c55e;--red:#ef4444;--accent:#3b82f6;--orange:#f59e0b}
+html{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--fg)}
+body{min-height:100dvh;display:flex;flex-direction:column}
+
+.top-bar{background:var(--bg2);padding:12px 16px;text-align:center;border-bottom:1px solid var(--bg3)}
+.top-bar h1{font-size:1rem;font-weight:600}
+.top-bar .sub{font-size:.75rem;color:var(--fg2);margin-top:2px}
+
+.status-bar{padding:10px 16px;display:flex;align-items:center;gap:8px;font-size:.85rem;background:var(--bg2);border-bottom:1px solid var(--bg3)}
+.status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.status-dot.connected{background:var(--green);box-shadow:0 0 8px rgba(34,197,94,.5)}
+.status-dot.connecting{background:var(--orange);animation:pulse 1s infinite}
+.status-dot.error{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.camera-area{flex:1;position:relative;background:#000;overflow:hidden}
+.camera-area video{width:100%;height:100%;object-fit:cover}
+.camera-area .frame-guide{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:88%;height:65%;border:2px solid rgba(255,255,255,.3);border-radius:12px;pointer-events:none}
+.camera-area .frame-guide.flash{border-color:var(--green);box-shadow:0 0 30px rgba(34,197,94,.4);transition:all .2s}
+
+.bottom-bar{background:var(--bg2);padding:16px;display:flex;align-items:center;justify-content:center;gap:16px;border-top:1px solid var(--bg3)}
+.btn-capture{width:72px;height:72px;border-radius:50%;border:4px solid var(--fg);background:transparent;cursor:pointer;position:relative;transition:all .15s}
+.btn-capture:active{transform:scale(.9)}
+.btn-capture::after{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--fg);transition:all .15s}
+.btn-capture:disabled{opacity:.3;cursor:not-allowed}
+.btn-capture.sending::after{background:var(--orange);animation:pulse .5s infinite}
+
+.btn-flip{background:var(--bg3);border:none;color:var(--fg);width:44px;height:44px;border-radius:50%;font-size:1.2rem;cursor:pointer}
+
+.photo-count{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);border-radius:20px;padding:6px 14px;font-size:.8rem;z-index:10;color:var(--fg)}
+
+.sent-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:var(--green);color:#fff;padding:16px 28px;border-radius:12px;font-size:1.1rem;font-weight:600;z-index:100;transition:transform .2s ease;pointer-events:none}
+.sent-toast.show{transform:translate(-50%,-50%) scale(1)}
+
+.error-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;flex:1;color:var(--fg2);gap:12px}
+.error-screen h2{color:var(--red);font-size:1.1rem}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>📸 BizCard Scanner</h1>
+  <div class="sub">Scansione remota</div>
+</div>
+
+<div class="status-bar" id="statusBar">
+  <div class="status-dot connecting" id="statusDot"></div>
+  <span id="statusText">Connessione al desktop...</span>
+</div>
+
+<div class="camera-area" id="cameraArea">
+  <video id="video" autoplay playsinline muted></video>
+  <div class="frame-guide" id="frameGuide"></div>
+  <div class="photo-count" id="photoCount" style="display:none">0 foto inviate</div>
+</div>
+
+<div class="bottom-bar">
+  <button class="btn-flip" id="btnFlip">🔄</button>
+  <button class="btn-capture" id="btnCapture" disabled></button>
+  <div style="width:44px"></div><!-- spacer -->
+</div>
+
+<div class="sent-toast" id="sentToast">✅ Foto inviata!</div>
+
+<div class="error-screen" id="errorScreen" style="display:none">
+  <h2 id="errorTitle">Errore</h2>
+  <p id="errorMsg">Sessione non trovata</p>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(function(){
+  // --- Get session from URL ---
+  var params = new URLSearchParams(location.search);
+  var sessionId = params.get('s') || params.get('session');
+
+  if(!sessionId){
+    showError('Sessione non trovata', 'Scansiona il QR code dal desktop per collegarti.');
+    return;
+  }
+
+  var peer = null;
+  var conn = null;
+  var facingMode = 'environment';
+  var currentStream = null;
+  var photosSent = 0;
+  var captureCanvas = document.createElement('canvas');
+  var captureCtx = captureCanvas.getContext('2d');
+
+  // --- Camera ---
+  async function startCamera(){
+    var video = document.getElementById('video');
+    try{
+      if(currentStream) currentStream.getTracks().forEach(function(t){t.stop();});
+      var s = await navigator.mediaDevices.getUserMedia({
+        video:{facingMode:facingMode, width:{ideal:1920}, height:{ideal:1440}},
+        audio:false
+      });
+      video.srcObject = s;
+      currentStream = s;
+    }catch(e){
+      showError('Camera non disponibile', e.message);
+    }
+  }
+
+  document.getElementById('btnFlip').addEventListener('click', function(){
+    facingMode = facingMode==='environment' ? 'user' : 'environment';
+    startCamera();
+  });
+
+  // --- PeerJS Connection ---
+  function connectToDesktop(){
+    setStatus('connecting', 'Connessione al desktop...');
+
+    peer = new Peer();
+
+    peer.on('open', function(myId){
+      // Connect to the desktop peer
+      conn = peer.connect('bizcard-' + sessionId, {reliable:true});
+
+      conn.on('open', function(){
+        setStatus('connected', 'Connesso al desktop ✓');
+        document.getElementById('btnCapture').disabled = false;
+      });
+
+      conn.on('close', function(){
+        setStatus('error', 'Desktop disconnesso');
+        document.getElementById('btnCapture').disabled = true;
+        // Try to reconnect after 3 seconds
+        setTimeout(function(){ connectToDesktop(); }, 3000);
+      });
+
+      conn.on('error', function(e){
+        setStatus('error', 'Errore: ' + e.type);
+      });
+
+      // Listen for messages from desktop
+      conn.on('data', function(data){
+        if(data && data.type === 'ack'){
+          showSentToast();
+        }
+      });
+    });
+
+    peer.on('error', function(e){
+      if(e.type === 'peer-unavailable'){
+        setStatus('error', 'Desktop non trovato. Assicurati che sia aperto.');
+        setTimeout(function(){ connectToDesktop(); }, 5000);
+      }else{
+        setStatus('error', 'Errore PeerJS: ' + e.type);
+        setTimeout(function(){ connectToDesktop(); }, 5000);
+      }
+    });
+
+    peer.on('disconnected', function(){
+      setStatus('connecting', 'Riconnessione...');
+      try{ peer.reconnect(); }catch(e){}
+    });
+  }
+
+  // --- Capture Photo ---
+  document.getElementById('btnCapture').addEventListener('click', function(){
+    if(!conn || !conn.open) return;
+
+    var video = document.getElementById('video');
+    if(!video.srcObject || video.videoWidth === 0) return;
+
+    var btn = document.getElementById('btnCapture');
+    btn.classList.add('sending');
+    btn.disabled = true;
+
+    // Flash effect
+    var guide = document.getElementById('frameGuide');
+    guide.classList.add('flash');
+    setTimeout(function(){guide.classList.remove('flash');}, 300);
+
+    // Capture at good resolution (max 1600px wide)
+    var scale = Math.min(1600 / video.videoWidth, 1);
+    captureCanvas.width = Math.round(video.videoWidth * scale);
+    captureCanvas.height = Math.round(video.videoHeight * scale);
+    captureCtx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+
+    // Convert to JPEG base64
+    var dataUrl = captureCanvas.toDataURL('image/jpeg', 0.85);
+    var base64 = dataUrl.split(',')[1];
+
+    // Send to desktop via WebRTC
+    try{
+      conn.send({
+        type: 'photo',
+        image: base64,
+        width: captureCanvas.width,
+        height: captureCanvas.height,
+        timestamp: Date.now()
+      });
+
+      photosSent++;
+      document.getElementById('photoCount').style.display = 'block';
+      document.getElementById('photoCount').textContent = photosSent + ' foto inviat' + (photosSent===1?'a':'e');
+      showSentToast();
+    }catch(e){
+      setStatus('error', 'Invio fallito: ' + e.message);
+    }
+
+    btn.classList.remove('sending');
+    btn.disabled = false;
+  });
+
+  // --- Helpers ---
+  function setStatus(state, text){
+    document.getElementById('statusDot').className = 'status-dot ' + state;
+    document.getElementById('statusText').textContent = text;
+  }
+
+  function showSentToast(){
+    var t = document.getElementById('sentToast');
+    t.classList.add('show');
+    setTimeout(function(){t.classList.remove('show');}, 1200);
+  }
+
+  function showError(title, msg){
+    document.getElementById('cameraArea').style.display = 'none';
+    document.querySelector('.bottom-bar').style.display = 'none';
+    var es = document.getElementById('errorScreen');
+    es.style.display = 'flex';
+    document.getElementById('errorTitle').textContent = title;
+    document.getElementById('errorMsg').textContent = msg;
+  }
+
+  // --- Start ---
+  startCamera();
+  connectToDesktop();
+
+})();
+</script>
+</body>
+</html>
