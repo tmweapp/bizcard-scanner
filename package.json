@@ -1,0 +1,6 @@
+{
+  "name": "bizcard-scanner",
+  "version": "2.0.0",
+  "description": "Scansiona biglietti da visita con OCR in tempo reale",
+  "private": true
+}
