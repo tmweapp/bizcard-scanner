@@ -97,6 +97,14 @@ main{flex:1;padding:16px;max-width:900px;margin:0 auto;width:100%}
 .card-minimap .minimap-slot.locked{border-left-color:var(--green);background:rgba(34,197,94,.1)}
 .card-minimap-label{font-size:.65rem;color:var(--fg3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
 
+/* Debug panel */
+.debug-panel{background:#1a1a2e;border:1px solid #e94560;border-radius:8px;padding:10px;margin-bottom:12px;font-family:monospace;font-size:.65rem;color:#0ff;max-height:200px;overflow-y:auto;display:none}
+.debug-panel.visible{display:block}
+.debug-panel .debug-line{margin-bottom:3px;border-bottom:1px solid #333;padding-bottom:3px}
+.debug-panel .debug-slot{color:#0f0}
+.debug-panel .debug-field{color:#ff0}
+.debug-panel .debug-warn{color:#f00}
+
 /* Completion */
 .completion-banner{background:linear-gradient(135deg,#14532d,#166534);border-radius:var(--radius);padding:20px;margin-bottom:16px;border:1px solid var(--green);animation:bannerIn .5s ease;text-align:center}
 @keyframes bannerIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
@@ -189,6 +197,7 @@ select{background:var(--bg);border:1px solid var(--bg3);border-radius:6px;paddin
       <div class="global-progress"><div class="fill" id="globalProgressFill" style="width:0"></div></div>
       <div class="card-minimap-label">📐 Struttura biglietto rilevata</div>
       <div class="card-minimap" id="cardMinimap" style="height:80px"></div>
+      <div class="debug-panel visible" id="debugPanel">🔍 Debug: in attesa di scansione...</div>
       <div id="rtFields"></div>
     </div>
 
@@ -529,12 +538,15 @@ async function pipelineLoop(){
 
     if(data.text&&data.text.trim().length>2){
       // Process LINES with spatial info
+      const lineTexts=data.lines?data.lines.map(l=>l.text.trim()).filter(t=>t.length>1):[];
       processLinesWithSpatial(data.lines,roiX,roiY,vw,vh);
       drawOverlayFromSlots(data.words,roiX,roiY,vw,vh);
       deriveFieldsFromSlots();
       refreshAllFieldsUI();
       updateGlobalProgress();
       renderMinimap();
+      // DEBUG: show full pipeline state
+      updateDebugPanel(lineTexts);
       if(areAllDone()){autoComplete();isProcessingFrame=false;return;}
     }
 
@@ -632,77 +644,68 @@ function recalcSlot(slot){
 function deriveFieldsFromSlots(){
   const threshold=settings.certThreshold||85;
 
-  // Step 1: Re-classify any unclassified slots that now have a bestValue
-  // This ensures classification runs continuously as OCR improves text
+  // Step 1: AGGRESSIVELY classify all slots on every cycle
+  // Try classifying the bestValue AND every evidence entry
   cardSlots.forEach(s=>{
-    if(!s.fieldType && s.bestValue){
+    if(s.bestValue){
+      // Always try to reclassify from bestValue
       const ft=classifyLine(s.bestValue);
       if(ft) s.fieldType=ft;
+      // If still null, try classifying each evidence raw text
+      if(!s.fieldType){
+        for(const[norm,info] of Object.entries(s.evidence)){
+          const ft2=classifyLine(info.bestRaw);
+          if(ft2){s.fieldType=ft2;break;}
+        }
+      }
     }
   });
 
-  // Step 2: For each field type, IMMEDIATELY assign the best matching slot
-  // Don't wait for high confidence — show data as soon as it's detected
+  // Step 2: For EVERY field, immediately assign the best matching slot
   FIELD_CONFIG.forEach(fc=>{
     if(fieldState[fc.key].manuallyEdited)return;
-
-    // Find slots classified as this field type
     const candidates=cardSlots.filter(s=>s.fieldType===fc.key);
-    if(candidates.length===0){
-      // Don't clear existing values — keep what we had
-      return;
-    }
-
-    // Pick the one with highest confidence
+    if(candidates.length===0)return;
     const best=candidates.reduce((a,b)=>a.confidence>b.confidence?a:b);
-
-    // ALWAYS update the field — even at 0% confidence — so user sees data immediately
+    // ALWAYS update — user sees data from frame 1
     fieldState[fc.key].bestValue=best.bestValue;
     fieldState[fc.key].confidence=best.confidence;
     fieldState[fc.key].locked=best.locked;
   });
 
-  // Step 3: Smart name/company disambiguation for unclassified slots
-  // Score ALL unclassified slots with text, not just when fields are empty
+  // Step 3: Name/company scoring for STILL-unclassified slots
   const unclassified=cardSlots.filter(s=>!s.fieldType&&s.bestValue);
   if(unclassified.length>0){
     const scored=unclassified.map(s=>{
       const v=s.bestValue;
       let nameScore=0;
       const words=v.split(/\s+/);
-      // Title Case pattern: strong name signal
-      const titleCase=words.length>=2 && words.length<=4 && words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ][a-zàèéìòùáóú']+$/.test(w));
+      const titleCase=words.length>=2&&words.length<=4&&words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ][a-zàèéìòùáóú']+$/.test(w));
       if(titleCase) nameScore+=5;
-      // ALL CAPS short (2-3 words) can be name
       const allCaps=words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ]{2,}$/.test(w));
-      if(allCaps && words.length>=2 && words.length<=3 && v.length<30) nameScore+=3;
-      // 2-3 words, all letters, short → likely name
-      const lr=(v.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙ]/g)||[]).length/v.length;
-      if(lr>.85 && words.length>=2 && words.length<=3 && v.length<35) nameScore+=2;
-      // No digits → more likely name
+      if(allCaps&&words.length>=2&&words.length<=3&&v.length<30) nameScore+=3;
+      const lr=(v.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙ]/g)||[]).length/Math.max(v.length,1);
+      if(lr>.85&&words.length>=2&&words.length<=3&&v.length<35) nameScore+=2;
       if(!/\d/.test(v)) nameScore+=1;
-      // Company keywords → definitely not a name
       const low=v.toLowerCase();
       if(COMPANY_KEYWORDS.some(kw=>low.includes(kw))) nameScore-=10;
       if(/[&]/.test(v)) nameScore-=5;
-      return {slot:s, nameScore};
+      return {slot:s,nameScore};
     });
     scored.sort((a,b)=>b.nameScore-a.nameScore);
 
-    // Assign best as name (even if field already has a lower-confidence value)
     if(!fieldState.name.manuallyEdited){
       const best=scored.find(s=>s.nameScore>0);
-      if(best && (!fieldState.name.bestValue || best.slot.confidence>fieldState.name.confidence)){
+      if(best&&(!fieldState.name.bestValue||best.slot.confidence>fieldState.name.confidence)){
         best.slot.fieldType='name';
         fieldState.name.bestValue=best.slot.bestValue;
         fieldState.name.confidence=best.slot.confidence;
         fieldState.name.locked=best.slot.locked;
       }
     }
-    // Assign remaining best as company
     if(!fieldState.company.manuallyEdited){
       const remaining=scored.find(s=>!s.slot.fieldType);
-      if(remaining && (!fieldState.company.bestValue || remaining.slot.confidence>fieldState.company.confidence)){
+      if(remaining&&(!fieldState.company.bestValue||remaining.slot.confidence>fieldState.company.confidence)){
         remaining.slot.fieldType='company';
         fieldState.company.bestValue=remaining.slot.bestValue;
         fieldState.company.confidence=remaining.slot.confidence;
@@ -710,6 +713,20 @@ function deriveFieldsFromSlots(){
       }
     }
   }
+
+  // Step 4: LAST RESORT — any remaining unclassified slots with text,
+  // assign to first empty field that could accept text (name, company, role)
+  const textFields=['name','company','role'];
+  const stillUnclassified=cardSlots.filter(s=>!s.fieldType&&s.bestValue);
+  stillUnclassified.forEach(s=>{
+    const emptyField=textFields.find(k=>!fieldState[k].bestValue&&!fieldState[k].manuallyEdited);
+    if(emptyField){
+      s.fieldType=emptyField;
+      fieldState[emptyField].bestValue=s.bestValue;
+      fieldState[emptyField].confidence=s.confidence;
+      fieldState[emptyField].locked=s.locked;
+    }
+  });
 }
 
 // ==================== MINIMAP ====================
@@ -724,6 +741,29 @@ function renderMinimap(){
     const label=s.fieldType?s.fieldType.toUpperCase()+': ':'';
     return `<div class="${cls}" style="top:${Math.max(0,Math.min(top,maxH-14))}px;border-left-color:${color}">${label}${esc(s.bestValue.substring(0,40))}</div>`;
   }).join('');
+}
+
+// ==================== DEBUG ====================
+function updateDebugPanel(lineTexts){
+  const dp=document.getElementById('debugPanel');
+  if(!dp)return;
+  let html='<div class="debug-line"><b>Frame #'+totalSamples+'</b> | Lines OCR: '+lineTexts.length+' | Slots: '+cardSlots.length+'</div>';
+  // Show raw OCR lines
+  html+='<div class="debug-line">📝 OCR: '+(lineTexts.length?lineTexts.map(t=>'"'+t.substring(0,30)+'"→'+classifyLine(t)).join(' | '):'NESSUN TESTO')+'</div>';
+  // Show slots
+  cardSlots.forEach((s,i)=>{
+    const evCount=Object.values(s.evidence).reduce((a,v)=>a+v.count,0);
+    html+='<div class="debug-line debug-slot">SLOT['+i+'] y='+s.normY.toFixed(2)+' type=<b>'+(s.fieldType||'NULL')+'</b> val="'+s.bestValue.substring(0,25)+'" conf='+s.confidence+'% ev='+evCount+(s.locked?' 🔒':'')+'</div>';
+  });
+  // Show fieldState
+  html+='<div class="debug-line debug-field">';
+  FIELD_CONFIG.forEach(f=>{
+    const fs=fieldState[f.key];
+    if(fs.bestValue) html+=f.key+'="<b>'+fs.bestValue.substring(0,20)+'</b>"'+fs.confidence+'% ';
+  });
+  html+='</div>';
+  if(!FIELD_CONFIG.some(f=>fieldState[f.key].bestValue)) html+='<div class="debug-line debug-warn">⚠️ NESSUN CAMPO COMPILATO</div>';
+  dp.innerHTML=html;
 }
 
 // ==================== COMPLETION ====================
