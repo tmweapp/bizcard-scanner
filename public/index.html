@@ -254,29 +254,9 @@ select{background:var(--bg);border:1px solid var(--bg3);border-radius:6px;paddin
 // ==================== STATE ====================
 let contacts=[], scanCount=0, worker=null, workerReady=false, currentStream=null, facingMode='environment';
 let settings={lang:'ita',webhookUrl:'',webhookAuth:'',certThreshold:85,captureRes:480};
-
-// ==================== SPATIAL CARD MODEL ====================
-/*
-  cardSlots = array of detected text regions, each with:
-  {
-    normY: 0-1 (vertical position on card, normalized),
-    normX: 0-1 (horizontal center),
-    normH: 0-1 (height),
-    evidence: { normalizedText: { count, bestRaw } },
-    bestValue: string,
-    confidence: number 0-100,
-    fieldType: string|null (name, email, phone, etc.),
-    locked: bool
-  }
-  Lines from each scan are matched to existing slots by spatial proximity.
-  New lines create new slots. This preserves the card's structure.
-*/
-let cardSlots = [];
-let totalSamples = 0;
-let realtimeActive = false, isProcessingFrame = false, animFrameId = null;
-let lastFrameTime = 0, frameCount = 0, currentFPS = 0;
-// Offscreen canvas for fast capture
-let captureCanvas = null, captureCtx = null;
+let totalSamples=0, realtimeActive=false, isProcessingFrame=false, animFrameId=null;
+let lastFrameTime=0, frameCount=0, currentFPS=0;
+let captureCanvas=null, captureCtx=null;
 
 const FIELD_CONFIG = [
   {key:'name',icon:'👤',label:'Nome'},{key:'company',icon:'🏢',label:'Azienda'},
@@ -285,22 +265,21 @@ const FIELD_CONFIG = [
   {key:'piva',icon:'🏛️',label:'P.IVA'},{key:'cf',icon:'🆔',label:'C.F.'},
   {key:'address',icon:'📍',label:'Indirizzo'}
 ];
-let fieldState = {};
 
-// Slot Y-proximity threshold for matching (normalized 0-1) — wider to avoid fragmentation
-const SLOT_Y_MATCH = 0.12;
+// ==================== SINGLE ACCUMULATION PIPELINE ====================
+// ONE data structure: fieldEvidence[key] = array of candidates with counts
+// ONE flow: OCR text → classify → accumulate per field → update fieldState
+var fieldEvidence = {};
+var fieldState = {};
 
-// Direct evidence accumulator (parallel pipeline B) — must be before resetAll()
-var directEvidence = {};
-function resetDirectEvidence(){directEvidence={};FIELD_CONFIG.forEach(f=>{directEvidence[f.key]={};});}
-resetDirectEvidence();
-
-function resetAll() {
-  cardSlots = [];
-  totalSamples = 0;
-  fieldState = {};
-  FIELD_CONFIG.forEach(f => { fieldState[f.key] = {bestValue:'',confidence:0,locked:false,manuallyEdited:false}; });
-  resetDirectEvidence();
+function resetAll(){
+  totalSamples=0;
+  fieldState={};
+  fieldEvidence={};
+  FIELD_CONFIG.forEach(f=>{
+    fieldState[f.key]={bestValue:'',confidence:0,locked:false,manuallyEdited:false};
+    fieldEvidence[f.key]={candidates:[],bestCandidate:null};
+  });
 }
 resetAll();
 
@@ -330,7 +309,7 @@ async function initOCR(){
   }catch(e){s.className='ocr-status error';s.innerHTML='<span>❌ '+esc(e.message)+'</span>';}
 }
 
-// ==================== FIELD EXTRACTION (from text) ====================
+// ==================== FIELD CLASSIFICATION ====================
 const RE_EMAIL=/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/;
 const RE_WEB=/(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9\-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?/i;
 const RE_PHONE=/(?:\+?\d{1,3}[\s.\-]?)?(?:\(?\d{2,4}\)?[\s.\-]?)?\d{3,4}[\s.\-]?\d{3,4}/;
@@ -338,43 +317,7 @@ const RE_PIVA=/(?:P\.?\s*I\.?V\.?A\.?|IT)\s*[:.]?\s*(\d{11})/i;
 const RE_CF=/\b[A-Z]{6}\d{2}[A-EHLMPRST]\d{2}[A-Z]\d{3}[A-Z]\b/i;
 const RE_ADDRESS=/(?:via|viale|v\.le|corso|c\.so|piazza|p\.za|p\.zza|largo|vicolo|loc\.|strada|contrada|s\.s\.|s\.r\.|s\.p\.)\s+.+?\d/i;
 const ROLES=['ceo','cto','cfo','coo','cio','direttore','director','manager','responsabile','presidente','founder','co-founder','ingegnere','engineer','architetto','avvocato','dottore','dott','consulente','analyst','designer','developer','sales','marketing','hr','amministratore','delegato','socio','partner','legale','tecnico','commerciale','operativo'];
-const COMPANY_KEYWORDS=['srl','s.r.l','spa','s.p.a','snc','s.n.c','sas','s.a.s','ltd','llc','inc','gmbh','corp','group','gruppo','studio','associati','consulting','solutions','services','servizi','technology','technologies','soc','coop','scarl','onlus','foundation','fondazione','agenzia','agency','immobiliare','assicurazioni','industrie','edizioni','costruzioni','laboratorio','farmacia','ristorante','hotel','albergo','bar','officina','autofficina'];
-
-function isPersonName(text){
-  const t=text.trim();
-  const words=t.split(/\s+/);
-  // Person names: 2-4 words, each word starts with uppercase letter
-  if(words.length<2||words.length>4) return false;
-  // Check Title Case pattern: each word starts with uppercase, rest lowercase
-  const titleCase=words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ][a-zàèéìòùáóúa-z']*$/.test(w));
-  // Also accept ALL CAPS names (2-3 words, short)
-  const allCaps=words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ]{2,}$/.test(w)) && words.length<=3 && t.length<35;
-  // Check no company keywords
-  const low=t.toLowerCase();
-  const hasCompanyKw=COMPANY_KEYWORDS.some(kw=>low.includes(kw));
-  if(hasCompanyKw) return false;
-  // No digits in person names
-  if(/\d/.test(t)) return false;
-  // No special chars except apostrophe/hyphen/period
-  if(/[&@#\/\\(){}[\]]/.test(t)) return false;
-  if(titleCase) return true;
-  if(allCaps) return true;
-  return false;
-}
-
-function isCompanyName(text){
-  const t=text.trim();
-  const low=t.toLowerCase();
-  // Explicit company keywords
-  if(COMPANY_KEYWORDS.some(kw=>low.includes(kw))) return true;
-  // Contains & or special business chars
-  if(/[&]/.test(t)) return true;
-  // ALL CAPS with 4+ words or long text is likely company
-  const words=t.split(/\s+/);
-  const allCaps=words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ0-9&.\-]+$/.test(w));
-  if(allCaps && (words.length>=3 || t.length>20)) return true;
-  return false;
-}
+const COMPANY_KEYWORDS=['srl','s.r.l','spa','s.p.a','snc','s.n.c','sas','s.a.s','ltd','llc','inc','gmbh','corp','group','gruppo','studio','associati','consulting','solutions','services','servizi','technology','technologies','soc','coop','scarl','onlus','foundation','fondazione','agenzia','agency'];
 
 function classifyLine(text){
   const t=text.trim();if(!t||t.length<2) return null;
@@ -388,17 +331,20 @@ function classifyLine(text){
   if(ph && ph[0].replace(/\D/g,'').length>=6) return 'phone';
   const web=t.match(RE_WEB);
   if(web && !web[0].includes('@') && web[0].includes('.')) return 'web';
-  // Improved name vs company detection
+  // Company keywords → company
+  if(COMPANY_KEYWORDS.some(kw=>low.includes(kw))) return 'company';
+  if(/[&]/.test(t)) return 'company';
   const lr=(t.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙ]/g)||[]).length/Math.max(t.length,1);
-  // Check explicit company indicators even with low letter ratio
-  if(isCompanyName(t)) return 'company';
-  if(lr<.5) return null;
-  // Check person name pattern (Title Case, 2-4 words, no company keywords)
-  if(isPersonName(t)) return 'name';
-  // Fallback heuristics — more relaxed to catch more text
+  if(lr<.4) return null;
   const words=t.split(/\s+/);
-  if(lr>.65 && words.length>=2 && words.length<=3 && t.length<40 && !/\d/.test(t)) return 'name';
-  if(lr>.5 && t.length<60) return 'company';
+  // Person name: 2-4 words, starts with uppercase, no digits, no company keywords
+  if(words.length>=2 && words.length<=4 && !/\d/.test(t) && lr>.6){
+    const allStart=words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ]/.test(w));
+    if(allStart) return 'name';
+  }
+  // Fallback for text lines
+  if(words.length>=2 && words.length<=3 && lr>.6 && t.length<40 && !/\d/.test(t)) return 'name';
+  if(lr>.4 && t.length<60) return 'company';
   return null;
 }
 
@@ -413,6 +359,104 @@ function extractFieldValue(text, type){
 }
 
 function normalizeValue(v){return(v||'').trim().toLowerCase().replace(/\s+/g,' ');}
+
+// ==================== FUZZY MATCHING ====================
+function stringSimilarity(a,b){
+  if(a===b) return 1;
+  const la=a.length,lb=b.length;
+  if(!la||!lb) return 0;
+  // Simple Levenshtein-based similarity
+  const mx=Math.max(la,lb);
+  if(mx===0) return 1;
+  const dp=Array.from({length:la+1},()=>Array(lb+1).fill(0));
+  for(let i=0;i<=la;i++) dp[i][0]=i;
+  for(let j=0;j<=lb;j++) dp[0][j]=j;
+  for(let i=1;i<=la;i++) for(let j=1;j<=lb;j++){
+    dp[i][j]=Math.min(dp[i-1][j]+1,dp[i][j-1]+1,dp[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  }
+  return 1-dp[la][lb]/mx;
+}
+
+function findFuzzyMatch(canonical, candidates, threshold){
+  let bestMatch=null, bestSim=0;
+  for(const c of candidates){
+    const sim=stringSimilarity(canonical,c.canonical);
+    if(sim>=threshold && sim>bestSim){bestSim=sim;bestMatch=c;}
+  }
+  return bestMatch;
+}
+
+// ==================== ACCUMULATE EVIDENCE ====================
+function accumulateEvidence(fieldKey, rawValue){
+  if(!fieldEvidence[fieldKey]) fieldEvidence[fieldKey]={candidates:[],bestCandidate:null};
+  const fe=fieldEvidence[fieldKey];
+  const canonical=normalizeValue(rawValue);
+  if(!canonical) return;
+
+  // Fuzzy match threshold depends on field type
+  const thresh=fieldKey==='email'?0.85:fieldKey==='phone'?0.75:0.80;
+  const match=findFuzzyMatch(canonical,fe.candidates,thresh);
+
+  if(match){
+    match.count++;
+    // Keep the longest/best raw form
+    if(rawValue.length>match.bestRaw.length) match.bestRaw=rawValue;
+  }else{
+    fe.candidates.push({canonical,bestRaw:rawValue,count:1});
+  }
+
+  // Sort by count descending
+  fe.candidates.sort((a,b)=>b.count-a.count);
+
+  // Update bestCandidate
+  const best=fe.candidates[0];
+  if(best && best.count>=1){
+    // Confidence = based on count, capped relative to runner-up
+    const second=fe.candidates[1];
+    let conf;
+    if(!second){
+      // Only candidate: confidence = min(count*30, 100)
+      conf=Math.min(best.count*30,100);
+    }else{
+      // Multiple: confidence based on how dominant the best is
+      const ratio=best.count/(best.count+second.count);
+      conf=Math.round(ratio*100);
+      // Boost if count is high
+      if(best.count>=3) conf=Math.max(conf,80);
+      if(best.count>=5) conf=Math.max(conf,95);
+    }
+    fe.bestCandidate={canonical:best.canonical,bestRaw:best.bestRaw,confidence:conf,count:best.count};
+  }
+}
+
+// ==================== UPDATE FIELD STATE (RATCHET) ====================
+function updateFieldStates(){
+  const threshold=settings.certThreshold||85;
+  FIELD_CONFIG.forEach(fc=>{
+    const key=fc.key;
+    if(fieldState[key].manuallyEdited || fieldState[key].locked) return;
+    const fe=fieldEvidence[key];
+    if(!fe || !fe.bestCandidate) return;
+
+    const newVal=fe.bestCandidate.bestRaw;
+    const newConf=fe.bestCandidate.confidence;
+
+    // RATCHET: always show value, confidence can only go UP
+    if(!fieldState[key].bestValue){
+      // First detection: show immediately
+      fieldState[key].bestValue=newVal;
+      fieldState[key].confidence=newConf;
+    }else if(newConf>=fieldState[key].confidence){
+      // Better confidence: update
+      fieldState[key].bestValue=newVal;
+      fieldState[key].confidence=newConf;
+    }
+    // Auto-lock
+    if(fieldState[key].confidence>=threshold && fe.bestCandidate.count>=2){
+      fieldState[key].locked=true;
+    }
+  });
+}
 
 // ==================== SCANNER ====================
 function initScanner(){
@@ -462,7 +506,7 @@ function buildRealtimeFieldsUI(){
   });
 }
 
-// ==================== CONTINUOUS PIPELINE SCANNING ====================
+// ==================== SCAN CONTROL ====================
 function toggleScan(){if(realtimeActive)stopScan();else startScan();}
 
 function startScan(){
@@ -482,12 +526,10 @@ function startScan(){
   document.getElementById('globalProgressFill').style.width='0';
   document.getElementById('cardMinimap').innerHTML='';
   lastFrameTime=performance.now();frameCount=0;currentFPS=0;
-  // Init offscreen capture canvas
   const res=settings.captureRes||480;
   captureCanvas=document.createElement('canvas');
-  captureCanvas.width=res;captureCanvas.height=Math.round(res*0.6);// card aspect ~5:3
+  captureCanvas.width=res;captureCanvas.height=Math.round(res*0.6);
   captureCtx=captureCanvas.getContext('2d',{willReadFrequently:true});
-  // Start pipeline: rAF captures, immediate OCR
   pipelineLoop();
 }
 
@@ -510,11 +552,10 @@ function stopScan(){
 function pauseScan(){if(animFrameId){cancelAnimationFrame(animFrameId);animFrameId=null;}document.getElementById('scanDot').className='dot';document.getElementById('scanLabel').textContent='PAUSA';}
 function resumeScan(){if(realtimeActive&&!animFrameId)pipelineLoop();document.getElementById('scanLabel').textContent='LIVE';}
 
-// The pipeline: rAF grabs the latest video frame → sends to OCR → immediately loops
+// ==================== SINGLE PIPELINE LOOP ====================
 async function pipelineLoop(){
-  if(!realtimeActive)return;
+  if(!realtimeActive) return;
   if(isProcessingFrame){animFrameId=requestAnimationFrame(pipelineLoop);return;}
-  // Check completion
   if(areAllDone()){autoComplete();return;}
 
   const video=document.getElementById('video');
@@ -524,11 +565,9 @@ async function pipelineLoop(){
   document.getElementById('scanDot').className='dot processing';
 
   try{
-    // Capture ROI at low resolution for speed
     const vw=video.videoWidth,vh=video.videoHeight;
     const roiX=Math.round(vw*0.075),roiY=Math.round(vh*0.2),roiW=Math.round(vw*0.85),roiH=Math.round(vh*0.6);
-    const cw=captureCanvas.width,ch=captureCanvas.height;
-    captureCtx.drawImage(video,roiX,roiY,roiW,roiH,0,0,cw,ch);
+    captureCtx.drawImage(video,roiX,roiY,roiW,roiH,0,0,captureCanvas.width,captureCanvas.height);
 
     const t0=performance.now();
     const{data}=await worker.recognize(captureCanvas);
@@ -538,36 +577,44 @@ async function pipelineLoop(){
     frameCount++;
     const now=performance.now();
     if(now-lastFrameTime>=1000){currentFPS=Math.round(frameCount*1000/(now-lastFrameTime));frameCount=0;lastFrameTime=now;}
-
     document.getElementById('scanCountLabel').textContent=totalSamples+' campioni';
     document.getElementById('scanFPS').textContent=currentFPS+' fps · '+Math.round(dt)+'ms';
 
-    if(data.text&&data.text.trim().length>2){
-      // DUAL PIPELINE: spatial slots + direct text fallback
-      let lineTexts=[];
-      try{
-        // Pipeline A: Spatial slot model (uses data.lines with bbox)
-        if(data.lines&&data.lines.length>0){
-          lineTexts=data.lines.map(l=>l.text.trim()).filter(t=>t.length>1);
-          processLinesWithSpatial(data.lines,roiX,roiY,vw,vh);
+    if(data.text && data.text.trim().length>2){
+      // === SINGLE PIPELINE: text → classify → accumulate → update fields ===
+      const rawLines=data.text.split('\n').map(l=>l.trim()).filter(l=>l.length>2);
+
+      rawLines.forEach(line=>{
+        const fieldType=classifyLine(line);
+        if(fieldType){
+          const cleanVal=extractFieldValue(line,fieldType);
+          accumulateEvidence(fieldType,cleanVal);
+        }else{
+          // Unclassified: try name/company heuristic
+          const words=line.split(/\s+/);
+          const lr=(line.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙ]/g)||[]).length/Math.max(line.length,1);
+          if(lr>.5 && words.length>=2 && words.length<=4 && !/\d/.test(line)){
+            const allStart=words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ]/.test(w));
+            if(allStart && !fieldEvidence.name.bestCandidate){
+              accumulateEvidence('name',line);
+            }else if(!fieldEvidence.company.bestCandidate){
+              accumulateEvidence('company',line);
+            }
+          }
         }
-        // Pipeline B: DIRECT text→field (always runs as fallback)
-        // Parse raw text into lines and classify directly
-        const rawLines=data.text.split('\n').map(l=>l.trim()).filter(l=>l.length>2);
-        if(rawLines.length>0){
-          if(!lineTexts.length) lineTexts=rawLines;
-          directTextToFields(rawLines);
-        }
-      }catch(pipeErr){
-        console.error('Pipeline error:',pipeErr);
-      }
-      try{drawOverlayFromSlots(data.words,roiX,roiY,vw,vh);}catch(e){}
-      deriveFieldsFromSlots();
+      });
+
+      // Update fieldState with ratchet rule
+      updateFieldStates();
+
+      // Draw overlay
+      try{drawOverlay(data.words,roiX,roiY,vw,vh);}catch(e){}
+
+      // Update UI
       refreshAllFieldsUI();
       updateGlobalProgress();
-      renderMinimap();
-      // DEBUG: show full pipeline state
-      updateDebugPanel(lineTexts,data.text);
+      updateDebugPanel(rawLines);
+
       if(areAllDone()){autoComplete();isProcessingFrame=false;return;}
     }
 
@@ -582,297 +629,25 @@ async function pipelineLoop(){
   if(realtimeActive) animFrameId=requestAnimationFrame(pipelineLoop);
 }
 
-// ==================== DIRECT TEXT → FIELDS (fallback pipeline) ====================
-// Directly accumulates detected text into fields without requiring spatial slots
-// This guarantees fields fill even if data.lines has no bbox data
-// (directEvidence and resetDirectEvidence are declared at the top of the file)
-
-function directTextToFields(rawLines){
-  rawLines.forEach(line=>{
-    const ft=classifyLine(line);
-    if(!ft)return;
-    const clean=extractFieldValue(line,ft);
-    const norm=normalizeValue(clean);
-    if(!norm)return;
-    // Accumulate evidence directly per field
-    if(!directEvidence[ft]) directEvidence[ft]={};
-    if(!directEvidence[ft][norm]) directEvidence[ft][norm]={count:0,bestRaw:clean};
-    directEvidence[ft][norm].count++;
-    if(clean.length>directEvidence[ft][norm].bestRaw.length) directEvidence[ft][norm].bestRaw=clean;
-    // Immediately update fieldState if this field isn't manually edited
-    if(fieldState[ft]&&!fieldState[ft].manuallyEdited){
-      // Find best evidence for this field
-      let bestC=0,bestR='',total=0;
-      for(const[n,info]of Object.entries(directEvidence[ft])){
-        total+=info.count;
-        if(info.count>bestC){bestC=info.count;bestR=info.bestRaw;}
-      }
-      const conf=total>0?Math.round(bestC/total*100):0;
-      // Only update if direct evidence is better than current slot-based value
-      if(!fieldState[ft].bestValue || conf>=fieldState[ft].confidence || bestC<=2){
-        fieldState[ft].bestValue=bestR;
-        fieldState[ft].confidence=conf;
-        if(conf>=(settings.certThreshold||85)&&bestC>=3) fieldState[ft].locked=true;
-      }
-    }
-  });
-
-  // Handle unclassified lines for name/company via scoring
-  rawLines.forEach(line=>{
-    const ft=classifyLine(line);
-    if(ft)return; // already classified above
-    const t=line.trim();
-    if(t.length<3)return;
-    const lr=(t.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙ]/g)||[]).length/Math.max(t.length,1);
-    if(lr<.5)return;
-    // Score as name
-    const words=t.split(/\s+/);
-    let nameScore=0;
-    if(words.length>=2&&words.length<=4&&words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ]/.test(w))) nameScore+=3;
-    if(!/\d/.test(t)) nameScore+=1;
-    if(COMPANY_KEYWORDS.some(kw=>t.toLowerCase().includes(kw))) nameScore-=10;
-    const targetField=nameScore>0?'name':'company';
-    const norm=normalizeValue(t);
-    if(!directEvidence[targetField]) directEvidence[targetField]={};
-    if(!directEvidence[targetField][norm]) directEvidence[targetField][norm]={count:0,bestRaw:t};
-    directEvidence[targetField][norm].count++;
-    if(!fieldState[targetField].manuallyEdited&&!fieldState[targetField].bestValue){
-      let bestC=0,bestR='';
-      for(const[n,info]of Object.entries(directEvidence[targetField])){
-        if(info.count>bestC){bestC=info.count;bestR=info.bestRaw;}
-      }
-      fieldState[targetField].bestValue=bestR;
-      fieldState[targetField].confidence=Math.min(bestC*20,100);
-    }
-  });
-}
-
-// ==================== SPATIAL LINE PROCESSING ====================
-function processLinesWithSpatial(lines,roiX,roiY,vw,vh){
-  if(!lines||!lines.length)return;
-  const roiH=vh*0.6;
-
-  lines.forEach(line=>{
-    const text=line.text.trim();
-    if(text.length<2)return;
-    const bbox=line.bbox;
-    // Normalize position relative to ROI (0-1)
-    const normY=(bbox.y0+bbox.y1)/(2*captureCanvas.height);
-    const normX=(bbox.x0+bbox.x1)/(2*captureCanvas.width);
-    const normH=(bbox.y1-bbox.y0)/captureCanvas.height;
-
-    // Classify this line
-    const fieldType=classifyLine(text);
-    const cleanValue=fieldType?extractFieldValue(text,fieldType):text;
-    const norm=normalizeValue(cleanValue);
-    if(!norm)return;
-
-    // Find matching slot by Y proximity
-    let matched=null;
-    let bestDist=Infinity;
-    for(const slot of cardSlots){
-      const dist=Math.abs(slot.normY-normY);
-      if(dist<SLOT_Y_MATCH&&dist<bestDist){
-        bestDist=dist;matched=slot;
-      }
-    }
-
-    if(matched){
-      // Update slot position (rolling average)
-      matched.normY=matched.normY*0.8+normY*0.2;
-      matched.normX=matched.normX*0.8+normX*0.2;
-      // Add evidence
-      if(!matched.evidence[norm]) matched.evidence[norm]={count:0,bestRaw:cleanValue};
-      matched.evidence[norm].count++;
-      if(cleanValue.length>matched.evidence[norm].bestRaw.length) matched.evidence[norm].bestRaw=cleanValue;
-      // Update field type: always apply classification (allows reclassification as text improves)
-      if(fieldType) matched.fieldType=fieldType;
-      // Recalculate best
-      recalcSlot(matched);
-    }else{
-      // Create new slot
-      const newSlot={
-        normY, normX, normH,
-        evidence:{[norm]:{count:1,bestRaw:cleanValue}},
-        bestValue:cleanValue,
-        confidence:0,
-        fieldType:fieldType,
-        locked:false
-      };
-      recalcSlot(newSlot);
-      cardSlots.push(newSlot);
-      // Sort by Y position
-      cardSlots.sort((a,b)=>a.normY-b.normY);
-    }
-  });
-}
-
-function recalcSlot(slot){
-  const threshold=settings.certThreshold||85;
-  let bestN='',bestC=0,bestR='',secondC=0;
-  const total=Object.values(slot.evidence).reduce((s,v)=>s+v.count,0);
-  for(const[n,info]of Object.entries(slot.evidence)){
-    if(info.count>bestC){secondC=bestC;bestC=info.count;bestN=n;bestR=info.bestRaw;}
-    else if(info.count>secondC){secondC=info.count;}
-  }
-  slot.bestValue=bestR;
-  // Confidence: how dominant is the best reading vs all others
-  // Use max(bestC/total, bestC/(bestC+secondC)) so minor OCR variations don't tank confidence
-  const rawConf=total>0?bestC/total:0;
-  const relConf=(bestC+secondC)>0?bestC/(bestC+secondC):0;
-  slot.confidence=Math.round(Math.max(rawConf,relConf)*100);
-  if(slot.confidence>=threshold&&bestC>=3&&!slot.locked){
-    slot.locked=true;
-  }
-}
-
-// ==================== DERIVE FIELDS FROM SLOTS ====================
-function deriveFieldsFromSlots(){
-  const threshold=settings.certThreshold||85;
-
-  // Step 1: AGGRESSIVELY classify all slots on every cycle
-  // Try classifying the bestValue AND every evidence entry
-  cardSlots.forEach(s=>{
-    if(s.bestValue){
-      // Always try to reclassify from bestValue
-      const ft=classifyLine(s.bestValue);
-      if(ft) s.fieldType=ft;
-      // If still null, try classifying each evidence raw text
-      if(!s.fieldType){
-        for(const[norm,info] of Object.entries(s.evidence)){
-          const ft2=classifyLine(info.bestRaw);
-          if(ft2){s.fieldType=ft2;break;}
-        }
-      }
-    }
-  });
-
-  // Step 2: For EVERY field, immediately assign the best matching slot
-  FIELD_CONFIG.forEach(fc=>{
-    if(fieldState[fc.key].manuallyEdited)return;
-    const candidates=cardSlots.filter(s=>s.fieldType===fc.key);
-    if(candidates.length===0)return;
-    const best=candidates.reduce((a,b)=>a.confidence>b.confidence?a:b);
-    // ALWAYS update — user sees data from frame 1
-    fieldState[fc.key].bestValue=best.bestValue;
-    fieldState[fc.key].confidence=best.confidence;
-    fieldState[fc.key].locked=best.locked;
-  });
-
-  // Step 3: Name/company scoring for STILL-unclassified slots
-  const unclassified=cardSlots.filter(s=>!s.fieldType&&s.bestValue);
-  if(unclassified.length>0){
-    const scored=unclassified.map(s=>{
-      const v=s.bestValue;
-      let nameScore=0;
-      const words=v.split(/\s+/);
-      const titleCase=words.length>=2&&words.length<=4&&words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ][a-zàèéìòùáóú']+$/.test(w));
-      if(titleCase) nameScore+=5;
-      const allCaps=words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ]{2,}$/.test(w));
-      if(allCaps&&words.length>=2&&words.length<=3&&v.length<30) nameScore+=3;
-      const lr=(v.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙ]/g)||[]).length/Math.max(v.length,1);
-      if(lr>.85&&words.length>=2&&words.length<=3&&v.length<35) nameScore+=2;
-      if(!/\d/.test(v)) nameScore+=1;
-      const low=v.toLowerCase();
-      if(COMPANY_KEYWORDS.some(kw=>low.includes(kw))) nameScore-=10;
-      if(/[&]/.test(v)) nameScore-=5;
-      return {slot:s,nameScore};
-    });
-    scored.sort((a,b)=>b.nameScore-a.nameScore);
-
-    if(!fieldState.name.manuallyEdited){
-      const best=scored.find(s=>s.nameScore>0);
-      if(best&&(!fieldState.name.bestValue||best.slot.confidence>fieldState.name.confidence)){
-        best.slot.fieldType='name';
-        fieldState.name.bestValue=best.slot.bestValue;
-        fieldState.name.confidence=best.slot.confidence;
-        fieldState.name.locked=best.slot.locked;
-      }
-    }
-    if(!fieldState.company.manuallyEdited){
-      const remaining=scored.find(s=>!s.slot.fieldType);
-      if(remaining&&(!fieldState.company.bestValue||remaining.slot.confidence>fieldState.company.confidence)){
-        remaining.slot.fieldType='company';
-        fieldState.company.bestValue=remaining.slot.bestValue;
-        fieldState.company.confidence=remaining.slot.confidence;
-        fieldState.company.locked=remaining.slot.locked;
-      }
-    }
-  }
-
-  // Step 4: LAST RESORT — any remaining unclassified slots with text,
-  // assign to first empty field that could accept text (name, company, role)
-  const textFields=['name','company','role'];
-  const stillUnclassified=cardSlots.filter(s=>!s.fieldType&&s.bestValue);
-  stillUnclassified.forEach(s=>{
-    const emptyField=textFields.find(k=>!fieldState[k].bestValue&&!fieldState[k].manuallyEdited);
-    if(emptyField){
-      s.fieldType=emptyField;
-      fieldState[emptyField].bestValue=s.bestValue;
-      fieldState[emptyField].confidence=s.confidence;
-      fieldState[emptyField].locked=s.locked;
-    }
-  });
-}
-
-// ==================== MINIMAP ====================
-function renderMinimap(){
-  const mm=document.getElementById('cardMinimap');
-  if(!cardSlots.length){mm.innerHTML='<span style="opacity:.4">In attesa di testo...</span>';return;}
-  const maxH=80;
-  mm.innerHTML=cardSlots.map(s=>{
-    const top=Math.round(s.normY*maxH-6);
-    const color=s.locked?'var(--green)':s.confidence>50?'var(--orange)':'var(--accent)';
-    const cls=s.locked?'minimap-slot locked':'minimap-slot';
-    const label=s.fieldType?s.fieldType.toUpperCase()+': ':'';
-    return `<div class="${cls}" style="top:${Math.max(0,Math.min(top,maxH-14))}px;border-left-color:${color}">${label}${esc(s.bestValue.substring(0,40))}</div>`;
-  }).join('');
-}
-
 // ==================== DEBUG ====================
-function updateDebugPanel(lineTexts,rawText){
+function updateDebugPanel(rawLines){
   const dp=document.getElementById('debugPanel');
-  if(!dp)return;
-  let html='<div class="debug-line"><b>Frame #'+totalSamples+'</b> | Lines: '+lineTexts.length+' | Slots: '+cardSlots.length+'</div>';
-  // Show RAW OCR text (truncated)
-  const rawShort=(rawText||'').replace(/\n/g,' | ').substring(0,120);
-  html+='<div class="debug-line">📝 RAW: "'+rawShort+'"</div>';
-  // Show each line + classification
-  lineTexts.slice(0,6).forEach(t=>{
+  if(!dp) return;
+  let html='<div class="debug-line"><b>Frame #'+totalSamples+'</b> | Lines: '+rawLines.length+'</div>';
+  rawLines.slice(0,6).forEach(t=>{
     const cls=classifyLine(t);
-    html+='<div class="debug-line">&nbsp;&nbsp;→ "'+t.substring(0,35)+'" <b>= '+(cls||'❌NULL')+'</b></div>';
+    html+='<div class="debug-line">&nbsp;→ "'+t.substring(0,35)+'" <b>='+(cls||'?')+'</b></div>';
   });
-  // Show slots
-  if(cardSlots.length>0){
-    html+='<div class="debug-line debug-slot"><b>SLOTS ('+cardSlots.length+'):</b></div>';
-    cardSlots.forEach((s,i)=>{
-      const evCount=Object.values(s.evidence).reduce((a,v)=>a+v.count,0);
-      html+='<div class="debug-line debug-slot">['+i+'] type='+(s.fieldType||'NULL')+' "'+s.bestValue.substring(0,25)+'" conf='+s.confidence+'% ev='+evCount+(s.locked?' 🔒':'')+'</div>';
-    });
-  }else{
-    html+='<div class="debug-line debug-warn">⚠️ ZERO SLOTS</div>';
-  }
-  // Show direct evidence counts
-  let deStr='';
   FIELD_CONFIG.forEach(f=>{
-    const de=directEvidence[f.key];
-    if(de){
-      const total=Object.values(de).reduce((a,v)=>a+v.count,0);
-      if(total>0) deStr+=f.key+'='+total+' ';
+    const fe=fieldEvidence[f.key];
+    const fs=fieldState[f.key];
+    if(fe&&fe.candidates.length>0){
+      const best=fe.candidates[0];
+      html+='<div class="debug-line debug-field">'+f.key+': "'+best.bestRaw.substring(0,25)+'" x'+best.count+' → <b>'+fs.confidence+'%</b>'+(fs.locked?' 🔒':'')+'</div>';
     }
   });
-  if(deStr) html+='<div class="debug-line" style="color:#f0f">DIRECT EV: '+deStr+'</div>';
-  // Show fieldState
-  html+='<div class="debug-line debug-field"><b>CAMPI:</b> ';
-  let anyField=false;
-  FIELD_CONFIG.forEach(f=>{
-    const fs=fieldState[f.key];
-    if(fs.bestValue){html+=f.key+'="'+fs.bestValue.substring(0,20)+'"'+fs.confidence+'% ';anyField=true;}
-  });
-  if(!anyField) html+='<span class="debug-warn">⚠️ TUTTI VUOTI</span>';
-  html+='</div>';
+  if(!FIELD_CONFIG.some(f=>fieldState[f.key].bestValue)) html+='<div class="debug-line debug-warn">⚠️ NESSUN CAMPO</div>';
   dp.innerHTML=html;
-  dp.scrollTop=dp.scrollHeight;
 }
 
 // ==================== COMPLETION ====================
@@ -924,7 +699,7 @@ function updateGlobalProgress(){
 }
 
 // ==================== OVERLAY ====================
-function drawOverlayFromSlots(words,roiX,roiY,vw,vh){
+function drawOverlay(words,roiX,roiY,vw,vh){
   const c=document.getElementById('overlay'),v=document.getElementById('video'),r=v.getBoundingClientRect();
   c.width=r.width*devicePixelRatio;c.height=r.height*devicePixelRatio;c.style.width=r.width+'px';c.style.height=r.height+'px';
   const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.scale(devicePixelRatio,devicePixelRatio);
