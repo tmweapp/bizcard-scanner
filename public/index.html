@@ -23,10 +23,6 @@ body{min-height:100dvh;display:flex;flex-direction:column}
 header{background:var(--bg2);border-bottom:1px solid var(--bg3);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 header h1{font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:8px}
 header h1 span{font-size:1.4rem}
-.header-actions{display:flex;gap:8px}
-.header-actions button{background:var(--bg3);color:var(--fg);border:none;border-radius:8px;padding:8px 12px;font-size:.85rem;cursor:pointer;transition:all .2s}
-.header-actions button:hover{background:var(--accent)}
-.header-actions button.active{background:var(--accent)}
 
 /* Navigation tabs */
 nav{display:flex;background:var(--bg2);border-bottom:1px solid var(--bg3);overflow-x:auto}
@@ -47,27 +43,26 @@ main{flex:1;padding:16px;max-width:900px;margin:0 auto;width:100%}
 .scanner-area canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
 .scanner-area .guide{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:85%;height:60%;border:2px dashed var(--accent);border-radius:8px;opacity:.5;pointer-events:none;transition:all .4s}
 .scanner-area .guide.detecting{border-color:var(--green);opacity:.8;box-shadow:0 0 20px rgba(34,197,94,.2)}
+.scanner-area .guide.done{border-color:var(--green);opacity:1;box-shadow:0 0 30px rgba(34,197,94,.35);border-style:solid}
 .scanner-area .guide::after{content:'Posiziona il biglietto qui';position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);color:var(--fg3);font-size:.8rem;white-space:nowrap}
 .scanner-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--fg3);gap:12px}
 .scanner-placeholder svg{width:64px;height:64px;opacity:.5}
 
-/* Realtime scan indicator */
-.scan-indicator{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border-radius:20px;padding:6px 12px;font-size:.75rem;z-index:10;pointer-events:none}
+/* Scan indicator */
+.scan-indicator{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);border-radius:20px;padding:6px 14px;font-size:.75rem;z-index:10;pointer-events:none}
 .scan-indicator .dot{width:8px;height:8px;border-radius:50%;background:var(--red)}
 .scan-indicator .dot.active{background:var(--green);animation:pulse 1.5s ease infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.scan-indicator .dot.processing{background:var(--orange);animation:pulse .6s ease infinite}
+.scan-indicator .dot.processing{background:var(--orange);animation:pulse .5s ease infinite}
+.scan-indicator .dot.done{background:var(--green)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* Scan line animation */
-.scan-line{position:absolute;left:10%;right:10%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;pointer-events:none;z-index:5;transition:opacity .3s}
+/* Scan counter badge */
+.scan-counter{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);border-radius:20px;padding:6px 14px;font-size:.75rem;z-index:10;pointer-events:none;display:flex;align-items:center;gap:6px}
+
+/* Scan line */
+.scan-line{position:absolute;left:10%;right:10%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;pointer-events:none;z-index:5}
 .scan-line.active{opacity:1;animation:scanMove 2s ease-in-out infinite}
 @keyframes scanMove{0%{top:25%}50%{top:65%}100%{top:25%}}
-
-/* Upload area */
-.upload-area{border:2px dashed var(--bg3);border-radius:var(--radius);padding:32px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px}
-.upload-area:hover,.upload-area.dragover{border-color:var(--accent);background:rgba(59,130,246,.1)}
-.upload-area input{display:none}
-.upload-area p{color:var(--fg3);margin-top:8px;font-size:.9rem}
 
 /* Controls */
 .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
@@ -85,10 +80,10 @@ main{flex:1;padding:16px;max-width:900px;margin:0 auto;width:100%}
 .btn-warning{background:var(--orange);color:#fff}
 .btn-warning:hover{background:#d97706}
 
-/* Realtime toggle button */
+/* Realtime toggle */
 .btn-realtime{position:relative;overflow:hidden}
 .btn-realtime.active{background:var(--green)}
-.btn-realtime.active::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);animation:shimmer 2s infinite}
+.btn-realtime.active::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);animation:shimmer 2s infinite}
 @keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
 
 /* OCR status */
@@ -99,52 +94,54 @@ main{flex:1;padding:16px;max-width:900px;margin:0 auto;width:100%}
 .ocr-status.processing{border-left:3px solid var(--orange)}
 .ocr-status.error{border-left:3px solid var(--red)}
 
-/* ===== REALTIME PANEL ===== */
+/* ===== ACCUMULATIVE REALTIME PANEL ===== */
 .realtime-panel{background:var(--bg2);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid var(--bg3);transition:all .3s}
 .realtime-panel.has-data{border-color:var(--accent)}
-.realtime-panel h3{font-size:.9rem;color:var(--fg2);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.realtime-panel h3 .scan-count{font-size:.75rem;color:var(--fg3);font-weight:400}
+.realtime-panel.all-done{border-color:var(--green);box-shadow:0 0 20px rgba(34,197,94,.15)}
+.realtime-panel h3{font-size:.9rem;color:var(--fg2);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.rt-subtitle{font-size:.8rem;color:var(--fg3);margin-bottom:12px}
 
-/* Realtime fields */
-.rt-field{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;margin-bottom:6px;background:var(--bg);transition:all .3s;min-height:40px}
-.rt-field .rt-icon{width:20px;text-align:center;font-size:.85rem;flex-shrink:0}
+/* Global progress bar */
+.global-progress{width:100%;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin-bottom:14px}
+.global-progress .fill{height:100%;border-radius:4px;transition:width .5s ease, background .5s ease;background:var(--orange)}
+.global-progress .fill.high{background:var(--green)}
+
+/* Realtime field row */
+.rt-field{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;margin-bottom:6px;background:var(--bg);transition:all .4s;min-height:44px;border:1px solid transparent}
+.rt-field.locked{border-color:var(--green);background:rgba(34,197,94,.05)}
+.rt-field .rt-icon{width:22px;text-align:center;font-size:.9rem;flex-shrink:0}
 .rt-field .rt-label{font-size:.7rem;color:var(--fg3);text-transform:uppercase;letter-spacing:.5px;width:60px;flex-shrink:0}
-.rt-field .rt-value{flex:1;font-size:.9rem;color:var(--fg);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rt-field .rt-value-wrap{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.rt-field .rt-value{font-size:.9rem;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rt-field .rt-value.empty{color:var(--fg3);font-style:italic;font-size:.8rem}
-.rt-field .rt-status{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:all .3s}
-.rt-field .rt-status.waiting{background:var(--bg3)}
-.rt-field .rt-status.unstable{background:var(--orange);animation:pulse 1s ease infinite}
-.rt-field .rt-status.stable{background:var(--green)}
+.rt-field .rt-value-input{background:transparent;border:1px solid var(--bg3);border-radius:6px;padding:4px 8px;color:var(--fg);font-size:.9rem;width:100%;transition:all .2s}
+.rt-field .rt-value-input:focus{outline:none;border-color:var(--accent);background:var(--bg2)}
 
-/* Stability progress bar per field */
-.rt-field .rt-stability{width:40px;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;flex-shrink:0}
-.rt-field .rt-stability .fill{height:100%;border-radius:2px;transition:width .3s, background .3s}
+/* Confidence badge */
+.rt-confidence{font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0;min-width:42px;text-align:center;transition:all .4s}
+.rt-confidence.low{background:rgba(239,68,68,.15);color:var(--red)}
+.rt-confidence.medium{background:rgba(245,158,11,.15);color:var(--orange)}
+.rt-confidence.high{background:rgba(34,197,94,.15);color:var(--green)}
+.rt-confidence.certain{background:var(--green);color:#fff}
 
-/* ===== APPROVAL CARD ===== */
-.approval-card{background:linear-gradient(135deg,var(--bg2),#1a2744);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:0 8px 32px rgba(0,0,0,.4);border:1px solid var(--green);animation:approvalIn .4s ease}
-@keyframes approvalIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-.approval-card h3{font-size:1rem;color:var(--green);margin-bottom:4px;display:flex;align-items:center;gap:8px}
-.approval-card .approval-subtitle{font-size:.85rem;color:var(--fg3);margin-bottom:16px}
-.approval-fields{display:grid;gap:8px;margin-bottom:16px}
-.approval-field{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border-radius:8px}
-.approval-field .af-icon{font-size:.9rem;width:20px;text-align:center}
-.approval-field .af-label{font-size:.7rem;color:var(--fg3);text-transform:uppercase;width:55px;flex-shrink:0}
-.approval-field input{flex:1;background:transparent;border:1px solid transparent;border-radius:6px;padding:4px 8px;color:var(--fg);font-size:.9rem;transition:all .2s}
-.approval-field input:hover{border-color:var(--bg3)}
-.approval-field input:focus{outline:none;border-color:var(--accent);background:var(--bg2)}
-.approval-actions{display:flex;gap:8px;flex-wrap:wrap}
+/* Lock icon */
+.rt-lock{width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;opacity:.3;transition:all .3s}
+.rt-lock.locked{opacity:1}
 
-/* Results card (kept for upload mode) */
+/* ===== COMPLETION BANNER ===== */
+.completion-banner{background:linear-gradient(135deg,#14532d,#166534);border-radius:var(--radius);padding:20px;margin-bottom:16px;border:1px solid var(--green);animation:bannerIn .5s ease;text-align:center}
+@keyframes bannerIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.completion-banner h3{color:var(--green);font-size:1.1rem;margin-bottom:6px}
+.completion-banner p{color:var(--fg2);font-size:.9rem;margin-bottom:16px}
+.completion-banner .controls{justify-content:center;margin-bottom:0}
+
+/* Results card (for upload mode) */
 .result-card{background:var(--bg2);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
 .result-card h3{font-size:1rem;color:var(--fg2);margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .field-group{margin-bottom:12px}
 .field-group label{display:block;font-size:.75rem;color:var(--fg3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
 .field-group input{width:100%;background:var(--bg);border:1px solid var(--bg3);border-radius:8px;padding:10px 12px;color:var(--fg);font-size:.95rem;transition:border-color .2s}
 .field-group input:focus{outline:none;border-color:var(--accent)}
-.field-group .confidence{font-size:.7rem;color:var(--fg3);margin-top:2px}
-.field-group .confidence.high{color:var(--green)}
-.field-group .confidence.medium{color:var(--orange)}
-.field-group .confidence.low{color:var(--red)}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:500px){.field-row{grid-template-columns:1fr}}
 
@@ -209,12 +206,11 @@ select{background:var(--bg);border:1px solid var(--bg3);border-radius:6px;paddin
 .progress-bar{width:100%;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:8px}
 .progress-bar .fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
 
-/* Mobile adjustments */
+/* Mobile */
 @media(max-width:600px){
   main{padding:12px}
   .result-card{padding:14px}
   .export-options{grid-template-columns:1fr 1fr}
-  .approval-card{padding:14px}
   .rt-field .rt-label{width:45px;font-size:.65rem}
 }
 </style>
@@ -243,6 +239,9 @@ select{background:var(--bg);border:1px solid var(--bg3);border-radius:6px;paddin
         <div class="dot" id="scanDot"></div>
         <span id="scanLabel">LIVE</span>
       </div>
+      <div class="scan-counter" id="scanCounter" style="display:none">
+        📸 <span id="scanCountLabel">0</span> campioni
+      </div>
       <div class="guide" id="guide"></div>
       <div class="scanner-placeholder" id="placeholder" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><circle cx="15" cy="15" r="2"/></svg>
@@ -251,8 +250,7 @@ select{background:var(--bg);border:1px solid var(--bg3);border-radius:6px;paddin
     </div>
 
     <div class="controls">
-      <button class="btn btn-realtime" id="btnRealtime" disabled>🔴 Tempo reale</button>
-      <button class="btn btn-primary" id="btnCapture" disabled>📸 Cattura singola</button>
+      <button class="btn btn-realtime" id="btnRealtime" disabled>🔴 Avvia scansione</button>
       <button class="btn btn-secondary" id="btnUpload">📁 Carica immagine</button>
       <button class="btn btn-secondary" id="btnFlip" style="display:none">🔄 Inverti camera</button>
       <input type="file" id="fileInput" accept="image/*" style="display:none">
@@ -264,138 +262,44 @@ select{background:var(--bg);border:1px solid var(--bg3);border-radius:6px;paddin
       <div class="progress-bar"><div class="fill" id="ocrProgress" style="width:0"></div></div>
     </div>
 
-    <!-- REALTIME PANEL: shows live extracted fields -->
+    <!-- REALTIME ACCUMULATIVE PANEL -->
     <div class="realtime-panel" id="realtimePanel" style="display:none">
-      <h3>
-        <span>🔍 Rilevamento in tempo reale</span>
-        <span class="scan-count" id="rtScanCount">Scansione #0</span>
-      </h3>
-      <div id="rtFields">
-        <div class="rt-field" data-field="name">
-          <span class="rt-icon">👤</span>
-          <span class="rt-label">Nome</span>
-          <span class="rt-value empty">In attesa...</span>
-          <div class="rt-stability"><div class="fill" style="width:0;background:var(--bg3)"></div></div>
-          <div class="rt-status waiting"></div>
-        </div>
-        <div class="rt-field" data-field="company">
-          <span class="rt-icon">🏢</span>
-          <span class="rt-label">Azienda</span>
-          <span class="rt-value empty">In attesa...</span>
-          <div class="rt-stability"><div class="fill" style="width:0;background:var(--bg3)"></div></div>
-          <div class="rt-status waiting"></div>
-        </div>
-        <div class="rt-field" data-field="role">
-          <span class="rt-icon">💼</span>
-          <span class="rt-label">Ruolo</span>
-          <span class="rt-value empty">In attesa...</span>
-          <div class="rt-stability"><div class="fill" style="width:0;background:var(--bg3)"></div></div>
-          <div class="rt-status waiting"></div>
-        </div>
-        <div class="rt-field" data-field="email">
-          <span class="rt-icon">📧</span>
-          <span class="rt-label">Email</span>
-          <span class="rt-value empty">In attesa...</span>
-          <div class="rt-stability"><div class="fill" style="width:0;background:var(--bg3)"></div></div>
-          <div class="rt-status waiting"></div>
-        </div>
-        <div class="rt-field" data-field="phone">
-          <span class="rt-icon">📱</span>
-          <span class="rt-label">Telefono</span>
-          <span class="rt-value empty">In attesa...</span>
-          <div class="rt-stability"><div class="fill" style="width:0;background:var(--bg3)"></div></div>
-          <div class="rt-status waiting"></div>
-        </div>
-        <div class="rt-field" data-field="web">
-          <span class="rt-icon">🌐</span>
-          <span class="rt-label">Web</span>
-          <span class="rt-value empty">In attesa...</span>
-          <div class="rt-stability"><div class="fill" style="width:0;background:var(--bg3)"></div></div>
-          <div class="rt-status waiting"></div>
-        </div>
-        <div class="rt-field" data-field="piva">
-          <span class="rt-icon">🏛️</span>
-          <span class="rt-label">P.IVA</span>
-          <span class="rt-value empty">In attesa...</span>
-          <div class="rt-stability"><div class="fill" style="width:0;background:var(--bg3)"></div></div>
-          <div class="rt-status waiting"></div>
-        </div>
-        <div class="rt-field" data-field="cf">
-          <span class="rt-icon">🆔</span>
-          <span class="rt-label">C.F.</span>
-          <span class="rt-value empty">In attesa...</span>
-          <div class="rt-stability"><div class="fill" style="width:0;background:var(--bg3)"></div></div>
-          <div class="rt-status waiting"></div>
-        </div>
-        <div class="rt-field" data-field="address">
-          <span class="rt-icon">📍</span>
-          <span class="rt-label">Indirizzo</span>
-          <span class="rt-value empty">In attesa...</span>
-          <div class="rt-stability"><div class="fill" style="width:0;background:var(--bg3)"></div></div>
-          <div class="rt-status waiting"></div>
-        </div>
-      </div>
+      <h3>🔍 Rilevamento progressivo</h3>
+      <div class="rt-subtitle" id="rtSubtitle">I campi si riempiono e si consolidano ad ogni scansione</div>
+      <div class="global-progress"><div class="fill" id="globalProgressFill" style="width:0"></div></div>
+      <div id="rtFields"></div>
     </div>
 
-    <!-- APPROVAL CARD: appears when fields are stable -->
-    <div class="approval-card" id="approvalCard" style="display:none">
-      <h3>✅ Dati pronti per il salvataggio</h3>
-      <p class="approval-subtitle">I campi si sono stabilizzati. Puoi modificarli prima di salvare.</p>
-      <div class="approval-fields" id="approvalFields"></div>
-      <div class="approval-actions">
-        <button class="btn btn-success" id="btnApprove">✅ Approva e salva</button>
-        <button class="btn btn-warning" id="btnRestart">🔄 Riscansiona</button>
-        <button class="btn btn-secondary" id="btnDiscard">✕ Scarta</button>
+    <!-- COMPLETION BANNER: all fields certain -->
+    <div class="completion-banner" id="completionBanner" style="display:none">
+      <h3>✅ Scansione completata!</h3>
+      <p>Tutti i campi rilevati sono stati verificati. Puoi salvare o modificare.</p>
+      <div class="controls">
+        <button class="btn btn-success" id="btnSaveRT">💾 Salva contatto</button>
+        <button class="btn btn-secondary" id="btnResetRT">🔄 Nuova scansione</button>
       </div>
     </div>
 
     <img class="image-preview" id="imagePreview" style="display:none">
 
-    <!-- RESULT CARD: kept for single capture / upload mode -->
+    <!-- RESULT CARD: for upload mode -->
     <div class="result-card" id="resultCard" style="display:none">
       <h3>📋 Dati estratti</h3>
       <div class="field-row">
-        <div class="field-group">
-          <label>Nome</label>
-          <input type="text" id="fName" placeholder="Nome e Cognome">
-        </div>
-        <div class="field-group">
-          <label>Azienda</label>
-          <input type="text" id="fCompany" placeholder="Nome azienda">
-        </div>
+        <div class="field-group"><label>Nome</label><input type="text" id="fName" placeholder="Nome e Cognome"></div>
+        <div class="field-group"><label>Azienda</label><input type="text" id="fCompany" placeholder="Nome azienda"></div>
       </div>
-      <div class="field-group">
-        <label>Ruolo / Titolo</label>
-        <input type="text" id="fRole" placeholder="Es. Direttore Commerciale">
+      <div class="field-group"><label>Ruolo / Titolo</label><input type="text" id="fRole" placeholder="Es. Direttore Commerciale"></div>
+      <div class="field-row">
+        <div class="field-group"><label>Email</label><input type="email" id="fEmail" placeholder="email@esempio.it"></div>
+        <div class="field-group"><label>Telefono</label><input type="tel" id="fPhone" placeholder="+39 ..."></div>
       </div>
       <div class="field-row">
-        <div class="field-group">
-          <label>Email</label>
-          <input type="email" id="fEmail" placeholder="email@esempio.it">
-        </div>
-        <div class="field-group">
-          <label>Telefono</label>
-          <input type="tel" id="fPhone" placeholder="+39 ...">
-        </div>
+        <div class="field-group"><label>Sito web</label><input type="url" id="fWeb" placeholder="www.esempio.it"></div>
+        <div class="field-group"><label>P.IVA</label><input type="text" id="fPiva" placeholder="IT..."></div>
       </div>
-      <div class="field-row">
-        <div class="field-group">
-          <label>Sito web</label>
-          <input type="url" id="fWeb" placeholder="www.esempio.it">
-        </div>
-        <div class="field-group">
-          <label>P.IVA</label>
-          <input type="text" id="fPiva" placeholder="IT...">
-        </div>
-      </div>
-      <div class="field-group">
-        <label>Codice Fiscale</label>
-        <input type="text" id="fCf" placeholder="RSSMRA80A01H501U">
-      </div>
-      <div class="field-group">
-        <label>Indirizzo</label>
-        <input type="text" id="fAddress" placeholder="Via/Piazza...">
-      </div>
+      <div class="field-group"><label>Codice Fiscale</label><input type="text" id="fCf" placeholder="RSSMRA80A01H501U"></div>
+      <div class="field-group"><label>Indirizzo</label><input type="text" id="fAddress" placeholder="Via/Piazza..."></div>
       <div class="field-group">
         <label>Testo completo OCR</label>
         <textarea id="fRawText" rows="3" style="width:100%;background:var(--bg);border:1px solid var(--bg3);border-radius:8px;padding:10px;color:var(--fg);font-size:.85rem;resize:vertical" readonly></textarea>
@@ -469,13 +373,6 @@ select{background:var(--bg);border:1px solid var(--bg3);border-radius:6px;paddin
     <div class="settings-section">
       <h3>⚡ Scansione in tempo reale</h3>
       <div class="setting-row">
-        <label>Abilita scansione live</label>
-        <label class="toggle">
-          <input type="checkbox" id="settingRealtime" checked>
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="setting-row">
         <label>Velocità scansione</label>
         <select id="scanSpeed">
           <option value="fast">Rapida (~1s)</option>
@@ -484,11 +381,11 @@ select{background:var(--bg);border:1px solid var(--bg3);border-radius:6px;paddin
         </select>
       </div>
       <div class="setting-row">
-        <label>Soglia stabilità (cicli)</label>
-        <select id="stabilityThreshold">
-          <option value="2">2 (veloce)</option>
-          <option value="3" selected>3 (bilanciato)</option>
-          <option value="5">5 (preciso)</option>
+        <label>Soglia certezza per blocco campo</label>
+        <select id="certThreshold">
+          <option value="70">70% (veloce)</option>
+          <option value="85" selected>85% (bilanciato)</option>
+          <option value="95">95% (preciso)</option>
         </select>
       </div>
     </div>
@@ -506,14 +403,8 @@ select{background:var(--bg);border:1px solid var(--bg3);border-radius:6px;paddin
     </div>
     <div class="settings-section">
       <h3>📊 Statistiche</h3>
-      <div class="setting-row">
-        <label>Contatti salvati</label>
-        <span id="statContacts">0</span>
-      </div>
-      <div class="setting-row">
-        <label>Scansioni effettuate</label>
-        <span id="statScans">0</span>
-      </div>
+      <div class="setting-row"><label>Contatti salvati</label><span id="statContacts">0</span></div>
+      <div class="setting-row"><label>Scansioni effettuate</label><span id="statScans">0</span></div>
     </div>
     <div class="settings-section">
       <h3>🗑️ Dati</h3>
@@ -535,31 +426,48 @@ let worker = null;
 let workerReady = false;
 let currentStream = null;
 let facingMode = 'environment';
-let settings = { lang: 'ita', webhookUrl: '', webhookAuth: '', realtimeEnabled: true, scanSpeed: 'normal', stabilityThreshold: 3 };
+let settings = { lang: 'ita', webhookUrl: '', webhookAuth: '', scanSpeed: 'normal', certThreshold: 85 };
 
-// ========== REALTIME STATE ==========
+// ========== ACCUMULATIVE REALTIME STATE ==========
 let realtimeActive = false;
 let isProcessingFrame = false;
-let realtimeScanCount = 0;
 let scanLoopTimer = null;
+let totalSamples = 0;  // how many frames we've analyzed
 
-// Field history for stability detection (circular buffer per field)
-const FIELD_NAMES = ['name','company','role','email','phone','web','piva','cf','address'];
-const HISTORY_SIZE = 7;
-let fieldHistory = {};
-let stableFields = {};
-let approvalShown = false;
+/*
+  ACCUMULATIVE EVIDENCE SYSTEM
+  For each field, we keep a map of { value -> count }.
+  The "best" value is the one with the highest count.
+  Confidence = (bestCount / totalSamples) * 100.
+  A field is "locked" (certain) when confidence >= threshold.
+  Once locked, we STOP updating that field — it stays forever.
+  User can manually edit any field at any time.
+*/
+const FIELD_CONFIG = [
+  { key: 'name',    icon: '👤', label: 'Nome' },
+  { key: 'company', icon: '🏢', label: 'Azienda' },
+  { key: 'role',    icon: '💼', label: 'Ruolo' },
+  { key: 'email',   icon: '📧', label: 'Email' },
+  { key: 'phone',   icon: '📱', label: 'Telefono' },
+  { key: 'web',     icon: '🌐', label: 'Web' },
+  { key: 'piva',    icon: '🏛️', label: 'P.IVA' },
+  { key: 'cf',      icon: '🆔', label: 'C.F.' },
+  { key: 'address', icon: '📍', label: 'Indirizzo' }
+];
 
-function resetFieldHistory() {
-  fieldHistory = {};
-  stableFields = {};
-  FIELD_NAMES.forEach(f => {
-    fieldHistory[f] = [];
-    stableFields[f] = { value: '', stable: false, count: 0 };
+let fieldEvidence = {};  // { fieldKey: { valueString: hitCount } }
+let fieldState = {};     // { fieldKey: { bestValue, confidence, locked, manuallyEdited } }
+
+function resetAccumulator() {
+  totalSamples = 0;
+  fieldEvidence = {};
+  fieldState = {};
+  FIELD_CONFIG.forEach(f => {
+    fieldEvidence[f.key] = {};
+    fieldState[f.key] = { bestValue: '', confidence: 0, locked: false, manuallyEdited: false };
   });
-  approvalShown = false;
 }
-resetFieldHistory();
+resetAccumulator();
 
 // ========== INIT ==========
 document.addEventListener('DOMContentLoaded', () => {
@@ -570,15 +478,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initExport();
   initSettings();
   initOCR();
-  initApproval();
+  buildRealtimeFieldsUI();
 
-  // Pause realtime when tab is hidden
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && realtimeActive) {
-      pauseRealtimeScan();
-    } else if (!document.hidden && realtimeActive) {
-      resumeRealtimeScan();
-    }
+    if (document.hidden && realtimeActive) pauseRealtimeScan();
+    else if (!document.hidden && realtimeActive) resumeRealtimeScan();
   });
 });
 
@@ -611,10 +515,7 @@ function initTabs() {
       if (btn.dataset.tab === 'contacts') renderContacts();
       if (btn.dataset.tab === 'export') updateExportState();
       if (btn.dataset.tab === 'settings') updateStats();
-      // Pause realtime when leaving scanner tab
-      if (btn.dataset.tab !== 'scanner' && realtimeActive) {
-        pauseRealtimeScan();
-      }
+      if (btn.dataset.tab !== 'scanner' && realtimeActive) pauseRealtimeScan();
     });
   });
 }
@@ -628,9 +529,7 @@ async function initOCR() {
   statusEl.querySelector('span').textContent = 'Caricamento motore OCR...';
 
   try {
-    const langMap = { ita: 'ita', eng: 'eng', deu: 'deu', fra: 'fra', spa: 'spa', por: 'por' };
-    const lang = langMap[settings.lang] || 'ita';
-
+    const lang = settings.lang || 'ita';
     worker = await Tesseract.createWorker(lang, 1, {
       logger: m => {
         if (m.status === 'recognizing text') {
@@ -640,17 +539,14 @@ async function initOCR() {
         }
       }
     });
-
     workerReady = true;
     statusEl.className = 'ocr-status ready';
     statusEl.innerHTML = '<span>✅ OCR pronto — lingua: ' + lang.toUpperCase() + '</span>';
-    document.getElementById('btnCapture').disabled = false;
     document.getElementById('btnRealtime').disabled = false;
-
     setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
   } catch (e) {
     statusEl.className = 'ocr-status error';
-    statusEl.innerHTML = '<span>❌ Errore inizializzazione OCR: ' + esc(e.message) + '</span>';
+    statusEl.innerHTML = '<span>❌ Errore OCR: ' + esc(e.message) + '</span>';
   }
 }
 
@@ -661,87 +557,41 @@ const RE_PHONE = /(?:\+?\d{1,3}[\s.\-]?)?(?:\(?\d{2,4}\)?[\s.\-]?)?\d{3,4}[\s.\-
 const RE_PIVA = /(?:P\.?\s*I\.?V\.?A\.?|IT)\s*[:.]?\s*(\d{11})/i;
 const RE_CF = /\b[A-Z]{6}\d{2}[A-EHLMPRST]\d{2}[A-Z]\d{3}[A-Z]\b/i;
 const RE_ADDRESS = /(?:via|viale|v\.le|corso|c\.so|piazza|p\.za|p\.zza|largo|vicolo|loc\.|strada|contrada|s\.s\.|s\.r\.|s\.p\.)\s+.+?\d/i;
-
-const ROLES = ['ceo','cto','cfo','coo','cio','direttore','director','manager','responsabile','presidente','founder','co-founder',
-  'ingegnere','engineer','architetto','avvocato','dottore','dott','consulente','analyst','designer','developer','sales',
-  'marketing','hr','amministratore','delegato','socio','partner','legale','tecnico','commerciale','operativo'];
+const ROLES = ['ceo','cto','cfo','coo','cio','direttore','director','manager','responsabile','presidente','founder','co-founder','ingegnere','engineer','architetto','avvocato','dottore','dott','consulente','analyst','designer','developer','sales','marketing','hr','amministratore','delegato','socio','partner','legale','tecnico','commerciale','operativo'];
 
 function extractFields(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 1);
-  const result = { name:'', company:'', role:'', email:'', phone:'', web:'', piva:'', cf:'', address:'', raw: text };
+  const result = { name:'', company:'', role:'', email:'', phone:'', web:'', piva:'', cf:'', address:'' };
   const used = new Set();
 
-  for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(RE_EMAIL);
-    if (m) { result.email = m[0]; used.add(i); break; }
-  }
-  for (let i = 0; i < lines.length; i++) {
-    if (used.has(i)) continue;
-    const m = lines[i].match(RE_WEB);
-    if (m && !m[0].includes('@') && m[0].includes('.')) {
-      result.web = m[0]; used.add(i); break;
-    }
-  }
-  for (let i = 0; i < lines.length; i++) {
-    if (used.has(i)) continue;
-    const m = lines[i].match(RE_CF);
-    if (m) { result.cf = m[0].toUpperCase(); used.add(i); break; }
-  }
-  for (let i = 0; i < lines.length; i++) {
-    if (used.has(i)) continue;
-    const m = lines[i].match(RE_PIVA);
-    if (m) { result.piva = m[1] || m[0]; used.add(i); break; }
-  }
-  for (let i = 0; i < lines.length; i++) {
-    if (used.has(i)) continue;
-    const m = lines[i].match(RE_PHONE);
-    if (m && m[0].replace(/\D/g,'').length >= 6) {
-      if (result.piva && m[0].includes(result.piva)) continue;
-      result.phone = m[0]; used.add(i); break;
-    }
-  }
-  for (let i = 0; i < lines.length; i++) {
-    if (used.has(i)) continue;
-    const m = lines[i].match(RE_ADDRESS);
-    if (m) { result.address = lines[i]; used.add(i); break; }
-  }
-  for (let i = 0; i < lines.length; i++) {
-    if (used.has(i)) continue;
-    const low = lines[i].toLowerCase();
-    if (ROLES.some(r => low.includes(r))) {
-      result.role = lines[i]; used.add(i); break;
-    }
-  }
+  for (let i = 0; i < lines.length; i++) { const m = lines[i].match(RE_EMAIL); if (m) { result.email = m[0]; used.add(i); break; } }
+  for (let i = 0; i < lines.length; i++) { if (used.has(i)) continue; const m = lines[i].match(RE_WEB); if (m && !m[0].includes('@') && m[0].includes('.')) { result.web = m[0]; used.add(i); break; } }
+  for (let i = 0; i < lines.length; i++) { if (used.has(i)) continue; const m = lines[i].match(RE_CF); if (m) { result.cf = m[0].toUpperCase(); used.add(i); break; } }
+  for (let i = 0; i < lines.length; i++) { if (used.has(i)) continue; const m = lines[i].match(RE_PIVA); if (m) { result.piva = m[1] || m[0]; used.add(i); break; } }
+  for (let i = 0; i < lines.length; i++) { if (used.has(i)) continue; const m = lines[i].match(RE_PHONE); if (m && m[0].replace(/\D/g,'').length >= 6) { if (result.piva && m[0].includes(result.piva)) continue; result.phone = m[0]; used.add(i); break; } }
+  for (let i = 0; i < lines.length; i++) { if (used.has(i)) continue; const m = lines[i].match(RE_ADDRESS); if (m) { result.address = lines[i]; used.add(i); break; } }
+  for (let i = 0; i < lines.length; i++) { if (used.has(i)) continue; const low = lines[i].toLowerCase(); if (ROLES.some(r => low.includes(r))) { result.role = lines[i]; used.add(i); break; } }
 
   const remaining = [];
-  for (let i = 0; i < lines.length; i++) {
-    if (!used.has(i) && lines[i].length > 1) remaining.push(lines[i]);
-  }
+  for (let i = 0; i < lines.length; i++) { if (!used.has(i) && lines[i].length > 1) remaining.push(lines[i]); }
   for (const line of remaining) {
     const letterRatio = (line.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙ]/g) || []).length / line.length;
     if (letterRatio > 0.7 && line.length < 50) {
-      if (!result.name) {
-        const words = line.split(/\s+/);
-        if (words.length >= 2 && words.length <= 5) {
-          result.name = line;
-        } else if (!result.company) {
-          result.company = line;
-        }
-      } else if (!result.company) {
-        result.company = line;
-      }
+      if (!result.name) { const words = line.split(/\s+/); if (words.length >= 2 && words.length <= 5) result.name = line; else if (!result.company) result.company = line; }
+      else if (!result.company) result.company = line;
     }
   }
-  if (!result.name && remaining.length > 0) {
-    result.name = remaining[0];
-  }
-
+  if (!result.name && remaining.length > 0) result.name = remaining[0];
   return result;
+}
+
+// Normalize a value for comparison (trim, lowercase, collapse spaces)
+function normalizeValue(v) {
+  return (v || '').trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
 // ========== SCANNER ==========
 function initScanner() {
-  const btnCapture = document.getElementById('btnCapture');
   const btnUpload = document.getElementById('btnUpload');
   const btnFlip = document.getElementById('btnFlip');
   const btnRealtime = document.getElementById('btnRealtime');
@@ -749,68 +599,83 @@ function initScanner() {
 
   startCamera();
 
-  btnCapture.addEventListener('click', () => {
-    if (realtimeActive) stopRealtimeScan();
-    captureFrame();
-  });
-  btnUpload.addEventListener('click', () => {
-    if (realtimeActive) stopRealtimeScan();
-    fileInput.click();
-  });
-  btnFlip.addEventListener('click', () => {
-    facingMode = facingMode === 'environment' ? 'user' : 'environment';
-    startCamera();
-  });
+  btnUpload.addEventListener('click', () => { if (realtimeActive) stopRealtimeScan(); fileInput.click(); });
+  btnFlip.addEventListener('click', () => { facingMode = facingMode === 'environment' ? 'user' : 'environment'; startCamera(); });
   btnRealtime.addEventListener('click', toggleRealtime);
-
-  fileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) processImageFile(file);
-  });
+  fileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) processImageFile(file); });
 
   const scannerArea = document.getElementById('scannerArea');
   scannerArea.addEventListener('dragover', e => { e.preventDefault(); scannerArea.style.opacity = '.7'; });
   scannerArea.addEventListener('dragleave', () => { scannerArea.style.opacity = '1'; });
-  scannerArea.addEventListener('drop', e => {
-    e.preventDefault();
-    scannerArea.style.opacity = '1';
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-      if (realtimeActive) stopRealtimeScan();
-      processImageFile(file);
-    }
-  });
+  scannerArea.addEventListener('drop', e => { e.preventDefault(); scannerArea.style.opacity = '1'; const file = e.dataTransfer.files[0]; if (file && file.type.startsWith('image/')) { if (realtimeActive) stopRealtimeScan(); processImageFile(file); } });
 
-  document.getElementById('btnSave').addEventListener('click', saveContact);
+  document.getElementById('btnSave').addEventListener('click', saveContactFromUpload);
   document.getElementById('btnClear').addEventListener('click', clearResult);
+  document.getElementById('btnSaveRT').addEventListener('click', saveContactFromRealtime);
+  document.getElementById('btnResetRT').addEventListener('click', () => { resetAndRestart(); });
 }
 
 async function startCamera() {
   const video = document.getElementById('video');
   const placeholder = document.getElementById('placeholder');
   const btnFlip = document.getElementById('btnFlip');
-  const btnCapture = document.getElementById('btnCapture');
-
   try {
-    if (currentStream) {
-      currentStream.getTracks().forEach(t => t.stop());
-    }
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
-      audio: false
-    });
+    if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
     video.srcObject = stream;
     currentStream = stream;
     video.style.display = 'block';
     placeholder.style.display = 'none';
     btnFlip.style.display = 'inline-flex';
-    if (workerReady) btnCapture.disabled = false;
   } catch (e) {
     console.log('Camera non disponibile:', e.message);
     video.style.display = 'none';
     placeholder.style.display = 'flex';
     btnFlip.style.display = 'none';
   }
+}
+
+// ========== BUILD REALTIME FIELDS UI ==========
+function buildRealtimeFieldsUI() {
+  const container = document.getElementById('rtFields');
+  container.innerHTML = FIELD_CONFIG.map(f => `
+    <div class="rt-field" data-field="${f.key}" id="rtf_${f.key}">
+      <span class="rt-icon">${f.icon}</span>
+      <span class="rt-label">${f.label}</span>
+      <div class="rt-value-wrap">
+        <span class="rt-value empty" id="rtv_${f.key}">—</span>
+      </div>
+      <span class="rt-confidence low" id="rtc_${f.key}">0%</span>
+      <span class="rt-lock" id="rtl_${f.key}">🔓</span>
+    </div>
+  `).join('');
+
+  // Make fields editable on click
+  FIELD_CONFIG.forEach(f => {
+    const row = document.getElementById('rtf_' + f.key);
+    const valueEl = document.getElementById('rtv_' + f.key);
+    row.addEventListener('dblclick', () => {
+      if (valueEl.tagName === 'INPUT') return; // already editing
+      const currentVal = fieldState[f.key].bestValue || '';
+      const wrap = row.querySelector('.rt-value-wrap');
+      wrap.innerHTML = `<input class="rt-value-input" type="text" value="${esc(currentVal)}" id="rti_${f.key}">`;
+      const input = document.getElementById('rti_' + f.key);
+      input.focus();
+      input.select();
+      input.addEventListener('blur', () => finishFieldEdit(f.key, input.value));
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
+    });
+  });
+}
+
+function finishFieldEdit(key, newValue) {
+  const trimmed = newValue.trim();
+  fieldState[key].bestValue = trimmed;
+  fieldState[key].manuallyEdited = true;
+  fieldState[key].locked = true;
+  fieldState[key].confidence = 100;
+  refreshFieldUI(key);
+  checkAllFieldsDone();
 }
 
 // ========== REALTIME SCANNING ==========
@@ -820,37 +685,35 @@ function getScanInterval() {
 }
 
 function toggleRealtime() {
-  if (realtimeActive) {
-    stopRealtimeScan();
-  } else {
-    startRealtimeScan();
-  }
+  if (realtimeActive) stopRealtimeScan();
+  else startRealtimeScan();
 }
 
 function startRealtimeScan() {
-  if (!workerReady || !currentStream) {
-    toast('Camera o OCR non pronti', 'error');
-    return;
-  }
+  if (!workerReady || !currentStream) { toast('Camera o OCR non pronti', 'error'); return; }
 
   realtimeActive = true;
-  realtimeScanCount = 0;
-  resetFieldHistory();
+  resetAccumulator();
+  buildRealtimeFieldsUI(); // rebuild fresh
 
   const btn = document.getElementById('btnRealtime');
   btn.classList.add('active');
-  btn.textContent = '🟢 LIVE — Stop';
+  btn.textContent = '⏹️ Ferma scansione';
 
   document.getElementById('realtimePanel').style.display = 'block';
   document.getElementById('resultCard').style.display = 'none';
   document.getElementById('imagePreview').style.display = 'none';
-  document.getElementById('approvalCard').style.display = 'none';
+  document.getElementById('completionBanner').style.display = 'none';
 
   document.getElementById('scanIndicator').style.display = 'flex';
+  document.getElementById('scanCounter').style.display = 'flex';
   document.getElementById('scanLine').classList.add('active');
   document.getElementById('guide').classList.add('detecting');
 
-  updateRealtimeFieldsUI();
+  document.getElementById('globalProgressFill').style.width = '0';
+  document.getElementById('scanCountLabel').textContent = '0';
+  document.getElementById('rtSubtitle').textContent = 'I campi si riempiono e si consolidano ad ogni scansione';
+
   scheduleScanLoop();
 }
 
@@ -860,19 +723,26 @@ function stopRealtimeScan() {
 
   const btn = document.getElementById('btnRealtime');
   btn.classList.remove('active');
-  btn.textContent = '🔴 Tempo reale';
+  btn.textContent = '🔴 Avvia scansione';
 
   document.getElementById('scanIndicator').style.display = 'none';
   document.getElementById('scanLine').classList.remove('active');
   document.getElementById('guide').classList.remove('detecting');
-
+  document.getElementById('guide').classList.remove('done');
   clearOverlay();
+
+  // If we have data, show the save option
+  const hasData = FIELD_CONFIG.some(f => fieldState[f.key].bestValue);
+  if (hasData) {
+    document.getElementById('completionBanner').style.display = 'block';
+    document.getElementById('completionBanner').querySelector('h3').textContent = '📋 Scansione fermata';
+    document.getElementById('completionBanner').querySelector('p').textContent = 'Puoi salvare i dati rilevati finora, modificarli (doppio click), o riavviare.';
+  }
 }
 
 function pauseRealtimeScan() {
   if (scanLoopTimer) { clearTimeout(scanLoopTimer); scanLoopTimer = null; }
-  const dot = document.getElementById('scanDot');
-  dot.className = 'dot';
+  document.getElementById('scanDot').className = 'dot';
   document.getElementById('scanLabel').textContent = 'PAUSA';
 }
 
@@ -889,16 +759,19 @@ function scheduleScanLoop() {
 }
 
 async function realtimeScanFrame() {
-  if (!realtimeActive || isProcessingFrame || !workerReady || approvalShown) {
-    scheduleScanLoop();
+  if (!realtimeActive || isProcessingFrame || !workerReady) {
+    if (realtimeActive) scheduleScanLoop();
+    return;
+  }
+
+  // Check if ALL fields with data are locked → auto-stop
+  if (areAllDetectedFieldsLocked()) {
+    autoComplete();
     return;
   }
 
   const video = document.getElementById('video');
-  if (!video.srcObject || video.videoWidth === 0) {
-    scheduleScanLoop();
-    return;
-  }
+  if (!video.srcObject || video.videoWidth === 0) { scheduleScanLoop(); return; }
 
   isProcessingFrame = true;
   const dot = document.getElementById('scanDot');
@@ -906,49 +779,42 @@ async function realtimeScanFrame() {
   document.getElementById('scanLabel').textContent = 'ANALISI...';
 
   try {
-    // Capture frame from ROI (guide area)
+    // Capture ROI
     const canvas = document.createElement('canvas');
-    const vw = video.videoWidth;
-    const vh = video.videoHeight;
-
-    // ROI: centered 85% width, 60% height (matching the guide)
-    const roiX = Math.round(vw * 0.075);
-    const roiY = Math.round(vh * 0.2);
-    const roiW = Math.round(vw * 0.85);
-    const roiH = Math.round(vh * 0.6);
-
-    canvas.width = roiW;
-    canvas.height = roiH;
+    const vw = video.videoWidth, vh = video.videoHeight;
+    const roiX = Math.round(vw * 0.075), roiY = Math.round(vh * 0.2);
+    const roiW = Math.round(vw * 0.85), roiH = Math.round(vh * 0.6);
+    canvas.width = roiW; canvas.height = roiH;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, roiX, roiY, roiW, roiH, 0, 0, roiW, roiH);
-
     const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
 
     const { data } = await worker.recognize(dataUrl);
-    realtimeScanCount++;
+    totalSamples++;
     scanCount++;
     saveState();
 
-    document.getElementById('rtScanCount').textContent = 'Scansione #' + realtimeScanCount;
+    document.getElementById('scanCountLabel').textContent = totalSamples;
 
     if (data.text && data.text.trim().length > 0) {
-      // Draw overlay boxes
       drawOverlay(data.words, roiX, roiY, vw, vh);
-
-      // Extract fields and update stability
       const fields = extractFields(data.text);
-      updateFieldHistory(fields);
-      updateRealtimeFieldsUI();
+      accumulateEvidence(fields);
+      refreshAllFieldsUI();
+      updateGlobalProgress();
 
-      // Check if enough fields are stable for approval
-      checkForApproval();
+      // Check auto-complete after updating
+      if (areAllDetectedFieldsLocked()) {
+        autoComplete();
+        isProcessingFrame = false;
+        return;
+      }
     }
 
     dot.className = 'dot active';
-    document.getElementById('scanLabel').textContent = 'LIVE';
-
+    document.getElementById('scanLabel').textContent = 'LIVE · #' + totalSamples;
   } catch (e) {
-    console.warn('Errore scan realtime:', e);
+    console.warn('Errore scan:', e);
     dot.className = 'dot';
     document.getElementById('scanLabel').textContent = 'ERRORE';
   }
@@ -957,49 +823,191 @@ async function realtimeScanFrame() {
   scheduleScanLoop();
 }
 
-// ========== OVERLAY DRAWING ==========
+// ========== ACCUMULATE EVIDENCE ==========
+function accumulateEvidence(fields) {
+  const threshold = settings.certThreshold || 85;
+
+  FIELD_CONFIG.forEach(fc => {
+    const key = fc.key;
+    const state = fieldState[key];
+
+    // Skip locked or manually edited fields
+    if (state.locked || state.manuallyEdited) return;
+
+    const rawValue = (fields[key] || '').trim();
+    if (!rawValue) return; // no data for this field in this frame — skip, don't penalize
+
+    // Normalize for grouping (but keep best raw version)
+    const norm = normalizeValue(rawValue);
+    if (!norm) return;
+
+    // Add evidence
+    if (!fieldEvidence[key][norm]) {
+      fieldEvidence[key][norm] = { count: 0, bestRaw: rawValue };
+    }
+    fieldEvidence[key][norm].count++;
+    // Keep the longest/best raw version
+    if (rawValue.length > fieldEvidence[key][norm].bestRaw.length) {
+      fieldEvidence[key][norm].bestRaw = rawValue;
+    }
+
+    // Find the value with the most hits
+    let bestNorm = '', bestCount = 0, bestRaw = '';
+    for (const [n, info] of Object.entries(fieldEvidence[key])) {
+      if (info.count > bestCount) {
+        bestCount = info.count;
+        bestNorm = n;
+        bestRaw = info.bestRaw;
+      }
+    }
+
+    // Confidence = how many times we've seen the best value vs total samples
+    // But we only count samples where this field had ANY data
+    const totalFieldSamples = Object.values(fieldEvidence[key]).reduce((s, v) => s + v.count, 0);
+    const confidence = totalFieldSamples > 0 ? Math.round((bestCount / totalFieldSamples) * 100) : 0;
+
+    state.bestValue = bestRaw;
+    state.confidence = confidence;
+
+    // Lock when confident enough AND we have at least 3 samples
+    if (confidence >= threshold && bestCount >= 3) {
+      state.locked = true;
+    }
+  });
+}
+
+// ========== CHECK COMPLETION ==========
+function areAllDetectedFieldsLocked() {
+  // A field is "detected" if it has any evidence at all
+  let detectedCount = 0;
+  let lockedCount = 0;
+  FIELD_CONFIG.forEach(f => {
+    const hasEvidence = Object.keys(fieldEvidence[f.key]).length > 0 || fieldState[f.key].manuallyEdited;
+    if (hasEvidence || fieldState[f.key].bestValue) {
+      detectedCount++;
+      if (fieldState[f.key].locked) lockedCount++;
+    }
+  });
+  // Need at least 1 detected field, and all detected must be locked
+  return detectedCount > 0 && detectedCount === lockedCount && totalSamples >= 3;
+}
+
+function autoComplete() {
+  realtimeActive = false;
+  if (scanLoopTimer) { clearTimeout(scanLoopTimer); scanLoopTimer = null; }
+
+  if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
+
+  const btn = document.getElementById('btnRealtime');
+  btn.classList.remove('active');
+  btn.textContent = '🔴 Avvia scansione';
+
+  document.getElementById('scanDot').className = 'dot done';
+  document.getElementById('scanLabel').textContent = 'COMPLETO';
+  document.getElementById('scanLine').classList.remove('active');
+  document.getElementById('guide').classList.remove('detecting');
+  document.getElementById('guide').classList.add('done');
+
+  document.getElementById('rtSubtitle').textContent = '✅ Tutti i campi verificati dopo ' + totalSamples + ' campioni!';
+
+  const banner = document.getElementById('completionBanner');
+  banner.querySelector('h3').textContent = '✅ Scansione completata!';
+  banner.querySelector('p').textContent = 'Tutti i campi rilevati sono certi al 100%. Puoi salvare il contatto.';
+  banner.style.display = 'block';
+  banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  document.getElementById('globalProgressFill').style.width = '100%';
+  document.getElementById('globalProgressFill').className = 'fill high';
+}
+
+// ========== UI REFRESH ==========
+function refreshFieldUI(key) {
+  const state = fieldState[key];
+  const row = document.getElementById('rtf_' + key);
+  const wrap = row.querySelector('.rt-value-wrap');
+  const confEl = document.getElementById('rtc_' + key);
+  const lockEl = document.getElementById('rtl_' + key);
+
+  // Value display (only update if not currently being edited)
+  const existingInput = wrap.querySelector('input');
+  if (!existingInput) {
+    const valueEl = document.getElementById('rtv_' + key);
+    if (state.bestValue) {
+      valueEl.textContent = state.bestValue;
+      valueEl.className = 'rt-value';
+    } else {
+      valueEl.textContent = '—';
+      valueEl.className = 'rt-value empty';
+    }
+  }
+
+  // Confidence badge
+  const conf = state.confidence;
+  confEl.textContent = conf + '%';
+  if (state.locked) {
+    confEl.className = 'rt-confidence certain';
+  } else if (conf >= 70) {
+    confEl.className = 'rt-confidence high';
+  } else if (conf >= 40) {
+    confEl.className = 'rt-confidence medium';
+  } else {
+    confEl.className = 'rt-confidence low';
+  }
+
+  // Lock icon
+  if (state.locked) {
+    lockEl.textContent = '🔒';
+    lockEl.className = 'rt-lock locked';
+    row.classList.add('locked');
+  } else {
+    lockEl.textContent = '🔓';
+    lockEl.className = 'rt-lock';
+    row.classList.remove('locked');
+  }
+}
+
+function refreshAllFieldsUI() {
+  FIELD_CONFIG.forEach(f => refreshFieldUI(f.key));
+}
+
+function updateGlobalProgress() {
+  const detected = FIELD_CONFIG.filter(f => Object.keys(fieldEvidence[f.key]).length > 0 || fieldState[f.key].bestValue);
+  if (detected.length === 0) {
+    document.getElementById('globalProgressFill').style.width = '0';
+    return;
+  }
+  const locked = detected.filter(f => fieldState[f.key].locked).length;
+  const pct = Math.round((locked / detected.length) * 100);
+  const fill = document.getElementById('globalProgressFill');
+  fill.style.width = pct + '%';
+  fill.className = pct >= 80 ? 'fill high' : 'fill';
+
+  const panel = document.getElementById('realtimePanel');
+  panel.classList.toggle('has-data', detected.length > 0);
+  panel.classList.toggle('all-done', pct === 100);
+}
+
+// ========== OVERLAY ==========
 function drawOverlay(words, roiX, roiY, videoW, videoH) {
   const canvas = document.getElementById('overlay');
   const video = document.getElementById('video');
   const rect = video.getBoundingClientRect();
-
   canvas.width = rect.width * window.devicePixelRatio;
   canvas.height = rect.height * window.devicePixelRatio;
   canvas.style.width = rect.width + 'px';
   canvas.style.height = rect.height + 'px';
-
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-
-  const scaleX = rect.width / videoW;
-  const scaleY = rect.height / videoH;
-
-  if (!words || words.length === 0) return;
-
+  const scaleX = rect.width / videoW, scaleY = rect.height / videoH;
+  if (!words) return;
   words.forEach(word => {
-    if (!word.text || word.text.trim().length === 0) return;
-    const conf = word.confidence;
-    const bbox = word.bbox;
-
-    // Translate from ROI coords to full video coords
-    const x = (bbox.x0 + roiX) * scaleX;
-    const y = (bbox.y0 + roiY) * scaleY;
-    const w = (bbox.x1 - bbox.x0) * scaleX;
-    const h = (bbox.y1 - bbox.y0) * scaleY;
-
-    // Color by confidence
-    if (conf > 80) {
-      ctx.strokeStyle = 'rgba(34,197,94,0.6)';
-      ctx.fillStyle = 'rgba(34,197,94,0.08)';
-    } else if (conf > 50) {
-      ctx.strokeStyle = 'rgba(245,158,11,0.6)';
-      ctx.fillStyle = 'rgba(245,158,11,0.08)';
-    } else {
-      ctx.strokeStyle = 'rgba(239,68,68,0.5)';
-      ctx.fillStyle = 'rgba(239,68,68,0.06)';
-    }
-
+    if (!word.text || !word.text.trim()) return;
+    const bbox = word.bbox, conf = word.confidence;
+    const x = (bbox.x0 + roiX) * scaleX, y = (bbox.y0 + roiY) * scaleY;
+    const w = (bbox.x1 - bbox.x0) * scaleX, h = (bbox.y1 - bbox.y0) * scaleY;
+    ctx.strokeStyle = conf > 80 ? 'rgba(34,197,94,0.6)' : conf > 50 ? 'rgba(245,158,11,0.6)' : 'rgba(239,68,68,0.5)';
+    ctx.fillStyle = conf > 80 ? 'rgba(34,197,94,0.08)' : conf > 50 ? 'rgba(245,158,11,0.08)' : 'rgba(239,68,68,0.06)';
     ctx.lineWidth = 1;
     ctx.fillRect(x, y, w, h);
     ctx.strokeRect(x, y, w, h);
@@ -1012,201 +1020,41 @@ function clearOverlay() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-// ========== FIELD STABILITY SYSTEM ==========
-function updateFieldHistory(fields) {
-  const threshold = settings.stabilityThreshold || 3;
-
-  FIELD_NAMES.forEach(name => {
-    const value = (fields[name] || '').trim();
-    const history = fieldHistory[name];
-
-    history.push(value);
-    if (history.length > HISTORY_SIZE) history.shift();
-
-    // Calculate stability: most common non-empty value
-    const counts = {};
-    history.forEach(v => {
-      if (v) counts[v] = (counts[v] || 0) + 1;
-    });
-
-    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    if (entries.length > 0 && entries[0][1] >= threshold) {
-      stableFields[name] = { value: entries[0][0], stable: true, count: entries[0][1] };
-    } else if (entries.length > 0) {
-      stableFields[name] = { value: entries[0][0], stable: false, count: entries[0][1] };
-    } else {
-      stableFields[name] = { value: '', stable: false, count: 0 };
-    }
+// ========== SAVE FROM REALTIME ==========
+function saveContactFromRealtime() {
+  const contact = { id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5), createdAt: new Date().toISOString() };
+  FIELD_CONFIG.forEach(f => {
+    // Check if there's an active input (user was editing)
+    const input = document.getElementById('rti_' + f.key);
+    contact[f.key] = input ? input.value.trim() : (fieldState[f.key].bestValue || '');
   });
-}
-
-function updateRealtimeFieldsUI() {
-  const threshold = settings.stabilityThreshold || 3;
-
-  FIELD_NAMES.forEach(name => {
-    const el = document.querySelector(`.rt-field[data-field="${name}"]`);
-    if (!el) return;
-
-    const sf = stableFields[name];
-    const valueEl = el.querySelector('.rt-value');
-    const statusEl = el.querySelector('.rt-status');
-    const stabilityFill = el.querySelector('.rt-stability .fill');
-
-    if (!sf || !sf.value) {
-      valueEl.textContent = 'In attesa...';
-      valueEl.className = 'rt-value empty';
-      statusEl.className = 'rt-status waiting';
-      stabilityFill.style.width = '0';
-      stabilityFill.style.background = 'var(--bg3)';
-    } else if (sf.stable) {
-      valueEl.textContent = sf.value;
-      valueEl.className = 'rt-value';
-      statusEl.className = 'rt-status stable';
-      stabilityFill.style.width = '100%';
-      stabilityFill.style.background = 'var(--green)';
-    } else {
-      valueEl.textContent = sf.value;
-      valueEl.className = 'rt-value';
-      statusEl.className = 'rt-status unstable';
-      const pct = Math.round((sf.count / threshold) * 100);
-      stabilityFill.style.width = Math.min(pct, 95) + '%';
-      stabilityFill.style.background = 'var(--orange)';
-    }
-  });
-
-  // Update panel border
-  const panel = document.getElementById('realtimePanel');
-  const hasAnyData = FIELD_NAMES.some(n => stableFields[n] && stableFields[n].value);
-  panel.classList.toggle('has-data', hasAnyData);
-}
-
-// ========== APPROVAL FLOW ==========
-function checkForApproval() {
-  if (approvalShown) return;
-
-  const nameStable = stableFields.name && stableFields.name.stable;
-  const emailStable = stableFields.email && stableFields.email.stable;
-  const phoneStable = stableFields.phone && stableFields.phone.stable;
-
-  // Need name + (email or phone) to be stable
-  const hasMinimumData = nameStable && (emailStable || phoneStable);
-
-  // Also check that we've done at least a few scans
-  if (hasMinimumData && realtimeScanCount >= (settings.stabilityThreshold || 3)) {
-    showApproval();
+  if (!contact.name && !contact.email && !contact.phone) {
+    toast('Nessun dato sufficiente da salvare', 'error');
+    return;
   }
+  contacts.push(contact);
+  saveState();
+  toast('✅ Contatto salvato: ' + (contact.name || contact.email), 'success');
+  if (navigator.vibrate) navigator.vibrate(200);
+  resetAndRestart();
 }
 
-function showApproval() {
-  approvalShown = true;
+function resetAndRestart() {
+  resetAccumulator();
+  buildRealtimeFieldsUI();
+  document.getElementById('completionBanner').style.display = 'none';
+  document.getElementById('realtimePanel').style.display = 'none';
+  document.getElementById('scanIndicator').style.display = 'none';
+  document.getElementById('scanCounter').style.display = 'none';
+  document.getElementById('guide').classList.remove('done', 'detecting');
+  clearOverlay();
 
-  // Vibrate if supported
-  if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-
-  const card = document.getElementById('approvalCard');
-  const fieldsContainer = document.getElementById('approvalFields');
-
-  const fieldConfig = [
-    { key: 'name', icon: '👤', label: 'Nome' },
-    { key: 'company', icon: '🏢', label: 'Azienda' },
-    { key: 'role', icon: '💼', label: 'Ruolo' },
-    { key: 'email', icon: '📧', label: 'Email' },
-    { key: 'phone', icon: '📱', label: 'Telefono' },
-    { key: 'web', icon: '🌐', label: 'Web' },
-    { key: 'piva', icon: '🏛️', label: 'P.IVA' },
-    { key: 'cf', icon: '🆔', label: 'C.F.' },
-    { key: 'address', icon: '📍', label: 'Indirizzo' }
-  ];
-
-  fieldsContainer.innerHTML = fieldConfig
-    .filter(f => stableFields[f.key] && stableFields[f.key].value)
-    .map(f => `
-      <div class="approval-field">
-        <span class="af-icon">${f.icon}</span>
-        <span class="af-label">${f.label}</span>
-        <input type="text" id="af_${f.key}" value="${esc(stableFields[f.key].value)}">
-      </div>
-    `).join('');
-
-  card.style.display = 'block';
-  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  const btn = document.getElementById('btnRealtime');
+  btn.classList.remove('active');
+  btn.textContent = '🔴 Avvia scansione';
 }
 
-function initApproval() {
-  document.getElementById('btnApprove').addEventListener('click', () => {
-    const contact = {
-      id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
-      name: getApprovalValue('name'),
-      company: getApprovalValue('company'),
-      role: getApprovalValue('role'),
-      email: getApprovalValue('email'),
-      phone: getApprovalValue('phone'),
-      web: getApprovalValue('web'),
-      piva: getApprovalValue('piva'),
-      cf: getApprovalValue('cf'),
-      address: getApprovalValue('address'),
-      createdAt: new Date().toISOString()
-    };
-
-    if (!contact.name && !contact.email && !contact.phone) {
-      toast('Nessun dato valido da salvare', 'error');
-      return;
-    }
-
-    contacts.push(contact);
-    scanCount++;
-    saveState();
-    toast('✅ Contatto salvato: ' + (contact.name || contact.email), 'success');
-
-    if (navigator.vibrate) navigator.vibrate(200);
-
-    // Reset and continue scanning
-    resetApprovalAndContinue();
-  });
-
-  document.getElementById('btnRestart').addEventListener('click', () => {
-    resetApprovalAndContinue();
-    toast('Riscansione avviata', 'success');
-  });
-
-  document.getElementById('btnDiscard').addEventListener('click', () => {
-    resetApprovalAndContinue();
-    toast('Dati scartati', 'success');
-  });
-}
-
-function getApprovalValue(key) {
-  const el = document.getElementById('af_' + key);
-  return el ? el.value.trim() : (stableFields[key] ? stableFields[key].value : '');
-}
-
-function resetApprovalAndContinue() {
-  document.getElementById('approvalCard').style.display = 'none';
-  resetFieldHistory();
-  realtimeScanCount = 0;
-  approvalShown = false;
-  updateRealtimeFieldsUI();
-
-  if (realtimeActive) {
-    scheduleScanLoop();
-  }
-}
-
-// ========== SINGLE CAPTURE (original flow) ==========
-function captureFrame() {
-  const video = document.getElementById('video');
-  if (!video.srcObject) return;
-
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0);
-
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-  processImage(dataUrl);
-}
-
+// ========== UPLOAD MODE (original flow) ==========
 function processImageFile(file) {
   const reader = new FileReader();
   reader.onload = (e) => processImage(e.target.result);
@@ -1214,40 +1062,23 @@ function processImageFile(file) {
 }
 
 async function processImage(dataUrl) {
-  if (!workerReady) {
-    toast('OCR non ancora pronto, attendi...', 'error');
-    return;
-  }
-
-  // Hide realtime panels
+  if (!workerReady) { toast('OCR non ancora pronto', 'error'); return; }
   document.getElementById('realtimePanel').style.display = 'none';
-  document.getElementById('approvalCard').style.display = 'none';
+  document.getElementById('completionBanner').style.display = 'none';
 
   const preview = document.getElementById('imagePreview');
   const statusEl = document.getElementById('ocrStatus');
   const resultCard = document.getElementById('resultCard');
-
-  preview.src = dataUrl;
-  preview.style.display = 'block';
-  resultCard.style.display = 'none';
-
+  preview.src = dataUrl; preview.style.display = 'block'; resultCard.style.display = 'none';
   statusEl.style.display = 'flex';
   statusEl.className = 'ocr-status processing';
   statusEl.innerHTML = '<div class="spinner"></div><span>Analisi in corso...</span><div class="progress-bar"><div class="fill" id="ocrProgress" style="width:0"></div></div>';
 
   try {
     const { data } = await worker.recognize(dataUrl);
-    scanCount++;
-    saveState();
-
-    if (!data.text || data.text.trim().length === 0) {
-      statusEl.className = 'ocr-status error';
-      statusEl.innerHTML = '<span>⚠️ Nessun testo rilevato. Prova con un\'immagine più nitida.</span>';
-      return;
-    }
-
+    scanCount++; saveState();
+    if (!data.text || !data.text.trim()) { statusEl.className = 'ocr-status error'; statusEl.innerHTML = '<span>⚠️ Nessun testo rilevato.</span>'; return; }
     const fields = extractFields(data.text);
-
     document.getElementById('fName').value = fields.name;
     document.getElementById('fCompany').value = fields.company;
     document.getElementById('fRole').value = fields.role;
@@ -1257,20 +1088,15 @@ async function processImage(dataUrl) {
     document.getElementById('fPiva').value = fields.piva;
     document.getElementById('fCf').value = fields.cf;
     document.getElementById('fAddress').value = fields.address;
-    document.getElementById('fRawText').value = fields.raw;
-
+    document.getElementById('fRawText').value = data.text;
     resultCard.style.display = 'block';
     statusEl.className = 'ocr-status ready';
-    statusEl.innerHTML = '<span>✅ Analisi completata — ' + data.lines.length + ' righe, confidenza: ' + Math.round(data.confidence) + '%</span>';
-
+    statusEl.innerHTML = '<span>✅ Completata — ' + data.lines.length + ' righe, confidenza: ' + Math.round(data.confidence) + '%</span>';
     setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
-  } catch (e) {
-    statusEl.className = 'ocr-status error';
-    statusEl.innerHTML = '<span>❌ Errore OCR: ' + esc(e.message) + '</span>';
-  }
+  } catch (e) { statusEl.className = 'ocr-status error'; statusEl.innerHTML = '<span>❌ Errore: ' + esc(e.message) + '</span>'; }
 }
 
-function saveContact() {
+function saveContactFromUpload() {
   const contact = {
     id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
     name: document.getElementById('fName').value.trim(),
@@ -1284,154 +1110,76 @@ function saveContact() {
     address: document.getElementById('fAddress').value.trim(),
     createdAt: new Date().toISOString()
   };
-
-  if (!contact.name && !contact.email && !contact.phone) {
-    toast('Compila almeno nome, email o telefono', 'error');
-    return;
-  }
-
-  contacts.push(contact);
-  saveState();
-  clearResult();
+  if (!contact.name && !contact.email && !contact.phone) { toast('Compila almeno nome, email o telefono', 'error'); return; }
+  contacts.push(contact); saveState(); clearResult();
   toast('Contatto salvato: ' + (contact.name || contact.email), 'success');
 }
 
 function clearResult() {
   document.getElementById('resultCard').style.display = 'none';
   document.getElementById('imagePreview').style.display = 'none';
-  ['fName','fCompany','fRole','fEmail','fPhone','fWeb','fPiva','fCf','fAddress','fRawText'].forEach(
-    id => document.getElementById(id).value = ''
-  );
+  ['fName','fCompany','fRole','fEmail','fPhone','fWeb','fPiva','fCf','fAddress','fRawText'].forEach(id => document.getElementById(id).value = '');
 }
 
 // ========== CONTACTS ==========
-function initContacts() {
-  document.getElementById('searchInput').addEventListener('input', renderContacts);
-}
+function initContacts() { document.getElementById('searchInput').addEventListener('input', renderContacts); }
 
 function renderContacts() {
   const query = document.getElementById('searchInput').value.toLowerCase();
   const list = document.getElementById('contactList');
   const empty = document.getElementById('emptyContacts');
-
-  const filtered = contacts.filter(c => {
-    if (!query) return true;
-    return [c.name, c.company, c.email, c.phone, c.role].some(v => v && v.toLowerCase().includes(query));
-  });
-
-  if (filtered.length === 0) {
-    list.innerHTML = '';
-    empty.style.display = 'block';
-    return;
-  }
-
+  const filtered = contacts.filter(c => { if (!query) return true; return [c.name, c.company, c.email, c.phone, c.role].some(v => v && v.toLowerCase().includes(query)); });
+  if (filtered.length === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
   list.innerHTML = filtered.map(c => {
     const initials = (c.name || c.email || '?').substring(0, 2).toUpperCase();
     const colors = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#22c55e','#06b6d4'];
     const color = colors[Math.abs(hashCode(c.id)) % colors.length];
-    return `<div class="contact-item" data-id="${c.id}">
-      <div class="contact-avatar" style="background:${color}">${esc(initials)}</div>
-      <div class="contact-info">
-        <div class="name">${esc(c.name || 'Senza nome')}</div>
-        <div class="detail">${esc([c.role, c.company].filter(Boolean).join(' — ') || c.email || c.phone || '')}</div>
-      </div>
-      <div class="contact-actions">
-        <button title="Esporta vCard" onclick="exportSingleVcard('${c.id}')">📋</button>
-        <button title="Elimina" onclick="deleteContact('${c.id}')">🗑️</button>
-      </div>
-    </div>`;
+    return `<div class="contact-item" data-id="${c.id}"><div class="contact-avatar" style="background:${color}">${esc(initials)}</div><div class="contact-info"><div class="name">${esc(c.name || 'Senza nome')}</div><div class="detail">${esc([c.role, c.company].filter(Boolean).join(' — ') || c.email || c.phone || '')}</div></div><div class="contact-actions"><button title="vCard" onclick="exportSingleVcard('${c.id}')">📋</button><button title="Elimina" onclick="deleteContact('${c.id}')">🗑️</button></div></div>`;
   }).join('');
 }
 
-function deleteContact(id) {
-  if (!confirm('Eliminare questo contatto?')) return;
-  contacts = contacts.filter(c => c.id !== id);
-  saveState();
-  renderContacts();
-  toast('Contatto eliminato', 'success');
-}
+function deleteContact(id) { if (!confirm('Eliminare questo contatto?')) return; contacts = contacts.filter(c => c.id !== id); saveState(); renderContacts(); toast('Contatto eliminato', 'success'); }
 
-function exportSingleVcard(id) {
-  const c = contacts.find(x => x.id === id);
-  if (!c) return;
-  const vcard = contactToVcard(c);
-  downloadFile(vcard, (c.name || 'contatto') + '.vcf', 'text/vcard');
-  toast('vCard scaricata', 'success');
-}
+function exportSingleVcard(id) { const c = contacts.find(x => x.id === id); if (!c) return; downloadFile(contactToVcard(c), (c.name || 'contatto') + '.vcf', 'text/vcard'); toast('vCard scaricata', 'success'); }
 
 // ========== EXPORT ==========
 function initExport() {
-  document.getElementById('exportVcard').addEventListener('click', () => {
-    if (contacts.length === 0) { toast('Nessun contatto da esportare', 'error'); return; }
-    const vcards = contacts.map(contactToVcard).join('\n');
-    downloadFile(vcards, 'contatti.vcf', 'text/vcard');
-    toast(contacts.length + ' contatti esportati come vCard', 'success');
-  });
-
-  document.getElementById('exportCsv').addEventListener('click', () => {
-    if (contacts.length === 0) { toast('Nessun contatto da esportare', 'error'); return; }
-    const headers = ['Nome','Azienda','Ruolo','Email','Telefono','Sito Web','P.IVA','C.F.','Indirizzo','Data'];
-    const rows = contacts.map(c => [c.name,c.company,c.role,c.email,c.phone,c.web,c.piva,c.cf,c.address,c.createdAt].map(csvEscape));
-    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    downloadFile('\ufeff' + csv, 'contatti.csv', 'text/csv');
-    toast(contacts.length + ' contatti esportati come CSV', 'success');
-  });
-
-  document.getElementById('exportJson').addEventListener('click', () => {
-    if (contacts.length === 0) { toast('Nessun contatto da esportare', 'error'); return; }
-    const json = JSON.stringify(contacts, null, 2);
-    downloadFile(json, 'contatti.json', 'application/json');
-    toast(contacts.length + ' contatti esportati come JSON', 'success');
-  });
-
+  document.getElementById('exportVcard').addEventListener('click', () => { if (!contacts.length) { toast('Nessun contatto', 'error'); return; } downloadFile(contacts.map(contactToVcard).join('\n'), 'contatti.vcf', 'text/vcard'); toast(contacts.length + ' contatti esportati', 'success'); });
+  document.getElementById('exportCsv').addEventListener('click', () => { if (!contacts.length) { toast('Nessun contatto', 'error'); return; } const h = ['Nome','Azienda','Ruolo','Email','Telefono','Web','P.IVA','C.F.','Indirizzo','Data']; const rows = contacts.map(c => [c.name,c.company,c.role,c.email,c.phone,c.web,c.piva,c.cf,c.address,c.createdAt].map(csvEsc)); downloadFile('\ufeff' + [h.join(','), ...rows.map(r => r.join(','))].join('\n'), 'contatti.csv', 'text/csv'); toast(contacts.length + ' contatti esportati', 'success'); });
+  document.getElementById('exportJson').addEventListener('click', () => { if (!contacts.length) { toast('Nessun contatto', 'error'); return; } downloadFile(JSON.stringify(contacts, null, 2), 'contatti.json', 'application/json'); toast(contacts.length + ' contatti esportati', 'success'); });
   document.getElementById('exportWebhook').addEventListener('click', async () => {
-    if (contacts.length === 0) { toast('Nessun contatto da esportare', 'error'); return; }
-    const url = settings.webhookUrl;
-    if (!url) { toast('Configura il Webhook URL nelle Impostazioni', 'error'); return; }
+    if (!contacts.length) { toast('Nessun contatto', 'error'); return; }
+    if (!settings.webhookUrl) { toast('Configura Webhook nelle Impostazioni', 'error'); return; }
     try {
-      const headers = { 'Content-Type': 'application/json' };
-      if (settings.webhookAuth) headers['Authorization'] = settings.webhookAuth;
-      const resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ contacts }) });
-      if (resp.ok) {
-        toast('Contatti inviati al CRM con successo', 'success');
-      } else {
-        toast('Errore CRM: ' + resp.status + ' ' + resp.statusText, 'error');
-      }
-    } catch (e) {
-      toast('Errore connessione CRM: ' + e.message, 'error');
-    }
+      const h = { 'Content-Type': 'application/json' }; if (settings.webhookAuth) h['Authorization'] = settings.webhookAuth;
+      const r = await fetch(settings.webhookUrl, { method: 'POST', headers: h, body: JSON.stringify({ contacts }) });
+      toast(r.ok ? 'Inviati al CRM!' : 'Errore CRM: ' + r.status, r.ok ? 'success' : 'error');
+    } catch (e) { toast('Errore: ' + e.message, 'error'); }
   });
 }
 
-function updateExportState() {
-  document.getElementById('emptyExport').style.display = contacts.length === 0 ? 'block' : 'none';
-}
+function updateExportState() { document.getElementById('emptyExport').style.display = contacts.length === 0 ? 'block' : 'none'; }
 
 // ========== SETTINGS ==========
 function initSettings() {
   document.getElementById('ocrLang').value = settings.lang;
   document.getElementById('webhookUrl').value = settings.webhookUrl || '';
   document.getElementById('webhookAuth').value = settings.webhookAuth || '';
-  document.getElementById('settingRealtime').checked = settings.realtimeEnabled !== false;
   document.getElementById('scanSpeed').value = settings.scanSpeed || 'normal';
-  document.getElementById('stabilityThreshold').value = String(settings.stabilityThreshold || 3);
+  document.getElementById('certThreshold').value = String(settings.certThreshold || 85);
 
   document.getElementById('btnSaveSettings').addEventListener('click', () => {
     const newLang = document.getElementById('ocrLang').value;
     const langChanged = newLang !== settings.lang;
-
     settings.lang = newLang;
     settings.webhookUrl = document.getElementById('webhookUrl').value.trim();
     settings.webhookAuth = document.getElementById('webhookAuth').value.trim();
-    settings.realtimeEnabled = document.getElementById('settingRealtime').checked;
     settings.scanSpeed = document.getElementById('scanSpeed').value;
-    settings.stabilityThreshold = parseInt(document.getElementById('stabilityThreshold').value) || 3;
+    settings.certThreshold = parseInt(document.getElementById('certThreshold').value) || 85;
     saveState();
     toast('Impostazioni salvate', 'success');
-
     if (langChanged && workerReady) {
-      toast('Ricaricamento OCR per nuova lingua...', 'success');
       if (realtimeActive) stopRealtimeScan();
       workerReady = false;
       worker.terminate().then(initOCR);
@@ -1439,81 +1187,46 @@ function initSettings() {
   });
 
   document.getElementById('btnClearAll').addEventListener('click', () => {
-    if (!confirm('Eliminare TUTTI i contatti? Questa azione è irreversibile.')) return;
-    contacts = [];
-    saveState();
-    toast('Tutti i contatti eliminati', 'success');
+    if (!confirm('Eliminare TUTTI i contatti?')) return;
+    contacts = []; saveState(); toast('Tutti i contatti eliminati', 'success');
   });
 }
 
-function updateStats() {
-  document.getElementById('statContacts').textContent = contacts.length;
-  document.getElementById('statScans').textContent = scanCount;
-}
+function updateStats() { document.getElementById('statContacts').textContent = contacts.length; document.getElementById('statScans').textContent = scanCount; }
 
 // ========== UTILS ==========
-function esc(s) {
-  const d = document.createElement('div');
-  d.textContent = s || '';
-  return d.innerHTML;
-}
-
-function csvEscape(val) {
-  if (!val) return '';
-  if (val.includes(',') || val.includes('"') || val.includes('\n')) {
-    return '"' + val.replace(/"/g, '""') + '"';
-  }
-  return val;
-}
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function csvEsc(v) { if (!v) return ''; return (v.includes(',') || v.includes('"') || v.includes('\n')) ? '"' + v.replace(/"/g, '""') + '"' : v; }
 
 function contactToVcard(c) {
-  const lines = ['BEGIN:VCARD', 'VERSION:3.0'];
-  if (c.name) {
-    const parts = c.name.split(/\s+/);
-    const last = parts.pop() || '';
-    const first = parts.join(' ') || '';
-    lines.push('N:' + last + ';' + first + ';;;');
-    lines.push('FN:' + c.name);
-  }
-  if (c.company) lines.push('ORG:' + c.company);
-  if (c.role) lines.push('TITLE:' + c.role);
-  if (c.email) lines.push('EMAIL;TYPE=WORK:' + c.email);
-  if (c.phone) lines.push('TEL;TYPE=WORK,VOICE:' + c.phone);
-  if (c.web) lines.push('URL:' + c.web);
-  if (c.address) lines.push('ADR;TYPE=WORK:;;' + c.address + ';;;;');
-  if (c.piva) lines.push('NOTE:P.IVA: ' + c.piva + (c.cf ? ' | C.F.: ' + c.cf : ''));
-  else if (c.cf) lines.push('NOTE:C.F.: ' + c.cf);
-  lines.push('END:VCARD');
-  return lines.join('\r\n');
+  const l = ['BEGIN:VCARD', 'VERSION:3.0'];
+  if (c.name) { const p = c.name.split(/\s+/); const last = p.pop() || ''; l.push('N:' + last + ';' + p.join(' ') + ';;;', 'FN:' + c.name); }
+  if (c.company) l.push('ORG:' + c.company);
+  if (c.role) l.push('TITLE:' + c.role);
+  if (c.email) l.push('EMAIL;TYPE=WORK:' + c.email);
+  if (c.phone) l.push('TEL;TYPE=WORK,VOICE:' + c.phone);
+  if (c.web) l.push('URL:' + c.web);
+  if (c.address) l.push('ADR;TYPE=WORK:;;' + c.address + ';;;;');
+  if (c.piva) l.push('NOTE:P.IVA: ' + c.piva + (c.cf ? ' | C.F.: ' + c.cf : ''));
+  else if (c.cf) l.push('NOTE:C.F.: ' + c.cf);
+  l.push('END:VCARD');
+  return l.join('\r\n');
 }
 
 function downloadFile(content, filename, mime) {
   const blob = new Blob([content], { type: mime + ';charset=utf-8' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  const a = document.createElement('a'); a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
 
-function hashCode(s) {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) {
-    h = ((h << 5) - h) + s.charCodeAt(i);
-    h |= 0;
-  }
-  return h;
-}
+function hashCode(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return h; }
 
 function toast(msg, type = 'success') {
-  const container = document.getElementById('toasts');
-  const el = document.createElement('div');
-  el.className = 'toast ' + type;
-  el.textContent = msg;
-  container.appendChild(el);
+  const c = document.getElementById('toasts');
+  const el = document.createElement('div'); el.className = 'toast ' + type; el.textContent = msg;
+  c.appendChild(el);
   setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3500);
 }
 </script>
