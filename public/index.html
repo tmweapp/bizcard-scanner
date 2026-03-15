@@ -290,12 +290,17 @@ let fieldState = {};
 // Slot Y-proximity threshold for matching (normalized 0-1) — wider to avoid fragmentation
 const SLOT_Y_MATCH = 0.12;
 
+// Direct evidence accumulator (parallel pipeline B) — must be before resetAll()
+var directEvidence = {};
+function resetDirectEvidence(){directEvidence={};FIELD_CONFIG.forEach(f=>{directEvidence[f.key]={};});}
+resetDirectEvidence();
+
 function resetAll() {
   cardSlots = [];
   totalSamples = 0;
   fieldState = {};
   FIELD_CONFIG.forEach(f => { fieldState[f.key] = {bestValue:'',confidence:0,locked:false,manuallyEdited:false}; });
-  if(typeof resetDirectEvidence==='function') resetDirectEvidence();
+  resetDirectEvidence();
 }
 resetAll();
 
@@ -580,9 +585,7 @@ async function pipelineLoop(){
 // ==================== DIRECT TEXT → FIELDS (fallback pipeline) ====================
 // Directly accumulates detected text into fields without requiring spatial slots
 // This guarantees fields fill even if data.lines has no bbox data
-let directEvidence={}; // {fieldKey: {normalizedValue: {count, bestRaw}}}
-function resetDirectEvidence(){directEvidence={};FIELD_CONFIG.forEach(f=>{directEvidence[f.key]={};});}
-resetDirectEvidence();
+// (directEvidence and resetDirectEvidence are declared at the top of the file)
 
 function directTextToFields(rawLines){
   rawLines.forEach(line=>{
