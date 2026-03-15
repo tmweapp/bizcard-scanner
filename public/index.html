@@ -98,7 +98,7 @@ main{flex:1;padding:16px;max-width:900px;margin:0 auto;width:100%}
 .card-minimap-label{font-size:.65rem;color:var(--fg3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
 
 /* Debug panel */
-.debug-panel{background:#1a1a2e;border:1px solid #e94560;border-radius:8px;padding:10px;margin-bottom:12px;font-family:monospace;font-size:.65rem;color:#0ff;max-height:200px;overflow-y:auto;display:none}
+.debug-panel{background:#1a1a2e;border:2px solid #e94560;border-radius:8px;padding:10px;margin-bottom:12px;font-family:monospace;font-size:.7rem;color:#0ff;max-height:300px;overflow-y:auto;display:none}
 .debug-panel.visible{display:block}
 .debug-panel .debug-line{margin-bottom:3px;border-bottom:1px solid #333;padding-bottom:3px}
 .debug-panel .debug-slot{color:#0f0}
@@ -295,6 +295,7 @@ function resetAll() {
   totalSamples = 0;
   fieldState = {};
   FIELD_CONFIG.forEach(f => { fieldState[f.key] = {bestValue:'',confidence:0,locked:false,manuallyEdited:false}; });
+  if(typeof resetDirectEvidence==='function') resetDirectEvidence();
 }
 resetAll();
 
@@ -537,16 +538,31 @@ async function pipelineLoop(){
     document.getElementById('scanFPS').textContent=currentFPS+' fps · '+Math.round(dt)+'ms';
 
     if(data.text&&data.text.trim().length>2){
-      // Process LINES with spatial info
-      const lineTexts=data.lines?data.lines.map(l=>l.text.trim()).filter(t=>t.length>1):[];
-      processLinesWithSpatial(data.lines,roiX,roiY,vw,vh);
-      drawOverlayFromSlots(data.words,roiX,roiY,vw,vh);
+      // DUAL PIPELINE: spatial slots + direct text fallback
+      let lineTexts=[];
+      try{
+        // Pipeline A: Spatial slot model (uses data.lines with bbox)
+        if(data.lines&&data.lines.length>0){
+          lineTexts=data.lines.map(l=>l.text.trim()).filter(t=>t.length>1);
+          processLinesWithSpatial(data.lines,roiX,roiY,vw,vh);
+        }
+        // Pipeline B: DIRECT text→field (always runs as fallback)
+        // Parse raw text into lines and classify directly
+        const rawLines=data.text.split('\n').map(l=>l.trim()).filter(l=>l.length>2);
+        if(rawLines.length>0){
+          if(!lineTexts.length) lineTexts=rawLines;
+          directTextToFields(rawLines);
+        }
+      }catch(pipeErr){
+        console.error('Pipeline error:',pipeErr);
+      }
+      try{drawOverlayFromSlots(data.words,roiX,roiY,vw,vh);}catch(e){}
       deriveFieldsFromSlots();
       refreshAllFieldsUI();
       updateGlobalProgress();
       renderMinimap();
       // DEBUG: show full pipeline state
-      updateDebugPanel(lineTexts);
+      updateDebugPanel(lineTexts,data.text);
       if(areAllDone()){autoComplete();isProcessingFrame=false;return;}
     }
 
@@ -559,6 +575,73 @@ async function pipelineLoop(){
 
   isProcessingFrame=false;
   if(realtimeActive) animFrameId=requestAnimationFrame(pipelineLoop);
+}
+
+// ==================== DIRECT TEXT → FIELDS (fallback pipeline) ====================
+// Directly accumulates detected text into fields without requiring spatial slots
+// This guarantees fields fill even if data.lines has no bbox data
+let directEvidence={}; // {fieldKey: {normalizedValue: {count, bestRaw}}}
+function resetDirectEvidence(){directEvidence={};FIELD_CONFIG.forEach(f=>{directEvidence[f.key]={};});}
+resetDirectEvidence();
+
+function directTextToFields(rawLines){
+  rawLines.forEach(line=>{
+    const ft=classifyLine(line);
+    if(!ft)return;
+    const clean=extractFieldValue(line,ft);
+    const norm=normalizeValue(clean);
+    if(!norm)return;
+    // Accumulate evidence directly per field
+    if(!directEvidence[ft]) directEvidence[ft]={};
+    if(!directEvidence[ft][norm]) directEvidence[ft][norm]={count:0,bestRaw:clean};
+    directEvidence[ft][norm].count++;
+    if(clean.length>directEvidence[ft][norm].bestRaw.length) directEvidence[ft][norm].bestRaw=clean;
+    // Immediately update fieldState if this field isn't manually edited
+    if(fieldState[ft]&&!fieldState[ft].manuallyEdited){
+      // Find best evidence for this field
+      let bestC=0,bestR='',total=0;
+      for(const[n,info]of Object.entries(directEvidence[ft])){
+        total+=info.count;
+        if(info.count>bestC){bestC=info.count;bestR=info.bestRaw;}
+      }
+      const conf=total>0?Math.round(bestC/total*100):0;
+      // Only update if direct evidence is better than current slot-based value
+      if(!fieldState[ft].bestValue || conf>=fieldState[ft].confidence || bestC<=2){
+        fieldState[ft].bestValue=bestR;
+        fieldState[ft].confidence=conf;
+        if(conf>=(settings.certThreshold||85)&&bestC>=3) fieldState[ft].locked=true;
+      }
+    }
+  });
+
+  // Handle unclassified lines for name/company via scoring
+  rawLines.forEach(line=>{
+    const ft=classifyLine(line);
+    if(ft)return; // already classified above
+    const t=line.trim();
+    if(t.length<3)return;
+    const lr=(t.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙ]/g)||[]).length/Math.max(t.length,1);
+    if(lr<.5)return;
+    // Score as name
+    const words=t.split(/\s+/);
+    let nameScore=0;
+    if(words.length>=2&&words.length<=4&&words.every(w=>/^[A-ZÀÈÉÌÒÙÁÓÚ]/.test(w))) nameScore+=3;
+    if(!/\d/.test(t)) nameScore+=1;
+    if(COMPANY_KEYWORDS.some(kw=>t.toLowerCase().includes(kw))) nameScore-=10;
+    const targetField=nameScore>0?'name':'company';
+    const norm=normalizeValue(t);
+    if(!directEvidence[targetField]) directEvidence[targetField]={};
+    if(!directEvidence[targetField][norm]) directEvidence[targetField][norm]={count:0,bestRaw:t};
+    directEvidence[targetField][norm].count++;
+    if(!fieldState[targetField].manuallyEdited&&!fieldState[targetField].bestValue){
+      let bestC=0,bestR='';
+      for(const[n,info]of Object.entries(directEvidence[targetField])){
+        if(info.count>bestC){bestC=info.count;bestR=info.bestRaw;}
+      }
+      fieldState[targetField].bestValue=bestR;
+      fieldState[targetField].confidence=Math.min(bestC*20,100);
+    }
+  });
 }
 
 // ==================== SPATIAL LINE PROCESSING ====================
@@ -744,26 +827,49 @@ function renderMinimap(){
 }
 
 // ==================== DEBUG ====================
-function updateDebugPanel(lineTexts){
+function updateDebugPanel(lineTexts,rawText){
   const dp=document.getElementById('debugPanel');
   if(!dp)return;
-  let html='<div class="debug-line"><b>Frame #'+totalSamples+'</b> | Lines OCR: '+lineTexts.length+' | Slots: '+cardSlots.length+'</div>';
-  // Show raw OCR lines
-  html+='<div class="debug-line">📝 OCR: '+(lineTexts.length?lineTexts.map(t=>'"'+t.substring(0,30)+'"→'+classifyLine(t)).join(' | '):'NESSUN TESTO')+'</div>';
-  // Show slots
-  cardSlots.forEach((s,i)=>{
-    const evCount=Object.values(s.evidence).reduce((a,v)=>a+v.count,0);
-    html+='<div class="debug-line debug-slot">SLOT['+i+'] y='+s.normY.toFixed(2)+' type=<b>'+(s.fieldType||'NULL')+'</b> val="'+s.bestValue.substring(0,25)+'" conf='+s.confidence+'% ev='+evCount+(s.locked?' 🔒':'')+'</div>';
+  let html='<div class="debug-line"><b>Frame #'+totalSamples+'</b> | Lines: '+lineTexts.length+' | Slots: '+cardSlots.length+'</div>';
+  // Show RAW OCR text (truncated)
+  const rawShort=(rawText||'').replace(/\n/g,' | ').substring(0,120);
+  html+='<div class="debug-line">📝 RAW: "'+rawShort+'"</div>';
+  // Show each line + classification
+  lineTexts.slice(0,6).forEach(t=>{
+    const cls=classifyLine(t);
+    html+='<div class="debug-line">&nbsp;&nbsp;→ "'+t.substring(0,35)+'" <b>= '+(cls||'❌NULL')+'</b></div>';
   });
+  // Show slots
+  if(cardSlots.length>0){
+    html+='<div class="debug-line debug-slot"><b>SLOTS ('+cardSlots.length+'):</b></div>';
+    cardSlots.forEach((s,i)=>{
+      const evCount=Object.values(s.evidence).reduce((a,v)=>a+v.count,0);
+      html+='<div class="debug-line debug-slot">['+i+'] type='+(s.fieldType||'NULL')+' "'+s.bestValue.substring(0,25)+'" conf='+s.confidence+'% ev='+evCount+(s.locked?' 🔒':'')+'</div>';
+    });
+  }else{
+    html+='<div class="debug-line debug-warn">⚠️ ZERO SLOTS</div>';
+  }
+  // Show direct evidence counts
+  let deStr='';
+  FIELD_CONFIG.forEach(f=>{
+    const de=directEvidence[f.key];
+    if(de){
+      const total=Object.values(de).reduce((a,v)=>a+v.count,0);
+      if(total>0) deStr+=f.key+'='+total+' ';
+    }
+  });
+  if(deStr) html+='<div class="debug-line" style="color:#f0f">DIRECT EV: '+deStr+'</div>';
   // Show fieldState
-  html+='<div class="debug-line debug-field">';
+  html+='<div class="debug-line debug-field"><b>CAMPI:</b> ';
+  let anyField=false;
   FIELD_CONFIG.forEach(f=>{
     const fs=fieldState[f.key];
-    if(fs.bestValue) html+=f.key+'="<b>'+fs.bestValue.substring(0,20)+'</b>"'+fs.confidence+'% ';
+    if(fs.bestValue){html+=f.key+'="'+fs.bestValue.substring(0,20)+'"'+fs.confidence+'% ';anyField=true;}
   });
+  if(!anyField) html+='<span class="debug-warn">⚠️ TUTTI VUOTI</span>';
   html+='</div>';
-  if(!FIELD_CONFIG.some(f=>fieldState[f.key].bestValue)) html+='<div class="debug-line debug-warn">⚠️ NESSUN CAMPO COMPILATO</div>';
   dp.innerHTML=html;
+  dp.scrollTop=dp.scrollHeight;
 }
 
 // ==================== COMPLETION ====================
