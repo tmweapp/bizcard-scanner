@@ -62,13 +62,13 @@ body { min-height: 100dvh; display: flex; flex-direction: column; }
 /* ─── Header ─── */
 header {
   background: var(--bg2); border-bottom: .5px solid var(--glass-border);
-  padding: 10px 20px; display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px; display: flex; align-items: center; justify-content: space-between;
   position: sticky; top: 0; z-index: 100;
   backdrop-filter: blur(20px) saturate(1.4);
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
 }
-header h1 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-header h1 span { font-size: 1.2rem; }
+header h1 { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+header h1 span { font-size: 1.1rem; }
 .version-badge {
   font-size: .55rem; background: linear-gradient(135deg, var(--accent), var(--lilac));
   color: #fff; padding: 2px 7px; border-radius: 6px; font-weight: 700;
@@ -77,7 +77,7 @@ header h1 span { font-size: 1.2rem; }
 /* ─── API Key Bar ─── */
 .api-key-bar {
   background: var(--bg2); border-bottom: .5px solid var(--glass-border);
-  padding: 7px 16px; font-size: .78rem;
+  padding: 5px 12px; font-size: .72rem;
   backdrop-filter: blur(16px);
 }
 .api-key-inner {
@@ -106,35 +106,44 @@ header h1 span { font-size: 1.2rem; }
 
 /* ─── Navigation ─── */
 nav {
-  display: flex; background: var(--bg2); border-bottom: .5px solid var(--glass-border);
+  display: flex; background: var(--bg2);
+  border-bottom: .5px solid var(--glass-border);
   overflow-x: auto; -webkit-overflow-scrolling: touch;
   backdrop-filter: blur(16px);
+  padding: 0 4px;
+  gap: 2px;
 }
 nav button {
-  flex: 1; background: none; border: none; color: var(--fg4); padding: 11px 16px;
-  font-size: .82rem; cursor: pointer; border-bottom: 2px solid transparent;
-  transition: all var(--transition); white-space: nowrap; font-weight: 500;
+  flex: 1; background: none; border: none; color: var(--fg4);
+  padding: 8px 6px;
+  font-size: .72rem; cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all var(--transition); white-space: nowrap; font-weight: 600;
+  letter-spacing: -.2px;
+  position: relative;
 }
-nav button.active { color: var(--lilac); border-bottom-color: var(--accent); }
+nav button.active {
+  color: var(--lilac); border-bottom-color: var(--accent);
+  background: linear-gradient(to bottom, transparent 60%, rgba(124,91,245,.06) 100%);
+}
 nav button:hover { color: var(--fg2); }
 
 /* ─── Main ─── */
-main { flex: 1; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
+main { flex: 1; padding: 12px; max-width: 900px; margin: 0 auto; width: 100%; }
 .panel { display: none; } .panel.active { display: block; }
 
 /* ─── Mode Selector ─── */
-.mode-selector { display: flex; gap: 8px; margin-bottom: 16px; }
+.mode-selector { display: flex; gap: 6px; margin-bottom: 12px; }
 .mode-btn {
-  flex: 1; padding: 12px 8px; border: .5px solid var(--glass-border); border-radius: var(--radius);
+  flex: 1; padding: 8px 6px; border: .5px solid var(--glass-border); border-radius: var(--radius2);
   background: var(--glass2); color: var(--fg3); cursor: pointer; text-align: center;
-  transition: all var(--transition); font-size: .85rem;
+  transition: all var(--transition); font-size: .8rem;
   backdrop-filter: blur(12px);
 }
-.mode-btn:hover { border-color: var(--accent); color: var(--fg); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.2); }
-.mode-btn.active { border-color: var(--accent); background: rgba(124,91,245,.1); color: var(--accent2); box-shadow: 0 0 20px var(--glow-purple); }
-.mode-btn .mode-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
-.mode-btn .mode-label { font-weight: 600; font-size: .85rem; }
-.mode-btn .mode-desc { font-size: .7rem; color: var(--fg4); margin-top: 2px; }
+.mode-btn:hover { border-color: var(--accent); color: var(--fg); transform: translateY(-1px); }
+.mode-btn.active { border-color: var(--accent); background: rgba(124,91,245,.1); color: var(--accent2); box-shadow: 0 0 16px var(--glow-purple); }
+.mode-btn .mode-icon { font-size: 1.2rem; display: block; margin-bottom: 2px; }
+.mode-btn .mode-label { font-weight: 600; font-size: .75rem; }
+.mode-btn .mode-desc { font-size: .62rem; color: var(--fg4); margin-top: 1px; }
 
 /* ─── Camera ─── */
 .camera-area {
@@ -340,6 +349,77 @@ main { flex: 1; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
 .ss-frame-label { font-size: .65rem; color: var(--fg4); text-transform: uppercase; letter-spacing: 1px; }
 .ss-status { font-size: .95rem; font-weight: 600; color: var(--fg); }
 .ss-detail { font-size: .75rem; color: var(--fg3); min-height: 1.2em; }
+
+/* ─── Live Building Card ─── */
+.ss-top-bar { width: 100%; margin-bottom: 16px; }
+.ss-top-status { font-size: .82rem; font-weight: 600; color: var(--fg); margin-bottom: 6px; text-align: left; }
+.ss-top-progress { height: 3px; background: var(--glass2); border-radius: 2px; overflow: hidden; }
+.ss-top-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--lilac)); border-radius: 2px; transition: width .3s ease; width: 0; }
+
+.live-card {
+  width: 100%; max-width: 400px;
+  background: var(--glass2); border: .5px solid var(--glass-border);
+  border-radius: var(--radius); padding: 18px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 40px rgba(0,0,0,.3), 0 0 30px var(--glow-purple);
+  transition: all .4s ease;
+}
+.live-card-header { margin-bottom: 14px; }
+.live-field { margin-bottom: 6px; min-height: 1.1em; position: relative; overflow: hidden; }
+.live-name { font-size: 1.2rem; font-weight: 700; color: var(--fg); }
+.live-role { font-size: .82rem; color: var(--lilac); }
+.live-company { font-size: .82rem; color: var(--fg3); }
+
+/* Shimmer placeholder */
+.shimmer-line {
+  height: .9em; border-radius: 4px;
+  background: linear-gradient(90deg, var(--glass) 25%, var(--glass2) 50%, var(--glass) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Live field row */
+.live-body-field {
+  display: flex; align-items: center; gap: 10px; padding: 6px 0;
+  border-top: .5px solid var(--glass-border);
+  animation: fieldAppear .4s ease-out;
+  opacity: 0; animation-fill-mode: forwards;
+}
+@keyframes fieldAppear {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.live-body-icon { font-size: .85rem; width: 20px; text-align: center; flex-shrink: 0; }
+.live-body-content { flex: 1; min-width: 0; }
+.live-body-label { font-size: .6rem; color: var(--fg4); text-transform: uppercase; letter-spacing: .5px; }
+.live-body-value { font-size: .82rem; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* AI refine glow effect */
+.live-field.refined { animation: fieldGlow .6s ease; }
+@keyframes fieldGlow {
+  0% { text-shadow: 0 0 0 transparent; }
+  50% { text-shadow: 0 0 12px var(--lilac); }
+  100% { text-shadow: 0 0 0 transparent; }
+}
+
+/* Flag entrance */
+.live-card-flag {
+  margin-bottom: 10px;
+}
+.live-card-flag img {
+  width: 44px; height: auto; border-radius: 3px;
+  transform: rotateY(-12deg) rotateX(4deg);
+  box-shadow: 2px 2px 8px rgba(0,0,0,.4);
+  animation: flagLand .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes flagLand {
+  from { opacity: 0; transform: rotateY(-30deg) rotateX(10deg) translateY(-20px) scale(.5); }
+  to { opacity: 1; transform: rotateY(-12deg) rotateX(4deg) translateY(0) scale(1); }
+}
 
 /* ─── Results ─── */
 .result-section {
@@ -876,17 +956,33 @@ body {
 
     <!-- Smart Scan Progress Overlay (shared by local + remote) -->
     <div class="smart-scan-overlay" id="smartScanOverlay" style="display:none">
-      <div class="ss-progress-ring">
-        <svg viewBox="0 0 120 120">
-          <circle class="ss-ring-bg" cx="60" cy="60" r="52" />
-          <circle class="ss-ring-fill" id="ssRingFill" cx="60" cy="60" r="52" />
-        </svg>
-        <div class="ss-center-text">
-          <div class="ss-frame-count" id="ssFrameCount">0</div>
-          <div class="ss-frame-label">frame</div>
+      <!-- Compact progress bar at top -->
+      <div class="ss-top-bar">
+        <div class="ss-top-status" id="ssStatus">📸 Acquisizione...</div>
+        <div class="ss-top-progress"><div class="ss-top-fill" id="ssTopFill"></div></div>
+      </div>
+
+      <!-- Live building card -->
+      <div class="live-card" id="liveCard">
+        <div class="live-card-flag" id="liveFlag" style="display:none">
+          <img id="liveFlagImg" alt="">
+        </div>
+        <div class="live-card-header">
+          <div class="live-field live-name" id="liveName">
+            <div class="shimmer-line" style="width:70%"></div>
+          </div>
+          <div class="live-field live-role" id="liveRole">
+            <div class="shimmer-line" style="width:50%"></div>
+          </div>
+          <div class="live-field live-company" id="liveCompany">
+            <div class="shimmer-line" style="width:60%"></div>
+          </div>
+        </div>
+        <div class="live-card-body" id="liveCardBody">
+          <!-- Fields appear here dynamically -->
         </div>
       </div>
-      <div class="ss-status" id="ssStatus">Acquisizione frame...</div>
+
       <div class="ss-detail" id="ssDetail"></div>
       <button class="btn btn-secondary btn-small" id="btnSmartScanStop">⏹ Interrompi</button>
     </div>
@@ -1538,10 +1634,10 @@ async function startSmartScan() {
   $('smartScanOverlay').style.display = 'flex';
   $('btnSmartScan').classList.add('scanning');
   $('btnSmartScan').disabled = true;
-  $('ssFrameCount').textContent = '0';
+  showLiveCard();
   $('ssStatus').textContent = '📸 Acquisizione frame...';
   $('ssDetail').textContent = 'Tieni fermo il biglietto nella guida';
-  updateSmartScanRing(0);
+  updateLiveProgress(0);
 
   if (navigator.vibrate) navigator.vibrate(100);
 
@@ -1568,14 +1664,14 @@ async function startSmartScan() {
 
     // ── PHASE 3: Multi-frame OCR ──
     $('ssStatus').textContent = '🤖 OCR su frame migliori...';
-    updateSmartScanRing(50);
+    updateLiveProgress(50);
 
     const ocrResults = [];
     for (let i = 0; i < bestFrames.length; i++) {
       if (smartScanAborted) return cleanupSmartScan();
 
       $('ssDetail').textContent = `OCR frame ${i + 1}/${bestFrames.length}...`;
-      updateSmartScanRing(50 + (i / bestFrames.length) * 30);
+      updateLiveProgress(50 + (i / bestFrames.length) * 30);
 
       const frame = bestFrames[i];
       const canvas = document.createElement('canvas');
@@ -1624,25 +1720,27 @@ async function startSmartScan() {
     }
 
     // ── PHASE 4: Merge OCR Results ──
-    $('ssStatus').textContent = '🔀 Fusione risultati multi-frame...';
-    updateSmartScanRing(85);
+    $('ssStatus').textContent = '🔀 Fusione risultati...';
+    updateLiveProgress(85);
 
     const mergedText = mergeOcrResults(ocrResults);
     scanCount++;
     saveState();
 
     classifyBlocks(mergedText);
+    populateLiveCardFromBlocks();
 
     // ── PHASE 5: Auto AI Normalization ──
     if (openaiApiKey && detectedBlocks.length > 0) {
-      $('ssStatus').textContent = '✨ Normalizzazione AI...';
-      $('ssDetail').textContent = 'GPT-4o-mini sta pulendo i dati...';
-      updateSmartScanRing(92);
+      $('ssStatus').textContent = '✨ AI sta raffinando...';
+      $('ssDetail').textContent = 'Pulizia e arricchimento dati...';
+      updateLiveProgress(92);
 
       await normalizeWithAI();
-      updateSmartScanRing(100);
+      refineLiveCardFromBlocks();
+      updateLiveProgress(100);
     } else {
-      updateSmartScanRing(100);
+      updateLiveProgress(100);
     }
 
     // Auto-start session on first scan
@@ -3187,6 +3285,114 @@ function renderFieldSummary() {
   });
 
   container.innerHTML = html;
+}
+
+// ─── LIVE CARD BUILDER ───────────────────────────────────────
+function showLiveCard() {
+  // Reset live card to skeleton state
+  $('liveName').innerHTML = '<div class="shimmer-line" style="width:70%"></div>';
+  $('liveRole').innerHTML = '<div class="shimmer-line" style="width:50%"></div>';
+  $('liveCompany').innerHTML = '<div class="shimmer-line" style="width:60%"></div>';
+  $('liveCardBody').innerHTML = '';
+  $('liveFlag').style.display = 'none';
+  $('liveCard').style.display = 'block';
+}
+
+function updateLiveProgress(pct) {
+  $('ssTopFill').style.width = pct + '%';
+}
+
+function updateLiveField(key, value, icon) {
+  if (!value) return;
+
+  // Header fields
+  if (key === 'name') {
+    $('liveName').textContent = value;
+    $('liveName').classList.add('refined');
+    setTimeout(() => $('liveName').classList.remove('refined'), 600);
+    return;
+  }
+  if (key === 'role') {
+    $('liveRole').textContent = value;
+    $('liveRole').classList.add('refined');
+    setTimeout(() => $('liveRole').classList.remove('refined'), 600);
+    return;
+  }
+  if (key === 'company') {
+    $('liveCompany').textContent = value;
+    $('liveCompany').classList.add('refined');
+    setTimeout(() => $('liveCompany').classList.remove('refined'), 600);
+    return;
+  }
+
+  // Country → show flag
+  if (key === 'country') {
+    const iso = getCountryISO(value);
+    if (iso) {
+      $('liveFlagImg').src = 'https://flagcdn.com/w80/' + iso + '.png';
+      $('liveFlag').style.display = 'block';
+    }
+  }
+
+  // Body fields — add or update
+  const container = $('liveCardBody');
+  let existing = container.querySelector('[data-key="' + key + '"]');
+  if (existing) {
+    const valEl = existing.querySelector('.live-body-value');
+    valEl.textContent = value;
+    existing.classList.add('refined');
+    setTimeout(() => existing.classList.remove('refined'), 600);
+  } else {
+    const row = document.createElement('div');
+    row.className = 'live-body-field';
+    row.dataset.key = key;
+    row.style.animationDelay = (container.children.length * 80) + 'ms';
+    row.innerHTML = '<span class="live-body-icon">' + (icon || '📌') + '</span>' +
+      '<div class="live-body-content">' +
+        '<div class="live-body-label">' + key + '</div>' +
+        '<div class="live-body-value">' + value + '</div>' +
+      '</div>';
+    container.appendChild(row);
+  }
+}
+
+function populateLiveCardFromBlocks() {
+  // Called after classifyBlocks — show raw classified data on live card
+  const fieldIcons = {};
+  FIELD_TYPES.forEach(ft => { fieldIcons[ft.key] = ft.icon; });
+
+  FIELD_TYPES.forEach(ft => {
+    if (ft.key === 'other' || ft.key === 'ignore') return;
+    const values = detectedBlocks
+      .filter(b => b.type === ft.key)
+      .map(b => b.text)
+      .filter(Boolean);
+    if (values.length) {
+      updateLiveField(ft.key, values.join(', '), ft.icon);
+    }
+  });
+}
+
+function refineLiveCardFromBlocks() {
+  // Called after AI normalization — update with refined data + glow
+  const fieldIcons = {};
+  FIELD_TYPES.forEach(ft => { fieldIcons[ft.key] = ft.icon; });
+
+  const delay = 100;
+  let i = 0;
+  FIELD_TYPES.forEach(ft => {
+    if (ft.key === 'other' || ft.key === 'ignore') return;
+    const values = detectedBlocks
+      .filter(b => b.type === ft.key)
+      .map(b => b.text)
+      .filter(Boolean);
+    if (values.length) {
+      setTimeout(() => {
+        updateLiveField(ft.key, values.join(', '), ft.icon);
+      }, i * delay);
+      i++;
+    }
+  });
 }
 
 // ─── COUNTRY → ISO FLAG MAP ──────────────────────────────────
