@@ -1396,9 +1396,9 @@ const RE = {
   address:  /(?:via|viale|v\.le|corso|c\.so|piazza|p\.za|p\.zza|largo|vicolo|strada|contrada|loc\.|localit[àa]|street|st\.|avenue|ave\.|boulevard|blvd|road|rd\.|straße|str\.|rue|calle)\s+[^\n]{3,60}/i,
   web:      /(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:\/[^\s]*)?/i,
   linkedin: /(?:linkedin\.com\/in\/|linkedin\.com\/company\/)[^\s]+/i,
-  // Mobile: keyword-based (cell, mob, whatsapp) or Italian mobile prefix 3XX
-  mobile:   /(?:(?:cell|mob(?:ile)?|whatsapp|wa)[.:\s]*(?:\+?\d[\d\s.\-()]{7,18}))|(?:(?:\+?39\s*)?3\d{2}[\s.\-]?\d{3,4}[\s.\-]?\d{3,4})/i,
-  phone:    /(?:(?:tel|phone|ufficio|office|sede|fisso)[.:\s]*)?(?:\+?\d{1,3}[\s.\-]?)?(?:\(?\d{2,4}\)?[\s.\-]?)\d{2,4}[\s.\-]?\d{3,4}[\s.\-]?\d{0,4}/i,
+  // Mobile: keyword-based (cell, cellulare, mob, mobile, MOB, whatsapp) or Italian mobile prefix 3XX
+  mobile:   /(?:(?:cell(?:ulare)?|mob(?:ile|\.)?|whatsapp|wa|m\b)[.:\s]*(?:\+?\d[\d\s.\-()]{7,18}))|(?:(?:\+?39\s*)?3\d{2}[\s.\-]?\d{3,4}[\s.\-]?\d{3,4})/i,
+  phone:    /(?:(?:tel(?:efono)?|phone|ph\.|ufficio|office|sede|fisso|t\.)[.:\s]*)?(?:\+?\d{1,3}[\s.\-]?)?(?:\(?\d{2,4}\)?[\s.\-]?)\d{2,4}[\s.\-]?\d{3,4}[\s.\-]?\d{0,4}/i,
   fax:      /(?:fax|facsimile)[.:\s]*(?:\+?\d{1,3}[\s.\-]?)?(?:\(?\d{2,4}\)?[\s.\-]?)\d{2,4}[\s.\-]?\d{3,4}/i,
 };
 
@@ -3221,12 +3221,18 @@ function classifyLine(text, lineIndex, totalLines) {
   const roleRegex = new RegExp('\\b(' + ROLES.join('|') + ')\\b', 'i');
   if (roleRegex.test(t)) return { type: 'role', confidence: 0.82 };
 
-  // Mobile phone (keyword: cell/mob/whatsapp, or IT mobile prefix 3XX)
+  // Mobile phone (keyword: cell/cellulare/mob/MOB/mobile/whatsapp, or IT mobile prefix 3XX)
   if (RE.mobile.test(t)) {
     const digits = t.replace(/\D/g, '');
     if (digits.length >= 7 && digits.length <= 15) {
-      return { type: 'mobile', confidence: 0.85 };
+      return { type: 'mobile', confidence: 0.88 };
     }
+  }
+
+  // Explicit mobile keywords even with flexible format
+  if (/(?:^|\s|:)(?:cell(?:ulare)?|mob(?:ile|\.)?|m\s*[:.])\s*\+?\d/i.test(t)) {
+    const digits = t.replace(/\D/g, '');
+    if (digits.length >= 7) return { type: 'mobile', confidence: 0.90 };
   }
 
   // Phone — check if it's a mobile by prefix even without keyword
@@ -3236,12 +3242,12 @@ function classifyLine(text, lineIndex, totalLines) {
     if (digits.length >= 7 && digits.length <= 15 && t.length < 40) {
       // Italian mobile: +39 3XX or just 3XX...
       const isMobile = /(?:^|\+?39\s*)?3\d{2}/.test(phoneMatch[0].replace(/[\s.\-()]/g, ''))
-        || /(?:^|\s)(?:cell|mob|whatsapp|wa)\b/i.test(t);
-      // International mobile hints: +1 with no area keywords, +44 7, +49 1, +33 6/7
+        || /(?:^|\s)(?:cell(?:ulare)?|mob(?:ile|\.)?|whatsapp|wa)\b/i.test(t);
+      // International mobile hints: +44 7, +49 1, +33 6/7
       const intlMobile = /\+44\s*7|\+49\s*1[567]|\+33\s*[67]|\+34\s*[67]|\+86\s*1[3-9]|\+81\s*[789]0/.test(phoneMatch[0].replace(/[\s.\-]/g, ''));
 
       if (isMobile || intlMobile) {
-        return { type: 'mobile', confidence: 0.82 };
+        return { type: 'mobile', confidence: 0.85 };
       }
       return { type: 'phone', confidence: 0.80 };
     }
@@ -3662,10 +3668,17 @@ function renderCleanCard() {
     // Make actionable links
     let valueHtml = esc(fields[key]);
     if (key === 'email') {
-      valueHtml = fields[key].split(',').map(e => `<a href="mailto:${e.trim()}" class="cc-link">${esc(e.trim())}</a>`).join(', ');
+      valueHtml = fields[key].split(',').map(e => {
+        const em = e.trim();
+        return `<a href="mailto:${em}" class="cc-link">${esc(em)}</a>`;
+      }).join(', ');
     } else if (key === 'mobile' || key === 'phone' || key === 'fax') {
-      const num = fields[key].replace(/[^\d+]/g, '');
-      valueHtml = `<a href="tel:${num}" class="cc-link">${esc(fields[key])}</a>`;
+      // Handle multiple numbers separated by comma
+      valueHtml = fields[key].split(',').map(p => {
+        const pt = p.trim();
+        const num = pt.replace(/[^\d+]/g, '');
+        return `<a href="tel:${num}" class="cc-link">${esc(pt)}</a>`;
+      }).join(', ');
     } else if (key === 'web') {
       valueHtml = `<a href="${fields[key]}" target="_blank" rel="noopener" class="cc-link">${esc(fields[key])}</a>`;
     } else if (key === 'linkedin') {
@@ -3717,9 +3730,9 @@ const AI_NORMALIZE_PROMPT = `Sei un sistema di data enrichment per un CRM/databa
 
 1. **name**: Title Case (es. "MARIO ROSSI" → "Mario Rossi"). Rimuovi titoli (Dott., Ing., Avv.) e spostali nel ruolo.
 2. **company**: Formatta correttamente. Mantieni forma giuridica standard (S.r.l., S.p.A., Ltd., GmbH, Inc.). Se riconosci l'azienda, usa il nome ufficiale.
-3. **email**: Minuscolo, rimuovi spazi. Se ci sono più email, separale con virgola.
-4. **mobile**: Numeri di CELLULARE in formato internazionale (+39 3XX XXX XXXX per Italia). Identifica cellulari da prefissi: IT 3XX, US/CA +1, UK +44 7XXX, DE +49 1XXX, FR +33 6/7, ES +34 6/7, CN +86 1XX, JP +81 70/80/90, ecc. Se il biglietto dice "Cell", "Mob", "Mobile", "WhatsApp" → è cellulare.
-5. **phone**: Numeri di TELEFONO FISSO / sede in formato internazionale. Tutto ciò che NON è cellulare (prefissi fissi: IT 0X, US area codes, UK 01/02/03, ecc.). Se dice "Tel", "Office", "Ufficio", "Sede" → fisso.
+3. **email**: Minuscolo, rimuovi spazi. ⚠️ ESTRAI TUTTE le email presenti, SEMPRE. Se ci sono 2, 3 o più email, separale con virgola. Non scartarne MAI nessuna.
+4. **mobile**: ⚠️ ESTRAI TUTTI i numeri di CELLULARE trovati, SEMPRE, separati da virgola. Identifica cellulari da: etichette "Cell", "Mob", "MOB", "Mobile", "Cellulare", "WhatsApp", "WA" → è cellulare. Prefissi mobili: IT 3XX, US/CA +1, UK +44 7XXX, DE +49 1XXX, FR +33 6/7, ES +34 6/7, CN +86 1XX, JP +81 70/80/90. Formato internazionale (+39 3XX XXX XXXX per Italia). Se ci sono 2 o più cellulari, mettili TUTTI separati da virgola.
+5. **phone**: ⚠️ ESTRAI TUTTI i numeri di TELEFONO FISSO / sede, SEMPRE, separati da virgola. Tutto ciò che NON è cellulare (prefissi fissi: IT 0X, US area codes, UK 01/02/03, ecc.). Se dice "Tel", "Office", "Ufficio", "Sede", "T.", "Ph." → fisso. Se ci sono 2+ numeri fissi, mettili TUTTI.
 6. **role**: Titolo professionale completo in lingua originale + traduzione italiana tra parentesi se non italiano. Es: "Chief Technology Officer (Direttore Tecnologico)". Espandi abbreviazioni: "amm. del." → "Amministratore Delegato", "CEO" → "CEO (Amministratore Delegato)".
 7. **web**: URL completo con https://. Minuscolo. Se c'è solo dominio nell'email (es. mario@acme.com), deduci "https://www.acme.com".
 8. **address**: Solo via/numero/CAP. Formatta: Via/Piazza/Straße/Street ecc. + numero + CAP.
@@ -3744,8 +3757,9 @@ const AI_NORMALIZE_PROMPT = `Sei un sistema di data enrichment per un CRM/databa
 - Se l'indirizzo contiene una città nota (Milano, Roma, New York, London, Tokyo, Shanghai...) estraila nel campo city
 - Se manca il paese ma c'è un prefisso +39 → Italia, +1 → USA, ecc.
 - Se manca il web ma c'è un'email aziendale → deduci il sito
-- Distingui SEMPRE cellulare da fisso basandoti sui prefissi
+- Distingui SEMPRE cellulare da fisso basandoti su etichette (Cell/Mob/MOB/Mobile/Cellulare → mobile, Tel/Ufficio/Office/Sede → fisso) e prefissi
 - Se c'è un solo numero e non è chiaro, mettilo in "mobile" (più utile commercialmente)
+- ⚠️ REGOLA CRITICA: NON PERDERE MAI nessun numero di telefono e nessuna email. Se il biglietto ha 3 numeri, devono apparire TUTTI nel JSON (distribuiti tra mobile, phone, fax). Se ha 2 email, entrambe nel campo email separate da virgola. OGNI dato di contatto è prezioso.
 
 ═══ CORREZIONE OCR ═══
 - Correggi errori OCR tipici: 0↔O, 1↔l↔I, 5↔S, 8↔B, rn↔m
@@ -3922,6 +3936,9 @@ function applyNormalizedData(normalized) {
     });
   }
 
+  // Multi-value fields: AI can return comma-separated values for these
+  const multiValueFields = new Set(['email', 'mobile', 'phone', 'fax']);
+
   fieldKeys.forEach(key => {
     const newValue = (normalized[key] || '').trim();
     if (!newValue) return;
@@ -3929,6 +3946,7 @@ function applyNormalizedData(normalized) {
     const existingBlocks = detectedBlocks.filter(b => b.type === key);
 
     if (existingBlocks.length > 0) {
+      // For multi-value fields, merge ALL values into the first block (comma-separated from AI)
       existingBlocks[0].text = newValue;
       existingBlocks[0].confidence = 0.99;
       for (let i = 1; i < existingBlocks.length; i++) {
@@ -4543,7 +4561,7 @@ function contactToVcard(c) {
   if (c.email) c.email.split(',').map(e => e.trim()).forEach(e => lines.push('EMAIL;TYPE=WORK:' + e));
   if (c.mobile) c.mobile.split(',').map(p => p.trim()).forEach(p => lines.push('TEL;TYPE=CELL:' + p));
   if (c.phone) c.phone.split(',').map(p => p.trim()).forEach(p => lines.push('TEL;TYPE=WORK,VOICE:' + p));
-  if (c.fax) lines.push('TEL;TYPE=WORK,FAX:' + c.fax);
+  if (c.fax) c.fax.split(',').map(f => f.trim()).forEach(f => lines.push('TEL;TYPE=WORK,FAX:' + f));
   if (c.web) lines.push('URL:' + c.web);
   if (c.linkedin) lines.push('URL;TYPE=LINKEDIN:' + c.linkedin);
   // ADR format: PO;ext;street;city;region;zip;country
