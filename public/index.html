@@ -1512,7 +1512,7 @@ function saveState() {
 const SUPABASE_URL = 'https://hgcscjekdqifwnczrhqj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnY3NjamVrZHFpZnduY3pyaHFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NDkxMjAsImV4cCI6MjA4OTIyNTEyMH0.d0SlxojBgv9mvuKQZ5-DBRouhn-J7IYSV2ITDS_RZVc';
 
-let supabase = null;
+let sbClient = null;
 let supabaseReady = false;
 let deviceId = '';
 let syncInProgress = false;
@@ -1533,7 +1533,7 @@ function initSupabase() {
 
   try {
     if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       supabaseReady = true;
       updateCloudStatus('connected');
       console.log('[Supabase] Initialized, device:', deviceId);
@@ -1586,13 +1586,13 @@ function debouncedCloudSync() {
 }
 
 async function syncWithCloud(force = false) {
-  if (!supabaseReady || !supabase || syncInProgress) return;
+  if (!supabaseReady || !sbClient || syncInProgress) return;
   syncInProgress = true;
   updateCloudStatus('syncing');
 
   try {
     // ── PULL: Get cloud contacts for this device ──
-    const { data: cloudContacts, error: pullErr } = await supabase
+    const { data: cloudContacts, error: pullErr } = await sbClient
       .from('contacts')
       .select('*')
       .eq('device_id', deviceId)
@@ -1631,7 +1631,7 @@ async function syncWithCloud(force = false) {
         .map(c => localContactToCloud(c));
 
       if (toUpsert.length) {
-        const { error: pushErr } = await supabase
+        const { error: pushErr } = await sbClient
           .from('contacts')
           .upsert(toUpsert, { onConflict: 'id' });
         if (pushErr) throw pushErr;
@@ -1644,7 +1644,7 @@ async function syncWithCloud(force = false) {
       const localIds = new Set(contacts.map(c => c.id));
       const toDelete = cloudContacts.filter(cc => !localIds.has(cc.id)).map(cc => cc.id);
       if (toDelete.length) {
-        await supabase.from('contacts').delete().in('id', toDelete);
+        await sbClient.from('contacts').delete().in('id', toDelete);
         console.log(`[Supabase] Deleted ${toDelete.length} contacts from cloud`);
       }
     }
@@ -1666,13 +1666,13 @@ async function syncWithCloud(force = false) {
 }
 
 async function syncExportHistory() {
-  if (!supabaseReady || !supabase) return;
+  if (!supabaseReady || !sbClient) return;
   try {
     const localExports = JSON.parse(localStorage.getItem('bizcard_exports') || '[]');
     if (!localExports.length) return;
 
     // Get existing cloud exports for this device
-    const { data: cloudExports } = await supabase
+    const { data: cloudExports } = await sbClient
       .from('exports')
       .select('id, created_at')
       .eq('device_id', deviceId);
@@ -1692,7 +1692,7 @@ async function syncExportHistory() {
       }));
 
     if (toInsert.length) {
-      await supabase.from('exports').insert(toInsert);
+      await sbClient.from('exports').insert(toInsert);
     }
   } catch (e) {
     console.warn('[Supabase] Export sync error:', e);
