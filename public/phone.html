@@ -21,7 +21,6 @@ html {
 }
 body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 
-/* ─── Top Bar ─── */
 .top-bar {
   background: var(--bg2); padding: 12px 16px; text-align: center;
   border-bottom: 1px solid var(--bg3); flex-shrink: 0;
@@ -29,7 +28,6 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
 .top-bar h1 { font-size: 1rem; font-weight: 600; }
 .top-bar .sub { font-size: .75rem; color: var(--fg2); margin-top: 2px; }
 
-/* ─── Status Bar ─── */
 .status-bar {
   padding: 10px 16px; display: flex; align-items: center; gap: 8px;
   font-size: .85rem; background: var(--bg2); border-bottom: 1px solid var(--bg3); flex-shrink: 0;
@@ -40,12 +38,15 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
 .status-dot.error { background: var(--red); }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
 
-/* ─── Camera ─── */
 .camera-area {
   flex: 1; position: relative; background: #000; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
 }
-.camera-area video { width: 100%; height: 100%; object-fit: cover; }
+.camera-area video {
+  width: 100%; height: 100%; object-fit: cover;
+  /* Fix iOS Safari black screen */
+  -webkit-transform: translateZ(0);
+}
 .frame-guide {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
   width: 88%; height: 65%; border: 2px solid rgba(255,255,255,.25); border-radius: 12px;
@@ -58,27 +59,28 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
   font-size: .8rem; z-index: 10; color: var(--fg);
 }
 
-/* ─── Preview Overlay ─── */
 .preview-overlay {
   position: absolute; inset: 0; background: rgba(0,0,0,.85); z-index: 20;
   display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
 }
 .preview-overlay.visible { display: flex; }
 .preview-overlay img {
-  max-width: 90%; max-height: 60%; border-radius: 8px; object-fit: contain;
+  max-width: 90%; max-height: 55%; border-radius: 8px; object-fit: contain;
 }
 .preview-actions { display: flex; gap: 12px; }
 .preview-actions button {
-  padding: 12px 24px; border: none; border-radius: 8px;
-  font-size: .95rem; font-weight: 600; cursor: pointer;
+  padding: 14px 28px; border: none; border-radius: 10px;
+  font-size: 1rem; font-weight: 600; cursor: pointer;
 }
 .preview-actions .btn-send { background: var(--green); color: #fff; }
+.preview-actions .btn-send:active { background: #16a34a; }
 .preview-actions .btn-retake { background: var(--bg3); color: var(--fg); }
 
-/* ─── Bottom Bar ─── */
 .bottom-bar {
   background: var(--bg2); padding: 16px; display: flex; align-items: center;
   justify-content: center; gap: 16px; border-top: 1px solid var(--bg3); flex-shrink: 0;
+  /* Safe area for iPhone notch */
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
 .btn-capture {
   width: 72px; height: 72px; border-radius: 50%; border: 4px solid var(--fg);
@@ -99,7 +101,6 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
 }
 .btn-flip:active, .btn-torch:active { transform: scale(.9); }
 
-/* ─── Toast ─── */
 .sent-toast {
   position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
   background: var(--green); color: #fff; padding: 16px 28px; border-radius: 12px;
@@ -108,23 +109,31 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
 }
 .sent-toast.show { transform: translate(-50%,-50%) scale(1); }
 
-/* ─── Error Screen ─── */
 .error-screen {
   display: none; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; padding: 40px 20px; flex: 1; color: var(--fg2); gap: 12px;
 }
 .error-screen h2 { color: var(--red); font-size: 1.1rem; }
-.error-screen .retry-btn {
-  margin-top: 12px; padding: 10px 20px; background: var(--accent); color: #fff;
-  border: none; border-radius: 8px; font-size: .9rem; cursor: pointer;
+.error-screen p { font-size: .9rem; line-height: 1.5; }
+.retry-btn {
+  margin-top: 12px; padding: 12px 24px; background: var(--accent); color: #fff;
+  border: none; border-radius: 8px; font-size: .95rem; cursor: pointer; font-weight: 600;
 }
+
+/* Debug info */
+.debug-info {
+  position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.8);
+  color: #0f0; font-family: monospace; font-size: .65rem; padding: 4px 8px;
+  z-index: 200; max-height: 80px; overflow-y: auto; display: none;
+}
+.debug-info.visible { display: block; }
 </style>
 </head>
 <body>
 
 <div class="top-bar">
   <h1>📸 BizCard Scanner</h1>
-  <div class="sub">Scansione remota</div>
+  <div class="sub" id="sessionLabel">Scansione remota</div>
 </div>
 
 <div class="status-bar" id="statusBar">
@@ -137,21 +146,20 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
   <div class="frame-guide" id="frameGuide"></div>
   <div class="photo-count" id="photoCount" style="display:none">0 foto inviate</div>
 
-  <!-- Preview before send -->
   <div class="preview-overlay" id="previewOverlay">
     <img id="previewImg" alt="Anteprima foto">
     <div class="preview-actions">
       <button class="btn-retake" id="btnPreviewRetake">🔄 Rifai</button>
-      <button class="btn-send" id="btnPreviewSend">📤 Invia al desktop</button>
+      <button class="btn-send" id="btnPreviewSend">📤 Invia</button>
     </div>
   </div>
 </div>
 
-<div class="bottom-bar">
+<div class="bottom-bar" id="bottomBar">
   <button class="btn-torch" id="btnTorch" style="display:none" aria-label="Flash">🔦</button>
   <button class="btn-flip" id="btnFlip" aria-label="Inverti fotocamera">🔄</button>
   <button class="btn-capture" id="btnCapture" disabled aria-label="Scatta foto"></button>
-  <div style="width:44px"></div><!-- spacer for centering -->
+  <div style="width:44px"></div>
 </div>
 
 <div class="sent-toast" id="sentToast">✅ Foto inviata!</div>
@@ -159,20 +167,45 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
 <div class="error-screen" id="errorScreen">
   <h2 id="errorTitle">Errore</h2>
   <p id="errorMsg">Sessione non trovata</p>
-  <button class="retry-btn" id="btnRetry" style="display:none">🔄 Riprova</button>
+  <button class="retry-btn" id="btnRetry">🔄 Riprova</button>
 </div>
+
+<div class="debug-info" id="debugInfo"></div>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 'use strict';
 
 (function() {
+
+  // ─── Config ───
+  const PEER_CONFIG = {
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+      ]
+    },
+    debug: 0,
+  };
+  const MAX_IMAGE_WIDTH = 1200;    // Smaller than desktop for WebRTC transfer
+  const JPEG_QUALITY = 0.75;       // Lower quality for faster transfer
+  const MAX_RETRIES = 12;
+  const CHUNK_SIZE = 64 * 1024;    // 64KB chunks for reliable transfer
+
   // ─── Session from URL ───
   const params = new URLSearchParams(location.search);
-  const sessionId = params.get('s') || params.get('session');
+  const sessionId = (params.get('s') || params.get('session') || '').toUpperCase();
+
+  // Show session in header
+  if (sessionId) {
+    document.getElementById('sessionLabel').textContent = 'Sessione: ' + sessionId;
+  }
 
   if (!sessionId) {
-    showError('Sessione non trovata', 'Scansiona il QR code dal desktop per collegarti.');
+    showError('Sessione non trovata', 'Apri questo link scansionando il QR code dal desktop BizCard Scanner. L\'URL deve contenere il parametro ?s=CODICE.');
     return;
   }
 
@@ -184,29 +217,81 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
   let currentStream = null;
   let photosSent = 0;
   let retries = 0;
-  const MAX_RETRIES = 15;
+  let connecting = false;
   const captureCanvas = document.createElement('canvas');
   const captureCtx = captureCanvas.getContext('2d');
   let pendingBase64 = null;
+
+  // ─── Debug logging ───
+  function dbg(msg) {
+    console.log('[Phone]', msg);
+    const el = document.getElementById('debugInfo');
+    const ts = new Date().toLocaleTimeString();
+    el.innerHTML = `${ts}: ${msg}<br>` + el.innerHTML;
+  }
+
+  // Triple-tap to show debug info
+  let tapCount = 0;
+  document.querySelector('.top-bar').addEventListener('click', () => {
+    tapCount++;
+    if (tapCount >= 5) {
+      document.getElementById('debugInfo').classList.toggle('visible');
+      tapCount = 0;
+    }
+    setTimeout(() => { tapCount = 0; }, 2000);
+  });
 
   // ─── Camera ───
   async function startCamera() {
     const video = document.getElementById('video');
     try {
-      if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+      if (currentStream) {
+        currentStream.getTracks().forEach(t => t.stop());
+        currentStream = null;
+      }
+
+      dbg('Requesting camera: ' + facingMode);
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1440 } },
+        video: {
+          facingMode: facingMode,
+          width: { ideal: 1920 },
+          height: { ideal: 1440 },
+        },
         audio: false,
       });
+
       video.srcObject = stream;
       currentStream = stream;
 
-      // Check torch
+      // CRITICAL: explicit play() required by mobile Safari & some Android browsers
+      try { await video.play(); } catch (e) { dbg('video.play() error: ' + e.message); }
+
+      dbg('Camera started: ' + stream.getVideoTracks()[0].label);
+
+      // Check torch capability
       const track = stream.getVideoTracks()[0];
-      const caps = track.getCapabilities ? track.getCapabilities() : {};
-      document.getElementById('btnTorch').style.display = caps.torch ? 'inline-flex' : 'none';
+      try {
+        const caps = track.getCapabilities ? track.getCapabilities() : {};
+        document.getElementById('btnTorch').style.display = caps.torch ? 'inline-flex' : 'none';
+      } catch (e) {}
+
+      // Enable capture ONLY after video is ready
+      video.addEventListener('loadedmetadata', () => {
+        if (conn && conn.open) {
+          document.getElementById('btnCapture').disabled = false;
+        }
+        dbg('Video ready: ' + video.videoWidth + 'x' + video.videoHeight);
+      }, { once: true });
+
     } catch (e) {
-      showError('Camera non disponibile', e.message || 'Concedi il permesso alla fotocamera nelle impostazioni del browser.');
+      dbg('Camera error: ' + e.name + ' ' + e.message);
+      if (e.name === 'NotAllowedError') {
+        showError('Permesso fotocamera negato', 'Vai nelle impostazioni del browser e consenti l\'accesso alla fotocamera per questo sito, poi ricarica la pagina.');
+      } else if (e.name === 'NotFoundError') {
+        showError('Nessuna fotocamera', 'Nessuna fotocamera trovata su questo dispositivo.');
+      } else {
+        showError('Errore fotocamera', e.message || 'Errore sconosciuto. Prova a ricaricare la pagina.');
+      }
     }
   }
 
@@ -227,85 +312,162 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
 
   // ─── PeerJS Connection ───
   function connectToDesktop() {
+    if (connecting) return;
     if (retries >= MAX_RETRIES) {
-      showError('Connessione fallita', 'Non riesco a raggiungere il desktop. Ricarica la pagina e riprova.');
-      document.getElementById('btnRetry').style.display = 'inline-block';
+      dbg('Max retries reached');
+      showError(
+        'Connessione fallita',
+        'Non riesco a collegarmi al desktop dopo ' + MAX_RETRIES + ' tentativi.\n\n' +
+        '1. Assicurati che il desktop abbia la modalità "Telefono remoto" aperta\n' +
+        '2. Verifica che il codice sessione sia: ' + sessionId + '\n' +
+        '3. Prova a rigenerare il QR code dal desktop'
+      );
       return;
     }
 
-    setStatus('connecting', retries > 0 ? `Riconnessione (${retries}/${MAX_RETRIES})...` : 'Connessione al desktop...');
+    connecting = true;
+    const retryLabel = retries > 0 ? ` (tentativo ${retries + 1}/${MAX_RETRIES})` : '';
+    setStatus('connecting', 'Connessione al desktop...' + retryLabel);
+    dbg('Connecting, attempt ' + (retries + 1) + ', target: bizcard-' + sessionId);
 
-    if (peer) { try { peer.destroy(); } catch (e) {} }
-    peer = new Peer();
+    // Destroy previous peer cleanly
+    if (peer) {
+      try { peer.destroy(); } catch (e) {}
+      peer = null;
+    }
 
-    peer.on('open', () => {
-      conn = peer.connect('bizcard-' + sessionId, { reliable: true });
+    try {
+      peer = new Peer(PEER_CONFIG);
+    } catch (e) {
+      dbg('Peer creation error: ' + e.message);
+      connecting = false;
+      retries++;
+      scheduleRetry();
+      return;
+    }
+
+    peer.on('open', (myId) => {
+      dbg('My peer ID: ' + myId + ', connecting to bizcard-' + sessionId);
+
+      try {
+        conn = peer.connect('bizcard-' + sessionId);
+      } catch (e) {
+        dbg('peer.connect error: ' + e.message);
+        connecting = false;
+        retries++;
+        scheduleRetry();
+        return;
+      }
+
+      if (!conn) {
+        dbg('conn is null after peer.connect');
+        connecting = false;
+        retries++;
+        scheduleRetry();
+        return;
+      }
 
       conn.on('open', () => {
-        setStatus('connected', '✅ Connesso al desktop');
-        document.getElementById('btnCapture').disabled = false;
+        connecting = false;
         retries = 0;
+        setStatus('connected', '✅ Connesso al desktop');
+        dbg('Connected to desktop!');
+
+        // Enable capture if video is ready
+        const video = document.getElementById('video');
+        if (video.srcObject && video.videoWidth > 0) {
+          document.getElementById('btnCapture').disabled = false;
+        }
       });
 
       conn.on('close', () => {
+        dbg('Connection closed by desktop');
         setStatus('connecting', 'Desktop disconnesso — riconnessione...');
         document.getElementById('btnCapture').disabled = true;
         conn = null;
+        connecting = false;
         retries++;
-        setTimeout(connectToDesktop, Math.min(2000 * retries, 10000));
+        scheduleRetry();
       });
 
       conn.on('error', (e) => {
-        console.warn('[Phone] Connection error:', e);
-        setStatus('error', 'Errore connessione: ' + (e.type || e.message));
+        dbg('Connection error: ' + (e.type || e.message || e));
+        setStatus('error', 'Errore: ' + (e.type || e.message));
+        connecting = false;
       });
 
       conn.on('data', (data) => {
-        if (data && data.type === 'ack') showSentToast();
+        if (data && data.type === 'ack') {
+          dbg('ACK received from desktop');
+          showSentToast();
+        }
       });
     });
 
     peer.on('error', (e) => {
-      console.warn('[Phone] Peer error:', e.type);
+      dbg('Peer error: ' + e.type + ' — ' + (e.message || ''));
+      connecting = false;
+
       if (e.type === 'peer-unavailable') {
-        setStatus('error', 'Desktop non trovato — assicurati che sia aperto.');
+        setStatus('error', 'Desktop non trovato — verifica che sia aperto su "Telefono remoto"');
+      } else if (e.type === 'network') {
+        setStatus('error', 'Errore di rete — verifica la connessione internet');
+      } else if (e.type === 'server-error') {
+        setStatus('error', 'Server PeerJS non raggiungibile');
       } else {
         setStatus('error', 'Errore: ' + e.type);
       }
+
       retries++;
-      setTimeout(connectToDesktop, Math.min(3000 * retries, 15000));
+      scheduleRetry();
     });
 
     peer.on('disconnected', () => {
-      setStatus('connecting', 'Riconnessione...');
-      try { peer.reconnect(); } catch (e) {
-        retries++;
-        setTimeout(connectToDesktop, 3000);
+      dbg('Peer disconnected from server');
+      connecting = false;
+      if (peer && !peer.destroyed) {
+        try {
+          peer.reconnect();
+          dbg('Reconnecting to PeerJS server...');
+        } catch (e) {
+          retries++;
+          scheduleRetry();
+        }
       }
     });
+  }
+
+  function scheduleRetry() {
+    const delay = Math.min(2000 + (retries * 1500), 15000);
+    dbg('Retry in ' + (delay / 1000) + 's');
+    setTimeout(connectToDesktop, delay);
   }
 
   // ─── Capture Photo ───
   document.getElementById('btnCapture').addEventListener('click', () => {
     const video = document.getElementById('video');
-    if (!video.srcObject || video.videoWidth === 0) return;
+    if (!video.srcObject || video.videoWidth === 0) {
+      dbg('Cannot capture: video not ready');
+      return;
+    }
 
-    // Haptic
     if (navigator.vibrate) navigator.vibrate(50);
 
-    // Flash effect
+    // Flash
     const guide = document.getElementById('frameGuide');
     guide.classList.add('flash');
     setTimeout(() => guide.classList.remove('flash'), 400);
 
-    // Capture at good resolution (max 1600px wide)
-    const scale = Math.min(1600 / video.videoWidth, 1);
+    // Capture at reduced resolution for WebRTC
+    const scale = Math.min(MAX_IMAGE_WIDTH / video.videoWidth, 1);
     captureCanvas.width = Math.round(video.videoWidth * scale);
     captureCanvas.height = Math.round(video.videoHeight * scale);
     captureCtx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
 
-    const dataUrl = captureCanvas.toDataURL('image/jpeg', 0.85);
+    const dataUrl = captureCanvas.toDataURL('image/jpeg', JPEG_QUALITY);
     pendingBase64 = dataUrl.split(',')[1];
+
+    dbg('Photo captured: ' + captureCanvas.width + 'x' + captureCanvas.height + ', size: ' + Math.round(pendingBase64.length / 1024) + 'KB');
 
     // Show preview
     document.getElementById('previewImg').src = dataUrl;
@@ -322,42 +484,54 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
   document.getElementById('btnPreviewSend').addEventListener('click', () => {
     document.getElementById('previewOverlay').classList.remove('visible');
     if (!pendingBase64) return;
+    sendPhoto(pendingBase64);
+    pendingBase64 = null;
+  });
 
+  function sendPhoto(base64) {
     if (!conn || !conn.open) {
-      setStatus('error', 'Non connesso al desktop');
+      setStatus('error', 'Non connesso al desktop — riconnessione...');
+      dbg('Cannot send: no open connection');
+      retries++;
+      scheduleRetry();
       return;
     }
 
     const btn = document.getElementById('btnCapture');
     btn.classList.add('sending');
 
+    const sizeKB = Math.round(base64.length / 1024);
+    dbg('Sending photo: ' + sizeKB + 'KB');
+
     try {
       conn.send({
         type: 'photo',
-        image: pendingBase64,
-        width: captureCanvas.width,
-        height: captureCanvas.height,
+        image: base64,
         timestamp: Date.now(),
       });
 
       photosSent++;
       document.getElementById('photoCount').style.display = 'block';
       document.getElementById('photoCount').textContent = photosSent + ' foto inviat' + (photosSent === 1 ? 'a' : 'e');
+      dbg('Photo sent OK (' + sizeKB + 'KB)');
+
+      // Optimistic toast (don't wait for ACK)
       showSentToast();
     } catch (e) {
+      dbg('Send error: ' + e.message);
       setStatus('error', 'Invio fallito: ' + e.message);
     }
 
-    pendingBase64 = null;
-    btn.classList.remove('sending');
-  });
+    setTimeout(() => btn.classList.remove('sending'), 500);
+  }
 
   // ─── Retry button ───
   document.getElementById('btnRetry').addEventListener('click', () => {
     document.getElementById('errorScreen').style.display = 'none';
     document.getElementById('cameraArea').style.display = 'flex';
-    document.querySelector('.bottom-bar').style.display = 'flex';
+    document.getElementById('bottomBar').style.display = 'flex';
     retries = 0;
+    connecting = false;
     startCamera();
     connectToDesktop();
   });
@@ -377,7 +551,7 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
 
   function showError(title, msg) {
     document.getElementById('cameraArea').style.display = 'none';
-    document.querySelector('.bottom-bar').style.display = 'none';
+    document.getElementById('bottomBar').style.display = 'none';
     const es = document.getElementById('errorScreen');
     es.style.display = 'flex';
     document.getElementById('errorTitle').textContent = title;
@@ -385,6 +559,8 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
   }
 
   // ─── Start ───
+  dbg('Session: ' + sessionId);
+  dbg('User agent: ' + navigator.userAgent.substring(0, 60));
   startCamera();
   connectToDesktop();
 

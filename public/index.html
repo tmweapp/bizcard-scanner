@@ -887,7 +887,17 @@ function setupPeer() {
   $('qrDot').className = 'dot waiting';
   $('qrStatusText').textContent = 'Connessione al server PeerJS...';
 
-  peer = new Peer('bizcard-' + sessionId);
+  peer = new Peer('bizcard-' + sessionId, {
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+      ]
+    },
+    debug: 0,
+  });
 
   peer.on('open', () => {
     $('qrStatusText').textContent = 'Pronto — scansiona il QR dal telefono';
