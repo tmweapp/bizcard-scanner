@@ -37,8 +37,8 @@
   ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/phone", "destination": "/phone.html" },
-    { "source": "/phone.html", "destination": "/phone.html" },
-    { "source": "/((?!api/|phone).*)", "destination": "/index.html" }
+    { "source": "/phone", "destination": "/index.html" },
+    { "source": "/phone.html", "destination": "/index.html" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

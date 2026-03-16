@@ -974,6 +974,8 @@ let detectedBlocks = []; // [{ text, type, confidence }]
 let openaiApiKey = ''; // Stored in memory only (not in localStorage for security)
 let remoteSmartBuffer = []; // Accumulate remote photos for Smart Scan
 let remoteSmartActive = false; // Whether we're collecting for Smart Scan
+let phoneBridgeConn = null;    // PeerJS connection to desktop (when this device is the phone)
+let isPhoneBridge = false;     // True when running as remote phone (?s= param detected)
 
 // ─── DOM HELPERS ──────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
@@ -992,6 +994,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initApiKeyBar();
   checkOcrApi();
   initTesseractFallback();
+  initPhoneBridge(); // Detect ?s= param and auto-connect to desktop
 });
 
 function loadState() {
@@ -1198,14 +1201,21 @@ function captureLocalPhoto() {
   if (!useServerOCR) preprocessImage(ctx, canvas.width, canvas.height);
 
   const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
-  processOCR(dataUrl.split(',')[1], dataUrl);
+  const base64 = dataUrl.split(',')[1];
+
+  // Phone bridge: also send to desktop
+  if (isPhoneBridge) sendPhotoToDesktop(base64);
+
+  processOCR(base64, dataUrl);
 }
 
 function processFile(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
     const dataUrl = e.target.result;
-    processOCR(dataUrl.split(',')[1], dataUrl);
+    const base64 = dataUrl.split(',')[1];
+    if (isPhoneBridge) sendPhotoToDesktop(base64);
+    processOCR(base64, dataUrl);
   };
   reader.readAsDataURL(file);
 }
@@ -2241,6 +2251,138 @@ function cleanupPeer() {
   if (peerConn) { try { peerConn.close(); } catch (e) {} peerConn = null; }
   if (peer) { try { peer.destroy(); } catch (e) {} peer = null; }
   phoneConnected = false;
+}
+
+// ─── PHONE BRIDGE — Connect to Desktop as Remote Phone ────────
+// When the app opens with ?s=XXXXXX, it acts as a remote phone:
+// same full app, but also sends captured photos to the desktop.
+
+function initPhoneBridge() {
+  const params = new URLSearchParams(location.search);
+  const remoteSession = (params.get('s') || params.get('session') || '').toUpperCase();
+  if (!remoteSession) return; // No session param = normal desktop mode
+
+  isPhoneBridge = true;
+  console.log('[PhoneBridge] Session detected:', remoteSession);
+
+  // Show persistent status bar at top
+  const banner = document.createElement('div');
+  banner.id = 'phoneBridgeBanner';
+  banner.style.cssText = 'background:linear-gradient(135deg,var(--accent),#7c3aed);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.82rem;z-index:99;';
+  banner.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px">
+      <div id="pbDot" style="width:10px;height:10px;border-radius:50%;background:var(--orange);animation:pulse 1s infinite;flex-shrink:0"></div>
+      <span id="pbStatus">Connessione al desktop...</span>
+    </div>
+    <span style="font-size:.72rem;color:rgba(255,255,255,.7)">Sessione: ${remoteSession}</span>
+  `;
+  // Insert after header
+  const header = document.querySelector('header');
+  header.parentNode.insertBefore(banner, header.nextSibling);
+
+  // Connect to the desktop peer
+  connectPhoneBridge(remoteSession);
+}
+
+function connectPhoneBridge(remoteSession, retries = 0) {
+  const MAX_RETRIES = 15;
+  if (retries >= MAX_RETRIES) {
+    updatePhoneBridgeStatus('error', '❌ Connessione fallita dopo ' + MAX_RETRIES + ' tentativi');
+    return;
+  }
+
+  const phonePeer = new Peer({
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+      ]
+    },
+    debug: 0,
+  });
+
+  phonePeer.on('open', (myId) => {
+    console.log('[PhoneBridge] My ID:', myId, '→ connecting to bizcard-' + remoteSession);
+
+    const conn = phonePeer.connect('bizcard-' + remoteSession);
+    if (!conn) {
+      updatePhoneBridgeStatus('error', 'Impossibile connettersi');
+      retries++;
+      setTimeout(() => connectPhoneBridge(remoteSession, retries), Math.min(2000 + retries * 1500, 15000));
+      return;
+    }
+
+    conn.on('open', () => {
+      phoneBridgeConn = conn;
+      updatePhoneBridgeStatus('connected', '✅ Connesso al desktop — le foto vengono inviate automaticamente');
+      toast('📱 Connesso al desktop! Le foto catturate saranno inviate.', 'success');
+    });
+
+    conn.on('close', () => {
+      phoneBridgeConn = null;
+      updatePhoneBridgeStatus('error', '⚠️ Desktop disconnesso — riconnessione...');
+      retries++;
+      setTimeout(() => connectPhoneBridge(remoteSession, retries), 3000);
+    });
+
+    conn.on('data', (data) => {
+      if (data && data.type === 'ack') {
+        console.log('[PhoneBridge] ACK received from desktop');
+      }
+    });
+
+    conn.on('error', (e) => {
+      console.warn('[PhoneBridge] Connection error:', e);
+      updatePhoneBridgeStatus('error', 'Errore: ' + (e.type || e.message));
+    });
+  });
+
+  phonePeer.on('error', (e) => {
+    console.warn('[PhoneBridge] Peer error:', e.type);
+    if (e.type === 'peer-unavailable') {
+      updatePhoneBridgeStatus('error', 'Desktop non trovato — verifica che sia aperto su "Telefono remoto"');
+    } else {
+      updatePhoneBridgeStatus('error', 'Errore: ' + e.type);
+    }
+    retries++;
+    setTimeout(() => connectPhoneBridge(remoteSession, retries), Math.min(2000 + retries * 1500, 15000));
+  });
+}
+
+function updatePhoneBridgeStatus(state, text) {
+  const dot = $('pbDot');
+  const status = $('pbStatus');
+  if (!dot || !status) return;
+  status.textContent = text;
+  if (state === 'connected') {
+    dot.style.background = 'var(--green)';
+    dot.style.animation = 'none';
+    dot.style.boxShadow = '0 0 8px rgba(34,197,94,.5)';
+  } else if (state === 'error') {
+    dot.style.background = 'var(--red)';
+    dot.style.animation = 'none';
+  } else {
+    dot.style.background = 'var(--orange)';
+    dot.style.animation = 'pulse 1s infinite';
+  }
+}
+
+// Send photo to desktop when this is a phone bridge
+function sendPhotoToDesktop(base64) {
+  if (!isPhoneBridge || !phoneBridgeConn || !phoneBridgeConn.open) return;
+  try {
+    phoneBridgeConn.send({
+      type: 'photo',
+      image: base64,
+      timestamp: Date.now(),
+    });
+    console.log('[PhoneBridge] Photo sent to desktop (' + Math.round(base64.length / 1024) + 'KB)');
+    toast('📤 Foto inviata al desktop', 'info');
+  } catch (e) {
+    console.warn('[PhoneBridge] Send error:', e);
+  }
 }
 
 // ─── PROCESS REMOTE PHOTO (same quality as local) ─────────────
