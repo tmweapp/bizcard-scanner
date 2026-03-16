@@ -970,7 +970,7 @@ body {
 <header>
   <h1>
     <svg class="header-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--lilac)" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M4 18c0-2 2.5-3.5 5-3.5s5 1.5 5 3.5"/><line x1="15" y1="9" x2="20" y2="9"/><line x1="15" y1="12" x2="19" y2="12"/></svg>
-    BizCard <span class="version-badge">v4.6</span>
+    BizCard <span class="version-badge">v4.7</span>
   </h1>
 </header>
 
@@ -1449,8 +1449,8 @@ const FIELD_TYPES = [
   { key: 'role',    icon: '💼', label: 'Ruolo',       req: false },
   { key: 'web',     icon: '🌐', label: 'Web',         req: false },
   { key: 'address', icon: '📍', label: 'Indirizzo',   req: false },
-  { key: 'city',    icon: '🏙️', label: 'Città',       req: false },
-  { key: 'country', icon: '🌍', label: 'Paese/Stato', req: false },
+  { key: 'city',    icon: '📌', label: 'Città',       req: false },
+  { key: 'country', icon: '🏳️', label: 'Paese/Stato', req: false },
   { key: 'piva',    icon: '🏛️', label: 'P.IVA',       req: false },
   { key: 'cf',      icon: '🆔', label: 'C.F.',        req: false },
   { key: 'fax',     icon: '📠', label: 'Fax',         req: false },
@@ -2697,8 +2697,8 @@ function drawProgressiveText(ctx, r, dpr) {
     { key: 'phone', size: 9 * dpr, weight: '400', color: '#94a3b8', icon: '📞' },
     { key: 'web', size: 9 * dpr, weight: '400', color: '#94a3b8', icon: '🌐' },
     { key: 'address', size: 8.5 * dpr, weight: '400', color: '#64748b', icon: '📍' },
-    { key: 'city', size: 8.5 * dpr, weight: '400', color: '#64748b', icon: '🏙️' },
-    { key: 'country', size: 8.5 * dpr, weight: '400', color: '#64748b', icon: '🌍' },
+    { key: 'city', size: 8.5 * dpr, weight: '400', color: '#64748b', icon: '📌' },
+    { key: 'country', size: 8.5 * dpr, weight: '400', color: '#64748b', icon: '🏳️' },
   ];
 
   fieldLayout.forEach(fl => {
@@ -2957,7 +2957,7 @@ async function arShowCompletion() {
     f.phone ? ['📞', f.phone] : null,
     f.web ? ['🌐', f.web] : null,
     f.address ? ['📍', f.address] : null,
-    (f.city || f.country) ? ['🌍', [f.city, f.country].filter(Boolean).join(', ')] : null,
+    (f.city || f.country) ? ['📌', [f.city, f.country].filter(Boolean).join(', ')] : null,
   ].filter(Boolean);
   lines.forEach(([icon, text]) => {
     cardHtml += `<div class="ar-cf-line"><span class="ar-cf-icon">${icon}</span>${esc(text)}</div>`;
