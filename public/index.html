@@ -939,9 +939,9 @@ body {
   <div class="api-key-inner">
     <span class="api-key-label">🔑 OpenAI API Key</span>
     <div class="api-key-input-wrap">
-      <input type="password" id="openaiKeyInput" placeholder="sk-..." autocomplete="off" spellcheck="false">
-      <button class="api-key-toggle" id="btnToggleKey" title="Mostra/nascondi">👁️</button>
-      <button class="api-key-save" id="btnSaveKey">Salva</button>
+      <input type="text" id="openaiKeyInput" placeholder="sk-..." autocomplete="off" spellcheck="false">
+      <button class="api-key-toggle" id="btnToggleKey" title="Mostra/nascondi" onclick="var i=document.getElementById('openaiKeyInput');i.type=i.type==='password'?'text':'password'">👁️</button>
+      <button class="api-key-save" id="btnSaveKey" onclick="window.__saveApiKey&&window.__saveApiKey()">Salva</button>
     </div>
     <span class="api-key-status" id="apiKeyStatus"></span>
   </div>
@@ -4753,21 +4753,28 @@ function initApiKeyBar() {
 
   if (!input || !btnSave) { console.error('[ApiKeyBar] Elements not found'); return; }
 
-  // Load from localStorage — try both formats (btoa-encoded and plain)
+  // Load from localStorage — try both formats (legacy btoa-encoded and plain)
   try {
     const stored = localStorage.getItem('bizcard_oai_key');
     if (stored) {
-      try { openaiApiKey = atob(stored); } catch (_) { openaiApiKey = stored; }
+      // If it looks like a base64 string (no dashes, no sk- prefix), try decoding
+      if (!stored.startsWith('sk') && !stored.includes('-')) {
+        try { openaiApiKey = atob(stored); } catch (_) { openaiApiKey = stored; }
+      } else {
+        openaiApiKey = stored;
+      }
       input.value = openaiApiKey;
       $('apiKeyBar').classList.add('has-key');
       status.textContent = '✅ Chiave salvata';
       status.className = 'api-key-status';
+      console.log('[ApiKeyBar] Loaded key from storage, length:', openaiApiKey.length);
     }
   } catch (e) { console.warn('[ApiKeyBar] Load error:', e); }
 
-  // Save key function (shared between button and Enter)
+  // Save key function — also exposed globally for inline onclick fallback
   function saveApiKey() {
     const key = input.value.trim();
+    console.log('[ApiKeyBar] saveApiKey called, key length:', key.length);
     if (!key) {
       openaiApiKey = '';
       localStorage.removeItem('bizcard_oai_key');
@@ -4776,43 +4783,33 @@ function initApiKeyBar() {
       toast('API Key rimossa', 'info');
       return;
     }
-    if (key.length < 20) {
-      toast('La chiave sembra troppo corta — verifica il formato', 'error');
+    if (key.length < 10) {
+      toast('La chiave sembra troppo corta', 'error');
       status.textContent = '❌ Chiave non valida';
       status.className = 'api-key-status error';
       return;
     }
     openaiApiKey = key;
-    // Store in localStorage — try btoa, fallback to plain
+    // Store in localStorage — plain text (simple and reliable)
     try {
-      localStorage.setItem('bizcard_oai_key', btoa(key));
-    } catch (_) {
-      try { localStorage.setItem('bizcard_oai_key', key); } catch (e2) {
-        console.error('[ApiKeyBar] Cannot save to localStorage:', e2);
-      }
+      localStorage.setItem('bizcard_oai_key', key);
+      console.log('[ApiKeyBar] Saved to localStorage OK');
+    } catch (e) {
+      console.error('[ApiKeyBar] localStorage write failed:', e);
+      toast('Errore salvataggio — controlla spazio disponibile', 'error');
+      return;
     }
     $('apiKeyBar').classList.add('has-key');
     status.textContent = '✅ Chiave salvata';
     status.className = 'api-key-status';
     toast('API Key OpenAI salvata ✓', 'success');
-    input.type = 'password';
-    console.log('[ApiKeyBar] Key saved, length:', key.length);
+    console.log('[ApiKeyBar] Key active, length:', key.length);
   }
+  window.__saveApiKey = saveApiKey;
 
-  // Multiple event bindings for maximum reliability
+  // Event bindings
   btnSave.addEventListener('click', saveApiKey);
   btnSave.addEventListener('touchend', (e) => { e.preventDefault(); saveApiKey(); });
-
-  // Toggle visibility
-  btnToggle.addEventListener('click', () => {
-    if (input.type === 'password') {
-      input.type = 'text';
-      btnToggle.textContent = '🙈';
-    } else {
-      input.type = 'password';
-      btnToggle.textContent = '👁️';
-    }
-  });
 
   // Enter key to save
   input.addEventListener('keydown', (e) => {
