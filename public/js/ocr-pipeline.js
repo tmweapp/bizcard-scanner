@@ -96,11 +96,28 @@ async function runTesseract(dataUrl) {
 }
 
 // ─── TEXT CLASSIFICATION ENGINE ───────────────────────────────
+function cleanOcrLine(line) {
+  // Remove common OCR icon artifacts: ®, ©, |, \, }, {, §, «, », [], and stray symbols
+  let clean = line
+    .replace(/[®©§«»\[\]{}|\\¬~^`<>]/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  // If a line has too many non-alphanumeric characters (>40%), it's noise
+  const alphaNum = clean.replace(/[^a-zA-Z0-9àèéìòùÀÈÉÌÒÙäöüÄÖÜñÑ@.+\-_/,:; ]/g, '');
+  if (clean.length > 10 && alphaNum.length / clean.length < 0.5) {
+    // Try to salvage a phone number from the noise
+    const phoneInNoise = clean.match(/\+?\d[\d\s.\-()]{7,18}/);
+    if (phoneInNoise) return phoneInNoise[0].trim();
+    return '';
+  }
+  return clean;
+}
+
 function classifyBlocks(rawText) {
   detectedBlocks = [];
 
   const lines = rawText.split('\n')
-    .map(l => l.trim())
+    .map(l => cleanOcrLine(l.trim()))
     .filter(l => l.length > 1);
 
   // First pass: classify each line with confidence scoring
