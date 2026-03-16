@@ -188,6 +188,36 @@ main { flex: 1; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
 .progress-bar { flex: 1; height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; min-width: 60px; }
 .progress-bar .fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }
 
+/* ─── Smart Scan ─── */
+.btn-accent { background: linear-gradient(135deg, var(--purple), var(--accent)); color: #fff; }
+.btn-accent:hover { filter: brightness(1.1); }
+.btn-accent:disabled { opacity: .4; cursor: not-allowed; filter: none; }
+.btn-accent.scanning { animation: pulse-glow 1.2s infinite; }
+@keyframes pulse-glow { 0%,100% { box-shadow: 0 0 8px rgba(168,85,247,.4); } 50% { box-shadow: 0 0 20px rgba(168,85,247,.7); } }
+
+.smart-scan-overlay {
+  background: rgba(15,23,42,.95); border-radius: var(--radius); padding: 28px;
+  text-align: center; margin-bottom: 16px; border: 1px solid var(--purple);
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  backdrop-filter: blur(8px);
+}
+.ss-progress-ring { position: relative; width: 120px; height: 120px; }
+.ss-progress-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ss-ring-bg { fill: none; stroke: var(--bg3); stroke-width: 6; }
+.ss-ring-fill {
+  fill: none; stroke: var(--purple); stroke-width: 6;
+  stroke-linecap: round; stroke-dasharray: 326.73; stroke-dashoffset: 326.73;
+  transition: stroke-dashoffset .3s ease;
+}
+.ss-center-text {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  text-align: center;
+}
+.ss-frame-count { font-size: 1.8rem; font-weight: 800; color: var(--purple); line-height: 1; }
+.ss-frame-label { font-size: .65rem; color: var(--fg4); text-transform: uppercase; letter-spacing: 1px; }
+.ss-status { font-size: .95rem; font-weight: 600; color: var(--fg); }
+.ss-detail { font-size: .75rem; color: var(--fg3); min-height: 1.2em; }
+
 /* ─── Results ─── */
 .result-section {
   background: var(--bg2); border-radius: var(--radius); padding: 16px;
@@ -441,9 +471,27 @@ body {
       </div>
       <div class="controls">
         <button class="btn btn-primary" id="btnCapture" disabled aria-label="Scatta foto">📸 Scatta foto</button>
+        <button class="btn btn-accent" id="btnSmartScan" disabled aria-label="Smart Scan AI">🧠 Smart Scan</button>
         <button class="btn btn-secondary" id="btnFlip" style="display:none" aria-label="Inverti fotocamera">🔄 Inverti</button>
         <button class="btn btn-secondary" id="btnTorch" style="display:none" aria-label="Flash">🔦 Flash</button>
       </div>
+    </div>
+
+    <!-- Smart Scan Progress Overlay (shared by local + remote) -->
+    <div class="smart-scan-overlay" id="smartScanOverlay" style="display:none">
+      <div class="ss-progress-ring">
+        <svg viewBox="0 0 120 120">
+          <circle class="ss-ring-bg" cx="60" cy="60" r="52" />
+          <circle class="ss-ring-fill" id="ssRingFill" cx="60" cy="60" r="52" />
+        </svg>
+        <div class="ss-center-text">
+          <div class="ss-frame-count" id="ssFrameCount">0</div>
+          <div class="ss-frame-label">frame</div>
+        </div>
+      </div>
+      <div class="ss-status" id="ssStatus">Acquisizione frame...</div>
+      <div class="ss-detail" id="ssDetail"></div>
+      <button class="btn btn-secondary btn-small" id="btnSmartScanStop">⏹ Interrompi</button>
     </div>
 
     <!-- Remote Phone View -->
@@ -457,6 +505,9 @@ body {
         <div class="qr-status">
           <div class="dot waiting" id="qrDot" role="status"></div>
           <span id="qrStatusText">In attesa del telefono...</span>
+        </div>
+        <div style="margin-top:16px">
+          <button class="btn btn-accent" id="btnRemoteSmartScan" disabled>🧠 Smart Scan (multi-foto)</button>
         </div>
       </div>
     </div>
@@ -651,6 +702,8 @@ let phoneConnected = false;
 let lastPhotoDataUrl = null; // Store photo with contact
 let detectedBlocks = []; // [{ text, type, confidence }]
 let openaiApiKey = ''; // Stored in memory only (not in localStorage for security)
+let remoteSmartBuffer = []; // Accumulate remote photos for Smart Scan
+let remoteSmartActive = false; // Whether we're collecting for Smart Scan
 
 // ─── DOM HELPERS ──────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
@@ -779,6 +832,8 @@ function switchMode(mode) {
 function initScanner() {
   startCamera();
   $('btnCapture').addEventListener('click', captureLocalPhoto);
+  $('btnSmartScan').addEventListener('click', startSmartScan);
+  $('btnSmartScanStop').addEventListener('click', () => { smartScanAborted = true; });
   $('btnFlip').addEventListener('click', () => { facingMode = facingMode === 'environment' ? 'user' : 'environment'; startCamera(); });
   $('btnTorch').addEventListener('click', toggleTorch);
 
@@ -795,6 +850,7 @@ function initScanner() {
   $('btnNormalizeAI').addEventListener('click', normalizeWithAI);
   $('btnSaveContact').addEventListener('click', saveContact);
   $('btnRetake').addEventListener('click', resetScan);
+  $('btnRemoteSmartScan').addEventListener('click', startRemoteSmartScan);
 
   // Photo preview zoom toggle
   $('photoPreview').addEventListener('click', function() { this.classList.toggle('zoomed'); });
@@ -815,6 +871,7 @@ async function startCamera() {
     ph.style.display = 'none';
     bf.style.display = 'inline-flex';
     $('btnCapture').disabled = false;
+    $('btnSmartScan').disabled = false;
 
     // Check torch support
     const track = stream.getVideoTracks()[0];
@@ -916,6 +973,349 @@ function preprocessImage(ctx, w, h) {
   ctx.putImageData(imageData, 0, 0);
 }
 
+// ─── SMART SCAN ENGINE ────────────────────────────────────────
+// Captures multiple frames, scores quality, runs OCR on best frames,
+// merges results, then auto-normalizes with AI.
+
+const SMART_SCAN_CONFIG = {
+  totalFrames: 30,         // Total frames to capture
+  captureIntervalMs: 150,  // ms between frames (~6.6 fps over ~4.5s)
+  topFrames: 3,            // Best frames to OCR
+  autoNormalize: true,     // Auto-run AI normalization at the end
+};
+
+let smartScanActive = false;
+let smartScanAborted = false;
+
+async function startSmartScan() {
+  const video = $('video');
+  if (!video.srcObject || video.videoWidth === 0) {
+    toast('Camera non pronta', 'error');
+    return;
+  }
+
+  if (!openaiApiKey) {
+    toast('Inserisci la API Key OpenAI per Smart Scan', 'error');
+    $('openaiKeyInput').focus();
+    return;
+  }
+
+  smartScanActive = true;
+  smartScanAborted = false;
+
+  // UI setup
+  $('smartScanOverlay').style.display = 'flex';
+  $('btnSmartScan').classList.add('scanning');
+  $('btnSmartScan').disabled = true;
+  $('btnCapture').disabled = true;
+  $('ssFrameCount').textContent = '0';
+  $('ssStatus').textContent = '📸 Acquisizione frame...';
+  $('ssDetail').textContent = 'Tieni fermo il biglietto nella guida';
+  updateSmartScanRing(0);
+
+  if (navigator.vibrate) navigator.vibrate(100);
+
+  try {
+    // ── PHASE 1: Burst Capture ──
+    const frames = await captureFrameBurst(video);
+    if (smartScanAborted) return cleanupSmartScan();
+
+    // ── PHASE 2: Quality Scoring ──
+    $('ssStatus').textContent = '🔍 Analisi qualità frame...';
+    $('ssDetail').textContent = `${frames.length} frame catturati — selezione migliori`;
+    const scored = frames.map((f, i) => ({
+      ...f,
+      index: i,
+      quality: scoreFrameQuality(f.imageData, f.width, f.height),
+    }));
+
+    // Sort by quality descending, pick top N
+    scored.sort((a, b) => b.quality - a.quality);
+    const bestFrames = scored.slice(0, SMART_SCAN_CONFIG.topFrames);
+
+    $('ssDetail').textContent = `Top ${bestFrames.length} frame — qualità: ${bestFrames.map(f => f.quality.toFixed(0)).join(', ')}`;
+    if (smartScanAborted) return cleanupSmartScan();
+
+    // ── PHASE 3: Multi-frame OCR ──
+    $('ssStatus').textContent = '🤖 OCR su frame migliori...';
+    updateSmartScanRing(50);
+
+    const ocrResults = [];
+    for (let i = 0; i < bestFrames.length; i++) {
+      if (smartScanAborted) return cleanupSmartScan();
+
+      $('ssDetail').textContent = `OCR frame ${i + 1}/${bestFrames.length}...`;
+      updateSmartScanRing(50 + (i / bestFrames.length) * 30);
+
+      const frame = bestFrames[i];
+      const canvas = document.createElement('canvas');
+      canvas.width = frame.width;
+      canvas.height = frame.height;
+      const ctx = canvas.getContext('2d');
+      ctx.putImageData(frame.imageData, 0, 0);
+
+      // Preprocess
+      if (!useServerOCR) preprocessImage(ctx, canvas.width, canvas.height);
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+      const base64 = dataUrl.split(',')[1];
+
+      // Store best frame as preview photo
+      if (i === 0) {
+        lastPhotoDataUrl = dataUrl;
+        $('photoPreview').src = dataUrl;
+      }
+
+      try {
+        let result;
+        if (useServerOCR) {
+          const resp = await fetch('/api/ocr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64 }),
+          });
+          result = await resp.json();
+          if (result.fallback) {
+            useServerOCR = false;
+            result = await runTesseract(dataUrl);
+          }
+        } else {
+          result = await runTesseract(dataUrl);
+        }
+        if (result && result.text) ocrResults.push(result);
+      } catch (e) {
+        console.warn('[SmartScan] OCR failed on frame ' + i, e);
+      }
+    }
+
+    if (ocrResults.length === 0) {
+      toast('Nessun testo rilevato su nessun frame', 'error');
+      return cleanupSmartScan();
+    }
+
+    // ── PHASE 4: Merge OCR Results ──
+    $('ssStatus').textContent = '🔀 Fusione risultati multi-frame...';
+    updateSmartScanRing(85);
+
+    const mergedText = mergeOcrResults(ocrResults);
+    scanCount++;
+    saveState();
+
+    classifyBlocks(mergedText);
+    renderBlocks();
+    renderFieldSummary();
+
+    $('resultSection').style.display = 'block';
+    $('ocrEngineLabel').textContent = `Smart Scan: ${ocrResults.length} frame | ${ocrResults[0].engine || 'tesseract'}`;
+
+    // ── PHASE 5: Auto AI Normalization ──
+    if (SMART_SCAN_CONFIG.autoNormalize && openaiApiKey && detectedBlocks.length > 0) {
+      $('ssStatus').textContent = '✨ Normalizzazione AI...';
+      $('ssDetail').textContent = 'GPT-4o-mini sta pulendo i dati...';
+      updateSmartScanRing(92);
+
+      await normalizeWithAI();
+      updateSmartScanRing(100);
+    } else {
+      updateSmartScanRing(100);
+    }
+
+    // Done!
+    $('ssStatus').textContent = '✅ Smart Scan completato!';
+    const fieldCount = detectedBlocks.filter(b => b.type !== 'other' && b.type !== 'ignore').length;
+    $('ssDetail').textContent = `${fieldCount} campi rilevati e normalizzati`;
+    if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
+
+    toast('🧠 Smart Scan completato — ' + fieldCount + ' campi trovati!', 'success');
+
+    // Auto-hide overlay after 2s
+    setTimeout(() => {
+      if ($('smartScanOverlay').style.display !== 'none') {
+        $('smartScanOverlay').style.display = 'none';
+      }
+    }, 2000);
+
+  } catch (e) {
+    console.error('[SmartScan] Error:', e);
+    toast('Errore Smart Scan: ' + e.message, 'error');
+  } finally {
+    cleanupSmartScan();
+  }
+}
+
+function cleanupSmartScan() {
+  smartScanActive = false;
+  $('btnSmartScan').classList.remove('scanning');
+  $('btnSmartScan').disabled = false;
+  $('btnCapture').disabled = false;
+  if (smartScanAborted) {
+    $('smartScanOverlay').style.display = 'none';
+    toast('Smart Scan interrotto', 'info');
+  }
+}
+
+function updateSmartScanRing(percent) {
+  const circumference = 2 * Math.PI * 52; // r=52
+  const offset = circumference - (percent / 100) * circumference;
+  $('ssRingFill').style.strokeDashoffset = offset;
+}
+
+// ── Burst Capture ──
+function captureFrameBurst(video) {
+  return new Promise((resolve) => {
+    const frames = [];
+    const config = SMART_SCAN_CONFIG;
+    let count = 0;
+
+    const scale = Math.min(1920 / video.videoWidth, 1);
+    const w = Math.round(video.videoWidth * scale);
+    const h = Math.round(video.videoHeight * scale);
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = w;
+    tempCanvas.height = h;
+    const tempCtx = tempCanvas.getContext('2d');
+
+    const captureFrame = () => {
+      if (smartScanAborted || count >= config.totalFrames) {
+        resolve(frames);
+        return;
+      }
+
+      tempCtx.drawImage(video, 0, 0, w, h);
+      const imageData = tempCtx.getImageData(0, 0, w, h);
+      frames.push({ imageData, width: w, height: h });
+
+      count++;
+      $('ssFrameCount').textContent = count;
+      updateSmartScanRing((count / config.totalFrames) * 45);
+
+      // Flash guide briefly every 5 frames
+      if (count % 5 === 0) {
+        const guide = $('cameraGuide');
+        guide.classList.add('flash');
+        setTimeout(() => guide.classList.remove('flash'), 100);
+      }
+
+      setTimeout(captureFrame, config.captureIntervalMs);
+    };
+
+    captureFrame();
+  });
+}
+
+// ── Frame Quality Scoring ──
+// Higher score = better quality (sharper, better contrast, good brightness)
+function scoreFrameQuality(imageData, width, height) {
+  const data = imageData.data;
+  const pixels = width * height;
+
+  // Sample every 8th pixel for performance
+  let sumGray = 0;
+  let sumGraySq = 0;
+  let edgeSum = 0;
+  let sampleCount = 0;
+
+  for (let y = 1; y < height - 1; y += 4) {
+    for (let x = 1; x < width - 1; x += 4) {
+      const idx = (y * width + x) * 4;
+      const gray = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+      sumGray += gray;
+      sumGraySq += gray * gray;
+
+      // Laplacian edge detection (simplified)
+      const idxUp = ((y - 1) * width + x) * 4;
+      const idxDown = ((y + 1) * width + x) * 4;
+      const idxLeft = (y * width + (x - 1)) * 4;
+      const idxRight = (y * width + (x + 1)) * 4;
+
+      const grayUp = 0.299 * data[idxUp] + 0.587 * data[idxUp + 1] + 0.114 * data[idxUp + 2];
+      const grayDown = 0.299 * data[idxDown] + 0.587 * data[idxDown + 1] + 0.114 * data[idxDown + 2];
+      const grayLeft = 0.299 * data[idxLeft] + 0.587 * data[idxLeft + 1] + 0.114 * data[idxLeft + 2];
+      const grayRight = 0.299 * data[idxRight] + 0.587 * data[idxRight + 1] + 0.114 * data[idxRight + 2];
+
+      const laplacian = Math.abs(grayUp + grayDown + grayLeft + grayRight - 4 * gray);
+      edgeSum += laplacian;
+      sampleCount++;
+    }
+  }
+
+  if (sampleCount === 0) return 0;
+
+  const meanGray = sumGray / sampleCount;
+  const variance = (sumGraySq / sampleCount) - (meanGray * meanGray);
+  const sharpness = edgeSum / sampleCount;
+
+  // Brightness penalty (too dark or too bright is bad)
+  const brightnessPenalty = Math.abs(meanGray - 128) / 128; // 0=perfect, 1=extreme
+  const brightnessScore = (1 - brightnessPenalty) * 30;
+
+  // Contrast score (higher variance = more contrast = better for OCR)
+  const contrastScore = Math.min(variance / 2, 35);
+
+  // Sharpness score (more edges = sharper image)
+  const sharpnessScore = Math.min(sharpness / 2, 35);
+
+  return brightnessScore + contrastScore + sharpnessScore;
+}
+
+// ── Merge Multiple OCR Results ──
+// Uses voting: lines that appear in multiple OCR results get priority
+function mergeOcrResults(ocrResults) {
+  if (ocrResults.length === 1) return ocrResults[0].text;
+
+  // Collect all unique lines across results
+  const lineVotes = new Map(); // normalized line → { original, count, sources }
+
+  ocrResults.forEach((result, srcIdx) => {
+    const lines = result.text.split('\n').map(l => l.trim()).filter(l => l.length > 1);
+    lines.forEach(line => {
+      // Normalize for comparison (lowercase, remove extra spaces)
+      const norm = line.toLowerCase().replace(/\s+/g, ' ');
+      if (lineVotes.has(norm)) {
+        const entry = lineVotes.get(norm);
+        entry.count++;
+        entry.sources.add(srcIdx);
+        // Keep the version with more content (probably more accurate)
+        if (line.length > entry.original.length) entry.original = line;
+      } else {
+        lineVotes.set(norm, {
+          original: line,
+          count: 1,
+          sources: new Set([srcIdx]),
+        });
+      }
+    });
+  });
+
+  // Sort by vote count (descending), then by original appearance order
+  const sorted = [...lineVotes.values()]
+    .sort((a, b) => b.count - a.count);
+
+  // Include lines that appear in at least 1 source (but prioritize multi-source)
+  // Remove near-duplicates (lines that are substrings of others)
+  const finalLines = [];
+  const used = new Set();
+
+  for (const entry of sorted) {
+    const norm = entry.original.toLowerCase().replace(/\s+/g, ' ');
+    let isDuplicate = false;
+
+    for (const existing of finalLines) {
+      const existNorm = existing.toLowerCase().replace(/\s+/g, ' ');
+      if (existNorm.includes(norm) || norm.includes(existNorm)) {
+        isDuplicate = true;
+        break;
+      }
+    }
+
+    if (!isDuplicate) {
+      finalLines.push(entry.original);
+    }
+  }
+
+  return finalLines.join('\n');
+}
+
 // ─── REMOTE PHONE (QR + PeerJS) ──────────────────────────────
 function initRemoteMode() {
   // Generate fresh session ID
@@ -1010,6 +1410,7 @@ function setupPeer() {
       toast('📱 Telefono connesso!', 'success');
       phoneConnected = true;
     }
+    $('btnRemoteSmartScan').disabled = false;
 
     conn.on('data', (data) => {
       if (data && data.type === 'photo') {
@@ -1048,33 +1449,182 @@ function cleanupPeer() {
 
 // ─── PROCESS REMOTE PHOTO (same quality as local) ─────────────
 function processRemotePhoto(base64) {
+  // If remote Smart Scan is active, accumulate instead of processing
+  if (remoteSmartActive) {
+    remoteSmartBuffer.push(base64);
+    const count = remoteSmartBuffer.length;
+    toast(`📸 Foto ${count} ricevuta — continua a scattare!`, 'info');
+    $('ssFrameCount').textContent = count;
+    updateSmartScanRing((count / 5) * 45); // assume ~5 photos target
+    $('ssDetail').textContent = `${count} foto ricevute — invia ancora oppure premi "Analizza"`;
+
+    // Auto-trigger analysis if we have enough
+    if (count >= 5) {
+      $('ssDetail').textContent = `${count} foto — pronto per l'analisi! Premi "Analizza" o invia altre foto.`;
+    }
+    return;
+  }
+
   toast('📸 Foto ricevuta — elaborazione...', 'info');
 
   // Load base64 into Image, then draw to canvas for preprocessing
   const img = new Image();
   img.onload = () => {
     const canvas = document.createElement('canvas');
-    // Use FULL resolution from phone (don't downscale further)
     canvas.width = img.width;
     canvas.height = img.height;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0);
 
-    // Apply SAME preprocessing as local capture
     if (!useServerOCR) preprocessImage(ctx, canvas.width, canvas.height);
 
-    // Re-encode at same quality as local
     const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
     const newBase64 = dataUrl.split(',')[1];
 
     processOCR(newBase64, dataUrl);
   };
   img.onerror = () => {
-    // Fallback: use raw base64 without preprocessing
     const dataUrl = 'data:image/jpeg;base64,' + base64;
     processOCR(base64, dataUrl);
   };
   img.src = 'data:image/jpeg;base64,' + base64;
+}
+
+// ─── REMOTE SMART SCAN ───────────────────────────────────────
+async function startRemoteSmartScan() {
+  if (!openaiApiKey) {
+    toast('Inserisci la API Key OpenAI per Smart Scan', 'error');
+    $('openaiKeyInput').focus();
+    return;
+  }
+  if (!peerConn || !peerConn.open) {
+    toast('Collega prima il telefono', 'error');
+    return;
+  }
+
+  remoteSmartBuffer = [];
+  remoteSmartActive = true;
+
+  // Show overlay
+  $('smartScanOverlay').style.display = 'flex';
+  $('ssFrameCount').textContent = '0';
+  $('ssStatus').textContent = '📱 Scatta foto dal telefono!';
+  $('ssDetail').textContent = 'Scatta 3-5 foto del biglietto da diversi angoli';
+  updateSmartScanRing(0);
+
+  // Change stop button to analyze button
+  $('btnSmartScanStop').textContent = '🔍 Analizza';
+  $('btnSmartScanStop').onclick = () => finishRemoteSmartScan();
+
+  toast('🧠 Smart Scan remoto avviato — scatta foto dal telefono!', 'info');
+}
+
+async function finishRemoteSmartScan() {
+  remoteSmartActive = false;
+  const photos = remoteSmartBuffer;
+  remoteSmartBuffer = [];
+
+  if (photos.length === 0) {
+    toast('Nessuna foto ricevuta', 'error');
+    $('smartScanOverlay').style.display = 'none';
+    return;
+  }
+
+  $('ssStatus').textContent = '🤖 OCR su ' + photos.length + ' foto...';
+  $('btnSmartScanStop').textContent = '⏹ Interrompi';
+  $('btnSmartScanStop').onclick = () => { smartScanAborted = true; };
+
+  smartScanAborted = false;
+
+  try {
+    const ocrResults = [];
+
+    for (let i = 0; i < photos.length; i++) {
+      if (smartScanAborted) break;
+
+      $('ssDetail').textContent = `OCR foto ${i + 1}/${photos.length}...`;
+      updateSmartScanRing(45 + (i / photos.length) * 35);
+
+      // Load image, preprocess, OCR
+      const dataUrl = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          if (!useServerOCR) preprocessImage(ctx, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.88));
+        };
+        img.onerror = reject;
+        img.src = 'data:image/jpeg;base64,' + photos[i];
+      });
+
+      if (i === 0) {
+        lastPhotoDataUrl = dataUrl;
+        $('photoPreview').src = dataUrl;
+      }
+
+      const base64 = dataUrl.split(',')[1];
+      try {
+        let result;
+        if (useServerOCR) {
+          const resp = await fetch('/api/ocr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64 }),
+          });
+          result = await resp.json();
+          if (result.fallback) { useServerOCR = false; result = await runTesseract(dataUrl); }
+        } else {
+          result = await runTesseract(dataUrl);
+        }
+        if (result && result.text) ocrResults.push(result);
+      } catch (e) { console.warn('[SmartScan Remote] OCR error:', e); }
+    }
+
+    if (smartScanAborted || ocrResults.length === 0) {
+      toast(smartScanAborted ? 'Interrotto' : 'Nessun testo rilevato', smartScanAborted ? 'info' : 'error');
+      $('smartScanOverlay').style.display = 'none';
+      return;
+    }
+
+    // Merge + classify
+    $('ssStatus').textContent = '🔀 Fusione risultati...';
+    updateSmartScanRing(85);
+
+    const mergedText = mergeOcrResults(ocrResults);
+    scanCount++;
+    saveState();
+
+    classifyBlocks(mergedText);
+    renderBlocks();
+    renderFieldSummary();
+
+    $('resultSection').style.display = 'block';
+    $('ocrEngineLabel').textContent = `Smart Scan remoto: ${ocrResults.length} foto | ${ocrResults[0].engine || 'tesseract'}`;
+
+    // AI Normalize
+    if (openaiApiKey && detectedBlocks.length > 0) {
+      $('ssStatus').textContent = '✨ Normalizzazione AI...';
+      updateSmartScanRing(92);
+      await normalizeWithAI();
+    }
+
+    updateSmartScanRing(100);
+    $('ssStatus').textContent = '✅ Smart Scan completato!';
+    const fieldCount = detectedBlocks.filter(b => b.type !== 'other' && b.type !== 'ignore').length;
+    $('ssDetail').textContent = `${fieldCount} campi da ${photos.length} foto`;
+    toast('🧠 Smart Scan completato — ' + fieldCount + ' campi!', 'success');
+    if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
+
+    setTimeout(() => { $('smartScanOverlay').style.display = 'none'; }, 2500);
+  } catch (e) {
+    console.error('[SmartScan Remote]', e);
+    toast('Errore: ' + e.message, 'error');
+    $('smartScanOverlay').style.display = 'none';
+  }
 }
 
 // ─── OCR PROCESSING ───────────────────────────────────────────
