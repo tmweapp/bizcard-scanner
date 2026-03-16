@@ -662,34 +662,74 @@ main { flex: 1; padding: 8px; max-width: 1200px; margin: 0 auto; width: 100%; }
 .type-dropdown button:hover { background: var(--bg3); color: var(--fg); }
 .type-dropdown button.active-type { color: var(--accent2); background: rgba(59,130,246,.1); }
 
+/* ─── Sort Bar ─── */
+.contact-sort-bar {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+  padding: 5px 0; flex-wrap: wrap;
+}
+.sort-label { font-size: .7rem; color: var(--fg4); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+.sort-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--glass2); border: .5px solid var(--glass-border); color: var(--fg3);
+  padding: 4px 10px; border-radius: 20px; font-size: .7rem; cursor: pointer;
+  transition: all var(--transition); white-space: nowrap;
+}
+.sort-btn:hover { border-color: var(--accent); color: var(--fg); }
+.sort-btn.active { background: rgba(124,91,245,.15); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.sort-arrow { font-size: .65rem; opacity: .5; transition: transform .2s; }
+.sort-btn.active .sort-arrow { opacity: 1; }
+.sort-btn.active.desc .sort-arrow { transform: rotate(180deg); }
+
 /* ─── Contacts ─── */
 .contact-list { display: flex; flex-direction: column; gap: 8px; }
 .contact-item {
-  background: var(--glass2); border-radius: var(--radius); padding: 12px 14px;
-  display: flex; align-items: center; gap: 12px; transition: all var(--transition);
+  background: var(--glass2); border-radius: var(--radius); padding: 14px 16px;
+  display: flex; align-items: flex-start; gap: 12px; transition: all var(--transition);
   border: .5px solid var(--glass-border);
   backdrop-filter: blur(12px);
+  position: relative;
 }
 .contact-item:hover {
   border-color: var(--accent); background: rgba(124,91,245,.06);
-  transform: translateY(-1px) scale(1.01);
+  transform: translateY(-1px) scale(1.005);
   box-shadow: 0 6px 24px rgba(0,0,0,.2), 0 0 20px var(--glow-purple);
 }
 .contact-avatar {
-  width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center;
-  justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0; color: #fff;
+  width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-weight: 700; font-size: 1.05rem; flex-shrink: 0; color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.contact-flag {
+  position: absolute; top: 10px; right: 12px; font-size: 1.3rem;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.3));
+  line-height: 1;
 }
 .contact-info { flex: 1; min-width: 0; }
-.contact-info .name { font-weight: 600; font-size: .95rem; }
-.contact-info .detail { color: var(--fg4); font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.contact-fields {
-  display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px;
+.contact-name {
+  font-weight: 700; font-size: 1rem; color: var(--fg);
+  display: flex; align-items: center; gap: 6px;
 }
-.contact-fields span {
-  font-size: .72rem; color: var(--fg3); white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis; max-width: 250px;
+.contact-name .source-icon { font-size: .65rem; opacity: .4; }
+.contact-role { color: var(--accent2); font-size: .78rem; font-weight: 500; margin-top: 1px; }
+.contact-company {
+  color: var(--fg2); font-size: .82rem; font-weight: 600; margin-top: 1px;
+  display: flex; align-items: center; gap: 4px;
 }
-.contact-actions { display: flex; gap: 2px; }
+.contact-city {
+  color: var(--fg3); font-size: .75rem; margin-top: 3px;
+  display: flex; align-items: center; gap: 4px;
+}
+.contact-city svg { width: 11px; height: 11px; stroke: var(--fg4); flex-shrink: 0; }
+.contact-links {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;
+}
+.contact-links a, .contact-links span {
+  font-size: .7rem; color: var(--fg3); background: var(--glass); padding: 2px 8px;
+  border-radius: 12px; border: .5px solid var(--glass-border); white-space: nowrap;
+  text-decoration: none; transition: all .15s; display: inline-flex; align-items: center; gap: 3px;
+}
+.contact-links a:hover { border-color: var(--accent); color: var(--accent); background: rgba(124,91,245,.08); }
+.contact-actions { display: flex; gap: 2px; flex-shrink: 0; margin-top: 2px; }
 .contact-actions button {
   background: none; border: none; color: var(--fg4); cursor: pointer; padding: 6px 8px;
   border-radius: 6px; transition: all var(--transition); font-size: .85rem;
@@ -930,7 +970,7 @@ body {
 <header>
   <h1>
     <svg class="header-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--lilac)" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M4 18c0-2 2.5-3.5 5-3.5s5 1.5 5 3.5"/><line x1="15" y1="9" x2="20" y2="9"/><line x1="15" y1="12" x2="19" y2="12"/></svg>
-    BizCard <span class="version-badge">v4</span>
+    BizCard <span class="version-badge">v4.6</span>
   </h1>
 </header>
 
@@ -1184,6 +1224,25 @@ body {
     <div class="search-bar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" id="searchInput" placeholder="Cerca contatti..." aria-label="Cerca contatti">
+    </div>
+    <div class="contact-sort-bar" id="contactSortBar">
+      <span class="sort-label">Ordina:</span>
+      <button class="sort-btn active" data-sort="date" title="Per data">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Data <span class="sort-arrow">↓</span>
+      </button>
+      <button class="sort-btn" data-sort="name" title="Per nome">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Nome <span class="sort-arrow">↓</span>
+      </button>
+      <button class="sort-btn" data-sort="company" title="Per azienda">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/></svg>
+        Azienda <span class="sort-arrow">↓</span>
+      </button>
+      <button class="sort-btn" data-sort="country" title="Per paese">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Paese <span class="sort-arrow">↓</span>
+      </button>
     </div>
     <div id="contactList" class="contact-list" role="list"></div>
     <div class="empty-state" id="emptyContacts">
@@ -1439,6 +1498,85 @@ const COMPANY_KW = [
 const TITLE_PREFIX = /^(?:dott\.?(?:ssa)?|ing\.?|arch\.?|avv\.?|rag\.?|geom\.?|prof\.?(?:ssa)?|sig\.?(?:ra)?|mr\.?|mrs\.?|ms\.?|dr\.?)\s+/i;
 
 const AVATAR_COLORS = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#22c55e','#06b6d4','#f43f5e','#a855f7'];
+
+// Country → ISO 3166 → Flag emoji
+const COUNTRY_FLAGS = {
+  'italia':'IT','italy':'IT','it':'IT','ita':'IT',
+  'germania':'DE','germany':'DE','deutschland':'DE','de':'DE',
+  'francia':'FR','france':'FR','fr':'FR',
+  'spagna':'ES','spain':'ES','españa':'ES','es':'ES',
+  'regno unito':'GB','united kingdom':'GB','uk':'GB','gb':'GB','england':'GB',
+  'stati uniti':'US','united states':'US','usa':'US','us':'US',
+  'svizzera':'CH','switzerland':'CH','schweiz':'CH','ch':'CH',
+  'austria':'AT','at':'AT',
+  'belgio':'BE','belgium':'BE','be':'BE',
+  'olanda':'NL','paesi bassi':'NL','netherlands':'NL','nl':'NL',
+  'portogallo':'PT','portugal':'PT','pt':'PT',
+  'grecia':'GR','greece':'GR','gr':'GR',
+  'polonia':'PL','poland':'PL','pl':'PL',
+  'romania':'RO','ro':'RO',
+  'svezia':'SE','sweden':'SE','se':'SE',
+  'norvegia':'NO','norway':'NO','no':'NO',
+  'danimarca':'DK','denmark':'DK','dk':'DK',
+  'finlandia':'FI','finland':'FI','fi':'FI',
+  'irlanda':'IE','ireland':'IE','ie':'IE',
+  'canada':'CA','ca':'CA',
+  'australia':'AU','au':'AU',
+  'brasile':'BR','brazil':'BR','br':'BR',
+  'argentina':'AR','ar':'AR',
+  'messico':'MX','mexico':'MX','mx':'MX',
+  'giappone':'JP','japan':'JP','jp':'JP',
+  'cina':'CN','china':'CN','cn':'CN',
+  'india':'IN','in':'IN',
+  'corea del sud':'KR','south korea':'KR','kr':'KR',
+  'russia':'RU','ru':'RU',
+  'turchia':'TR','turkey':'TR','türkiye':'TR','tr':'TR',
+  'emirati arabi':'AE','uae':'AE','ae':'AE',
+  'arabia saudita':'SA','saudi arabia':'SA','sa':'SA',
+  'israele':'IL','israel':'IL','il':'IL',
+  'egitto':'EG','egypt':'EG','eg':'EG',
+  'sudafrica':'ZA','south africa':'ZA','za':'ZA',
+  'marocco':'MA','morocco':'MA','ma':'MA',
+  'tunisia':'TN','tn':'TN',
+  'croazia':'HR','croatia':'HR','hr':'HR',
+  'slovenia':'SI','si':'SI',
+  'repubblica ceca':'CZ','czech republic':'CZ','czechia':'CZ','cz':'CZ',
+  'ungheria':'HU','hungary':'HU','hu':'HU',
+  'slovacchia':'SK','slovakia':'SK','sk':'SK',
+  'bulgaria':'BG','bg':'BG',
+  'lussemburgo':'LU','luxembourg':'LU','lu':'LU',
+  'malta':'MT','mt':'MT',
+  'cipro':'CY','cyprus':'CY','cy':'CY',
+  'lituania':'LT','lithuania':'LT','lt':'LT',
+  'lettonia':'LV','latvia':'LV','lv':'LV',
+  'estonia':'EE','ee':'EE',
+  'monaco':'MC','mc':'MC',
+  'san marino':'SM','sm':'SM',
+  'colombia':'CO','co':'CO',
+  'cile':'CL','chile':'CL','cl':'CL',
+  'singapore':'SG','sg':'SG',
+  'thailandia':'TH','thailand':'TH','th':'TH',
+  'indonesia':'ID','id_country':'ID',
+  'malesia':'MY','malaysia':'MY','my':'MY',
+  'filippine':'PH','philippines':'PH','ph':'PH',
+  'nuova zelanda':'NZ','new zealand':'NZ','nz':'NZ',
+};
+
+function countryToFlag(country) {
+  if (!country) return '';
+  const iso = COUNTRY_FLAGS[country.toLowerCase().trim()];
+  if (!iso) {
+    // Try matching partial (first word)
+    const first = country.toLowerCase().trim().split(/[\s,]+/)[0];
+    const isoPartial = COUNTRY_FLAGS[first];
+    if (isoPartial) return String.fromCodePoint(...[...isoPartial].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+    return '';
+  }
+  return String.fromCodePoint(...[...iso].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+}
+
+let contactSortField = 'date'; // 'date' | 'country' | 'company' | 'name'
+let contactSortAsc = true;
 
 // ─── STATE ────────────────────────────────────────────────────
 let contacts = [];
@@ -4511,6 +4649,37 @@ function resetScan() {
 // ─── CONTACTS ─────────────────────────────────────────────────
 function initContacts() {
   $('searchInput').addEventListener('input', renderContacts);
+
+  // Sort buttons
+  $$('.sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const field = btn.dataset.sort;
+      if (contactSortField === field) {
+        contactSortAsc = !contactSortAsc;
+      } else {
+        contactSortField = field;
+        contactSortAsc = true;
+      }
+      // Update UI
+      $$('.sort-btn').forEach(b => { b.classList.remove('active', 'desc'); });
+      btn.classList.add('active');
+      if (!contactSortAsc) btn.classList.add('desc');
+      btn.querySelector('.sort-arrow').textContent = contactSortAsc ? '↓' : '↑';
+      renderContacts();
+    });
+  });
+}
+
+function sortContacts(arr) {
+  const dir = contactSortAsc ? 1 : -1;
+  return [...arr].sort((a, b) => {
+    if (contactSortField === 'date') return dir * ((b._ts || 0) - (a._ts || 0));
+    const va = (a[contactSortField] || '').toLowerCase();
+    const vb = (b[contactSortField] || '').toLowerCase();
+    if (!va && vb) return 1;
+    if (va && !vb) return -1;
+    return dir * va.localeCompare(vb);
+  });
 }
 
 function renderContacts() {
@@ -4518,48 +4687,67 @@ function renderContacts() {
   const list = $('contactList');
   const empty = $('emptyContacts');
 
-  const filtered = contacts.filter(c => {
+  let filtered = contacts.map(c => ({ ...c, _ts: c.id ? parseInt(c.id) || 0 : 0 })).filter(c => {
     if (!query) return true;
-    return [c.name, c.company, c.email, c.phone, c.role]
+    return [c.name, c.company, c.email, c.phone, c.role, c.city, c.country]
       .some(v => v && v.toLowerCase().includes(query));
   });
+
+  filtered = sortContacts(filtered);
 
   if (!filtered.length) {
     list.innerHTML = '';
     empty.style.display = 'block';
+    $('contactSortBar').style.display = 'none';
     return;
   }
   empty.style.display = 'none';
+  $('contactSortBar').style.display = 'flex';
 
   list.innerHTML = filtered.map(c => {
     const initials = (c.name || c.email || '?').substring(0, 2).toUpperCase();
     const color = AVATAR_COLORS[Math.abs(hashCode(c.id)) % AVATAR_COLORS.length];
-    const detail = [c.role, c.company].filter(Boolean).join(' — ') || '';
-    const contactLines = [
-      c.email ? '📧 ' + c.email : '',
-      c.mobile ? '📱 ' + c.mobile : '',
-      c.phone ? '📞 ' + c.phone : '',
-      c.address ? '📍 ' + c.address : '',
-      c.city ? '🏙️ ' + c.city : '',
-      c.country ? '🌍 ' + c.country : '',
-      c.web ? '🌐 ' + c.web : '',
-      c.linkedin ? '💼 LinkedIn' : '',
-      c.piva ? '🏛️ P.IVA ' + c.piva : '',
-      c.cf ? '🆔 C.F. ' + c.cf : '',
-      c.fax ? '📠 ' + c.fax : '',
-    ].filter(Boolean);
+    const flag = countryToFlag(c.country);
     const sourceIcon = c.source === 'remote' ? '📱' : c.source === 'upload' ? '📁' : '📷';
+
+    // Build location string
+    const locationParts = [c.city, c.country].filter(Boolean);
+    const locationStr = locationParts.join(', ');
+
+    // Build link pills
+    const pills = [];
+    if (c.email) c.email.split(',').forEach(e => {
+      const et = e.trim();
+      pills.push(`<a href="mailto:${esc(et)}">📧 ${esc(et)}</a>`);
+    });
+    if (c.mobile) c.mobile.split(',').forEach(p => {
+      const pt = p.trim(); const num = pt.replace(/[^\d+]/g, '');
+      pills.push(`<a href="tel:${num}">📱 ${esc(pt)}</a>`);
+    });
+    if (c.phone) c.phone.split(',').forEach(p => {
+      const pt = p.trim(); const num = pt.replace(/[^\d+]/g, '');
+      pills.push(`<a href="tel:${num}">📞 ${esc(pt)}</a>`);
+    });
+    if (c.web) pills.push(`<a href="${esc(c.web.startsWith('http') ? c.web : 'https://' + c.web)}" target="_blank">🌐 ${esc(c.web.replace(/^https?:\/\/(www\.)?/, ''))}</a>`);
+    if (c.linkedin) pills.push(`<a href="${esc(c.linkedin.startsWith('http') ? c.linkedin : 'https://' + c.linkedin)}" target="_blank">💼 LinkedIn</a>`);
+    if (c.address) pills.push(`<span>📍 ${esc(c.address)}</span>`);
+    if (c.piva) pills.push(`<span>🏛️ ${esc(c.piva)}</span>`);
+    if (c.cf) pills.push(`<span>🆔 ${esc(c.cf)}</span>`);
+    if (c.fax) pills.push(`<span>📠 ${esc(c.fax)}</span>`);
 
     return `<div class="contact-item" role="listitem">
       ${c.photo
-        ? `<img src="${c.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0" alt="">`
+        ? `<img src="${c.photo}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.25)" alt="">`
         : `<div class="contact-avatar" style="background:${color}">${esc(initials)}</div>`
       }
       <div class="contact-info">
-        <div class="name">${esc(c.name || 'Senza nome')} <span style="font-size:.7rem;opacity:.5">${sourceIcon}</span></div>
-        ${detail ? `<div class="detail">${esc(detail)}</div>` : ''}
-        ${contactLines.length ? `<div class="contact-fields">${contactLines.map(l => `<span>${esc(l)}</span>`).join('')}</div>` : ''}
+        <div class="contact-name">${esc(c.name || 'Senza nome')} <span class="source-icon">${sourceIcon}</span></div>
+        ${c.role ? `<div class="contact-role">${esc(c.role)}</div>` : ''}
+        ${c.company ? `<div class="contact-company"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/></svg> ${esc(c.company)}</div>` : ''}
+        ${locationStr ? `<div class="contact-city"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${esc(locationStr)}</div>` : ''}
+        ${pills.length ? `<div class="contact-links">${pills.join('')}</div>` : ''}
       </div>
+      ${flag ? `<span class="contact-flag">${flag}</span>` : ''}
       <div class="contact-actions">
         <button title="Scarica vCard" data-action="vcard" data-id="${c.id}">📇</button>
         <button title="Copia info" data-action="copy" data-id="${c.id}">📋</button>
