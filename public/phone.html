@@ -21,11 +21,18 @@ html {
 }
 body {
   min-height: 100dvh; min-height: -webkit-fill-available;
-  display: flex; flex-direction: column; overflow: hidden;
-  /* Safe area insets for notch/dynamic island/home indicator */
-  padding-top: env(safe-area-inset-top);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  /* Safe area insets for notch/dynamic island — bottom handled by .bottom-bar */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+/* Fallback for older iOS that uses constant() instead of env() */
+@supports (padding: constant(safe-area-inset-bottom)) {
+  .bottom-bar {
+    padding-bottom: calc(24px + constant(safe-area-inset-bottom)) !important;
+  }
 }
 
 .top-bar {
@@ -91,8 +98,8 @@ body {
 .bottom-bar {
   background: var(--bg2);
   padding: 20px 24px;
-  /* Critical: generous bottom padding + safe area for ALL phones */
-  padding-bottom: calc(20px + env(safe-area-inset-bottom, 12px));
+  /* Extra bottom padding ON TOP of body's safe-area padding for home indicator */
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 34px));
   display: flex; align-items: center; justify-content: center; gap: 20px;
   border-top: 1px solid var(--bg3); flex-shrink: 0;
   min-height: 100px; /* Ensure always visible */
@@ -123,7 +130,7 @@ body {
   .top-bar h1 { font-size: .85rem; }
   .top-bar .sub { display: none; }
   .status-bar { padding: 6px 12px; font-size: .75rem; }
-  .bottom-bar { padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 8px)); min-height: 80px; gap: 14px; }
+  .bottom-bar { padding: 12px 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom, 34px)); min-height: 80px; gap: 14px; }
   .btn-capture { width: 58px; height: 58px; }
   .btn-flip, .btn-torch { width: 40px; height: 40px; font-size: 1.1rem; }
 }
@@ -147,7 +154,7 @@ body {
 /* ─── Responsive: tablets / large screens ─── */
 @media (min-width: 768px) {
   .camera-area { max-height: 70vh; }
-  .bottom-bar { padding: 24px; gap: 24px; }
+  .bottom-bar { padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom, 34px)); gap: 24px; }
   .btn-capture { width: 80px; height: 80px; }
   .btn-flip, .btn-torch { width: 52px; height: 52px; font-size: 1.4rem; }
 }
@@ -174,7 +181,8 @@ body {
 /* Debug info */
 .debug-info {
   position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.8);
-  color: #0f0; font-family: monospace; font-size: .65rem; padding: 4px 8px;
+  color: #0f0; font-family: monospace; font-size: .65rem;
+  padding: 4px 8px; padding-bottom: calc(4px + env(safe-area-inset-bottom, 34px));
   z-index: 200; max-height: 80px; overflow-y: auto; display: none;
 }
 .debug-info.visible { display: block; }
