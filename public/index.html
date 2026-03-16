@@ -110,8 +110,8 @@ header h1 span.header-icon { font-size: .9rem; }
   border-radius: var(--radius2); cursor: pointer; font-size: .72rem; white-space: nowrap;
   transition: all var(--transition);
 }
-.api-key-save { background: linear-gradient(135deg, var(--accent), var(--lilac)); color: #fff; font-weight: 600; border: none; }
-.api-key-save:hover { transform: scale(1.03); box-shadow: 0 0 16px var(--glow-purple); }
+.api-key-save { background: linear-gradient(135deg, var(--accent), var(--lilac)); color: #fff; font-weight: 600; border: none; min-width: 54px; min-height: 32px; }
+.api-key-save:hover, .api-key-save:active { transform: scale(1.03); box-shadow: 0 0 16px var(--glow-purple); }
 .api-key-status { font-size: .72rem; color: var(--green); white-space: nowrap; }
 .api-key-status.error { color: var(--red); }
 .api-key-bar.has-key .api-key-input-wrap input { color: var(--fg4); }
@@ -1472,18 +1472,24 @@ const $$ = (sel) => document.querySelectorAll(sel);
 
 // ─── INITIALIZATION ───────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  loadState();
-  initTabs();
-  initModes();
-  initScanner();
-  initContacts();
-  initExport();
-  initSettings();
-  initAdvancedExport();
-  initApiKeyBar();
-  checkOcrApi();
-  initTesseractFallback();
-  initPhoneBridge(); // Detect ?s= param and auto-connect to desktop
+  // Each init wrapped in try/catch so one failure doesn't block others
+  const inits = [
+    ['loadState', loadState],
+    ['initTabs', initTabs],
+    ['initModes', initModes],
+    ['initScanner', initScanner],
+    ['initContacts', initContacts],
+    ['initExport', initExport],
+    ['initSettings', initSettings],
+    ['initAdvancedExport', initAdvancedExport],
+    ['initApiKeyBar', initApiKeyBar],
+    ['checkOcrApi', checkOcrApi],
+    ['initTesseractFallback', initTesseractFallback],
+    ['initPhoneBridge', initPhoneBridge],
+  ];
+  for (const [name, fn] of inits) {
+    try { fn(); } catch (e) { console.error(`[Init] ${name} failed:`, e); }
+  }
   // Supabase: init after all UI is ready (async, non-blocking)
   setTimeout(() => initSupabase(), 500);
 });
@@ -4745,23 +4751,24 @@ function initApiKeyBar() {
   const btnToggle = $('btnToggleKey');
   const status = $('apiKeyStatus');
 
-  // Load from localStorage (encrypted/obfuscated for basic protection)
+  if (!input || !btnSave) { console.error('[ApiKeyBar] Elements not found'); return; }
+
+  // Load from localStorage — try both formats (btoa-encoded and plain)
   try {
     const stored = localStorage.getItem('bizcard_oai_key');
     if (stored) {
-      openaiApiKey = atob(stored); // decode
+      try { openaiApiKey = atob(stored); } catch (_) { openaiApiKey = stored; }
       input.value = openaiApiKey;
       $('apiKeyBar').classList.add('has-key');
       status.textContent = '✅ Chiave salvata';
       status.className = 'api-key-status';
     }
-  } catch (e) { /* no stored key */ }
+  } catch (e) { console.warn('[ApiKeyBar] Load error:', e); }
 
-  // Save key
-  btnSave.addEventListener('click', () => {
+  // Save key function (shared between button and Enter)
+  function saveApiKey() {
     const key = input.value.trim();
     if (!key) {
-      // Clear key
       openaiApiKey = '';
       localStorage.removeItem('bizcard_oai_key');
       $('apiKeyBar').classList.remove('has-key');
@@ -4776,14 +4783,25 @@ function initApiKeyBar() {
       return;
     }
     openaiApiKey = key;
-    // Store encoded in localStorage
-    try { localStorage.setItem('bizcard_oai_key', btoa(key)); } catch (e) {}
+    // Store in localStorage — try btoa, fallback to plain
+    try {
+      localStorage.setItem('bizcard_oai_key', btoa(key));
+    } catch (_) {
+      try { localStorage.setItem('bizcard_oai_key', key); } catch (e2) {
+        console.error('[ApiKeyBar] Cannot save to localStorage:', e2);
+      }
+    }
     $('apiKeyBar').classList.add('has-key');
     status.textContent = '✅ Chiave salvata';
     status.className = 'api-key-status';
-    toast('API Key OpenAI salvata', 'success');
+    toast('API Key OpenAI salvata ✓', 'success');
     input.type = 'password';
-  });
+    console.log('[ApiKeyBar] Key saved, length:', key.length);
+  }
+
+  // Multiple event bindings for maximum reliability
+  btnSave.addEventListener('click', saveApiKey);
+  btnSave.addEventListener('touchend', (e) => { e.preventDefault(); saveApiKey(); });
 
   // Toggle visibility
   btnToggle.addEventListener('click', () => {
