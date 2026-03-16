@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>BizCard — Scanner Remoto</title>
 <meta name="theme-color" content="#0f172a">
 <style>
@@ -19,18 +19,25 @@ html {
   background: var(--bg); color: var(--fg);
   -webkit-tap-highlight-color: transparent;
 }
-body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+body {
+  min-height: 100dvh; min-height: -webkit-fill-available;
+  display: flex; flex-direction: column; overflow: hidden;
+  /* Safe area insets for notch/dynamic island/home indicator */
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
 
 .top-bar {
-  background: var(--bg2); padding: 12px 16px; text-align: center;
+  background: var(--bg2); padding: 10px 16px; text-align: center;
   border-bottom: 1px solid var(--bg3); flex-shrink: 0;
 }
-.top-bar h1 { font-size: 1rem; font-weight: 600; }
-.top-bar .sub { font-size: .75rem; color: var(--fg2); margin-top: 2px; }
+.top-bar h1 { font-size: .95rem; font-weight: 600; }
+.top-bar .sub { font-size: .7rem; color: var(--fg2); margin-top: 2px; }
 
 .status-bar {
-  padding: 10px 16px; display: flex; align-items: center; gap: 8px;
-  font-size: .85rem; background: var(--bg2); border-bottom: 1px solid var(--bg3); flex-shrink: 0;
+  padding: 8px 16px; display: flex; align-items: center; gap: 8px;
+  font-size: .8rem; background: var(--bg2); border-bottom: 1px solid var(--bg3); flex-shrink: 0;
 }
 .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .status-dot.connected { background: var(--green); box-shadow: 0 0 8px rgba(34,197,94,.5); }
@@ -60,46 +67,90 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
 }
 
 .preview-overlay {
-  position: absolute; inset: 0; background: rgba(0,0,0,.85); z-index: 20;
-  display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  position: absolute; inset: 0; background: rgba(0,0,0,.9); z-index: 20;
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; padding: 20px;
+  /* Safe area for overlay too */
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
 }
 .preview-overlay.visible { display: flex; }
 .preview-overlay img {
-  max-width: 90%; max-height: 55%; border-radius: 8px; object-fit: contain;
+  max-width: 92%; max-height: 50vh; border-radius: 10px; object-fit: contain;
+  flex-shrink: 1;
 }
-.preview-actions { display: flex; gap: 12px; }
+.preview-actions { display: flex; gap: 12px; flex-shrink: 0; }
 .preview-actions button {
   padding: 14px 28px; border: none; border-radius: 10px;
   font-size: 1rem; font-weight: 600; cursor: pointer;
+  min-height: 48px; /* Minimum touch target */
 }
 .preview-actions .btn-send { background: var(--green); color: #fff; }
 .preview-actions .btn-send:active { background: #16a34a; }
 .preview-actions .btn-retake { background: var(--bg3); color: var(--fg); }
 
 .bottom-bar {
-  background: var(--bg2); padding: 16px; display: flex; align-items: center;
-  justify-content: center; gap: 16px; border-top: 1px solid var(--bg3); flex-shrink: 0;
-  /* Safe area for iPhone notch */
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  background: var(--bg2);
+  padding: 20px 24px;
+  /* Critical: generous bottom padding + safe area for ALL phones */
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 12px));
+  display: flex; align-items: center; justify-content: center; gap: 20px;
+  border-top: 1px solid var(--bg3); flex-shrink: 0;
+  min-height: 100px; /* Ensure always visible */
 }
 .btn-capture {
-  width: 72px; height: 72px; border-radius: 50%; border: 4px solid var(--fg);
+  width: 68px; height: 68px; border-radius: 50%; border: 4px solid var(--fg);
   background: transparent; cursor: pointer; position: relative; transition: all .15s;
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent; flex-shrink: 0;
 }
 .btn-capture:active { transform: scale(.9); }
 .btn-capture::after {
-  content: ''; position: absolute; inset: 6px; border-radius: 50%;
+  content: ''; position: absolute; inset: 5px; border-radius: 50%;
   background: var(--fg); transition: all .15s;
 }
 .btn-capture:disabled { opacity: .3; cursor: not-allowed; }
 .btn-capture.sending::after { background: var(--orange); animation: pulse .5s infinite; }
 .btn-flip, .btn-torch {
   background: var(--bg3); border: none; color: var(--fg);
-  width: 44px; height: 44px; border-radius: 50%; font-size: 1.2rem;
-  cursor: pointer; transition: all .15s;
+  width: 48px; height: 48px; border-radius: 50%; font-size: 1.3rem;
+  cursor: pointer; transition: all .15s; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
 }
 .btn-flip:active, .btn-torch:active { transform: scale(.9); }
+
+/* ─── Responsive: small phones (SE, Mini) ─── */
+@media (max-height: 667px) {
+  .top-bar { padding: 6px 12px; }
+  .top-bar h1 { font-size: .85rem; }
+  .top-bar .sub { display: none; }
+  .status-bar { padding: 6px 12px; font-size: .75rem; }
+  .bottom-bar { padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 8px)); min-height: 80px; gap: 14px; }
+  .btn-capture { width: 58px; height: 58px; }
+  .btn-flip, .btn-torch { width: 40px; height: 40px; font-size: 1.1rem; }
+}
+
+/* ─── Responsive: landscape mode ─── */
+@media (orientation: landscape) and (max-height: 500px) {
+  .top-bar { display: none; }
+  .status-bar { padding: 4px 12px; font-size: .7rem; }
+  .bottom-bar {
+    position: fixed; right: 0; top: 0; bottom: 0;
+    flex-direction: column; width: 80px;
+    padding: 16px 8px; padding-right: calc(8px + env(safe-area-inset-right, 0px));
+    border-top: none; border-left: 1px solid var(--bg3);
+    min-height: auto;
+  }
+  .camera-area { margin-right: 80px; }
+  .btn-capture { width: 56px; height: 56px; }
+  .btn-flip, .btn-torch { width: 40px; height: 40px; }
+}
+
+/* ─── Responsive: tablets / large screens ─── */
+@media (min-width: 768px) {
+  .camera-area { max-height: 70vh; }
+  .bottom-bar { padding: 24px; gap: 24px; }
+  .btn-capture { width: 80px; height: 80px; }
+  .btn-flip, .btn-torch { width: 52px; height: 52px; font-size: 1.4rem; }
+}
 
 .sent-toast {
   position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
@@ -156,10 +207,9 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
 </div>
 
 <div class="bottom-bar" id="bottomBar">
-  <button class="btn-torch" id="btnTorch" style="display:none" aria-label="Flash">🔦</button>
   <button class="btn-flip" id="btnFlip" aria-label="Inverti fotocamera">🔄</button>
   <button class="btn-capture" id="btnCapture" disabled aria-label="Scatta foto"></button>
-  <div style="width:44px"></div>
+  <button class="btn-torch" id="btnTorch" style="visibility:hidden" aria-label="Flash">🔦</button>
 </div>
 
 <div class="sent-toast" id="sentToast">✅ Foto inviata!</div>
@@ -272,7 +322,7 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
       const track = stream.getVideoTracks()[0];
       try {
         const caps = track.getCapabilities ? track.getCapabilities() : {};
-        document.getElementById('btnTorch').style.display = caps.torch ? 'inline-flex' : 'none';
+        document.getElementById('btnTorch').style.visibility = caps.torch ? 'visible' : 'hidden';
       } catch (e) {}
 
       // Enable capture ONLY after video is ready
