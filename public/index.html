@@ -411,6 +411,85 @@ main { flex: 1; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
 .export-card h4 { font-size: .95rem; margin-bottom: 4px; }
 .export-card p { font-size: .78rem; color: var(--fg4); }
 
+/* ─── Export Modal ─── */
+.export-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 500;
+  display: none; align-items: center; justify-content: center;
+  padding: 20px; backdrop-filter: blur(4px);
+}
+.export-modal-backdrop.visible { display: flex; }
+.export-modal {
+  background: var(--bg2); border-radius: var(--radius); width: 100%; max-width: 560px;
+  max-height: 85vh; overflow-y: auto; border: 1px solid var(--bg3); box-shadow: 0 8px 40px rgba(0,0,0,.6);
+}
+.export-modal-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--bg3);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.export-modal-header h3 { font-size: 1.05rem; }
+.export-modal-close {
+  background: none; border: none; color: var(--fg3); font-size: 1.3rem;
+  cursor: pointer; padding: 4px 8px; border-radius: 6px;
+}
+.export-modal-close:hover { background: var(--bg3); color: var(--fg); }
+.export-modal-body { padding: 20px; }
+.export-section { margin-bottom: 18px; }
+.export-section-title {
+  font-size: .82rem; font-weight: 600; color: var(--accent2);
+  margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px;
+}
+.export-format-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px;
+}
+.export-format-btn {
+  background: var(--bg); border: 1px solid var(--bg3); border-radius: var(--radius2);
+  padding: 10px 8px; text-align: center; cursor: pointer; transition: all var(--transition);
+  color: var(--fg2); font-size: .8rem;
+}
+.export-format-btn:hover { border-color: var(--accent); }
+.export-format-btn.active { border-color: var(--accent); background: rgba(59,130,246,.15); color: var(--accent2); font-weight: 600; }
+.export-format-btn .fmt-icon { font-size: 1.3rem; display: block; margin-bottom: 4px; }
+
+.export-columns-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px;
+}
+.export-col-check {
+  display: flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--fg2);
+  cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: background var(--transition);
+}
+.export-col-check:hover { background: var(--bg3); }
+.export-col-check input[type="checkbox"] {
+  accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer;
+}
+.export-col-actions { display: flex; gap: 8px; margin-bottom: 8px; }
+.export-col-actions button {
+  background: none; border: none; color: var(--accent2); font-size: .75rem;
+  cursor: pointer; text-decoration: underline; padding: 0;
+}
+
+.export-separator-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.export-separator-row select, .export-separator-row input {
+  background: var(--bg); border: 1px solid var(--bg3); color: var(--fg);
+  padding: 8px 12px; border-radius: var(--radius2); font-size: .85rem;
+}
+.export-separator-row select { min-width: 160px; }
+.export-separator-row input { width: 80px; }
+
+.export-preview-box {
+  background: var(--bg); border: 1px solid var(--bg3); border-radius: var(--radius2);
+  padding: 10px 14px; font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: .72rem; color: var(--fg3); max-height: 120px; overflow: auto;
+  white-space: pre; line-height: 1.5;
+}
+
+.export-modal-footer {
+  padding: 14px 20px; border-top: 1px solid var(--bg3);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.export-modal-footer .export-count { font-size: .8rem; color: var(--fg3); }
+
 /* ─── Settings ─── */
 .settings-section { background: var(--bg2); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
 .settings-section h3 { font-size: .95rem; margin-bottom: 14px; color: var(--fg2); display: flex; align-items: center; gap: 8px; }
@@ -690,8 +769,79 @@ body {
         <div class="export-icon">🔗</div><h4>Webhook CRM</h4><p>Invio diretto al tuo CRM</p>
       </div>
     </div>
+    <div style="margin-top:16px;text-align:center">
+      <button class="btn btn-primary" id="btnAdvancedExport" style="font-size:.95rem;padding:12px 28px">
+        ⚙️ Export Avanzato — Scegli formato, colonne e separatore
+      </button>
+    </div>
     <div class="empty-state" id="emptyExport" style="display:none">
       <div class="empty-icon">📤</div><p>Nessun contatto da esportare.</p>
+    </div>
+  </div>
+
+  <!-- ═══ ADVANCED EXPORT MODAL ═══ -->
+  <div class="export-modal-backdrop" id="exportModalBackdrop">
+    <div class="export-modal" role="dialog" aria-label="Export avanzato">
+      <div class="export-modal-header">
+        <h3>⚙️ Export Avanzato</h3>
+        <button class="export-modal-close" id="exportModalClose" aria-label="Chiudi">&times;</button>
+      </div>
+      <div class="export-modal-body">
+
+        <!-- FORMAT -->
+        <div class="export-section">
+          <div class="export-section-title">📄 Formato</div>
+          <div class="export-format-grid" id="exportFormatGrid">
+            <div class="export-format-btn active" data-format="csv"><span class="fmt-icon">📊</span>CSV</div>
+            <div class="export-format-btn" data-format="tsv"><span class="fmt-icon">📋</span>TSV</div>
+            <div class="export-format-btn" data-format="custom"><span class="fmt-icon">✂️</span>Custom</div>
+            <div class="export-format-btn" data-format="json"><span class="fmt-icon">🔧</span>JSON</div>
+            <div class="export-format-btn" data-format="jsonl"><span class="fmt-icon">📝</span>JSONL</div>
+            <div class="export-format-btn" data-format="xml"><span class="fmt-icon">📄</span>XML</div>
+            <div class="export-format-btn" data-format="xlsx"><span class="fmt-icon">📗</span>XLSX</div>
+            <div class="export-format-btn" data-format="vcard"><span class="fmt-icon">📇</span>vCard</div>
+          </div>
+        </div>
+
+        <!-- SEPARATOR (visible for csv/tsv/custom) -->
+        <div class="export-section" id="exportSepSection">
+          <div class="export-section-title">🔤 Separatore</div>
+          <div class="export-separator-row">
+            <select id="exportSepSelect">
+              <option value=",">Virgola (,)</option>
+              <option value=";">Punto e virgola (;)</option>
+              <option value="\t">Tab</option>
+              <option value="|">Pipe (|)</option>
+              <option value="custom">Personalizzato...</option>
+            </select>
+            <input type="text" id="exportSepCustom" placeholder="es: ::" maxlength="4" style="display:none">
+          </div>
+        </div>
+
+        <!-- COLUMNS -->
+        <div class="export-section" id="exportColSection">
+          <div class="export-section-title">📋 Colonne</div>
+          <div class="export-col-actions">
+            <button id="exportColAll">Seleziona tutte</button>
+            <button id="exportColNone">Deseleziona tutte</button>
+            <button id="exportColEssential">Solo essenziali</button>
+          </div>
+          <div class="export-columns-grid" id="exportColumnsGrid">
+            <!-- Generated by JS -->
+          </div>
+        </div>
+
+        <!-- PREVIEW -->
+        <div class="export-section">
+          <div class="export-section-title">👁️ Anteprima (primi 2 record)</div>
+          <div class="export-preview-box" id="exportPreview">Seleziona un formato...</div>
+        </div>
+
+      </div>
+      <div class="export-modal-footer">
+        <span class="export-count" id="exportRecordCount">0 contatti</span>
+        <button class="btn btn-success" id="btnExportDownload" style="font-size:.95rem">💾 Scarica</button>
+      </div>
     </div>
   </div>
 
@@ -838,6 +988,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initContacts();
   initExport();
   initSettings();
+  initAdvancedExport();
   initApiKeyBar();
   checkOcrApi();
   initTesseractFallback();
@@ -3300,6 +3451,319 @@ function downloadFile(content, filename, mime) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// ─── ADVANCED EXPORT ENGINE ──────────────────────────────────
+// Supports: CSV, TSV, Custom separator, JSON, JSONL, XML, XLSX, vCard
+// With column selection and live preview
+
+const EXPORT_COLUMNS = [
+  { key: 'name',     label: 'Nome',       essential: true },
+  { key: 'company',  label: 'Azienda',    essential: true },
+  { key: 'role',     label: 'Ruolo',      essential: false },
+  { key: 'email',    label: 'Email',      essential: true },
+  { key: 'mobile',   label: 'Cellulare',  essential: true },
+  { key: 'phone',    label: 'Tel. Fisso', essential: false },
+  { key: 'fax',      label: 'Fax',        essential: false },
+  { key: 'web',      label: 'Web',        essential: false },
+  { key: 'linkedin', label: 'LinkedIn',   essential: false },
+  { key: 'address',  label: 'Indirizzo',  essential: false },
+  { key: 'city',     label: 'Città',      essential: true },
+  { key: 'country',  label: 'Paese',      essential: true },
+  { key: 'piva',     label: 'P.IVA',      essential: false },
+  { key: 'cf',       label: 'C.F.',       essential: false },
+  { key: 'logo_description', label: 'Logo', essential: false },
+  { key: 'notes',    label: 'Note',       essential: false },
+  { key: 'createdAt', label: 'Data',      essential: false },
+];
+
+let advExportFormat = 'csv';
+let advExportCols = EXPORT_COLUMNS.map(c => c.key);
+
+function initAdvancedExport() {
+  const backdrop = $('exportModalBackdrop');
+  const close = $('exportModalClose');
+
+  $('btnAdvancedExport').addEventListener('click', () => {
+    if (!contacts.length) { toast('Nessun contatto da esportare', 'error'); return; }
+    $('exportRecordCount').textContent = contacts.length + ' contatti';
+    backdrop.classList.add('visible');
+    updateExportPreview();
+  });
+
+  close.addEventListener('click', () => backdrop.classList.remove('visible'));
+  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.classList.remove('visible'); });
+
+  // Format buttons
+  $$('#exportFormatGrid .export-format-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('#exportFormatGrid .export-format-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      advExportFormat = btn.dataset.format;
+
+      // Show/hide separator section
+      const sepFormats = ['csv', 'tsv', 'custom'];
+      $('exportSepSection').style.display = sepFormats.includes(advExportFormat) ? '' : 'none';
+
+      // Show/hide columns section (not for vCard)
+      $('exportColSection').style.display = advExportFormat === 'vcard' ? 'none' : '';
+
+      // Auto-set separator for TSV
+      if (advExportFormat === 'tsv') $('exportSepSelect').value = '\\t';
+      else if (advExportFormat === 'csv') $('exportSepSelect').value = ',';
+
+      updateExportPreview();
+    });
+  });
+
+  // Separator select
+  $('exportSepSelect').addEventListener('change', () => {
+    $('exportSepCustom').style.display = $('exportSepSelect').value === 'custom' ? '' : 'none';
+    updateExportPreview();
+  });
+  $('exportSepCustom').addEventListener('input', updateExportPreview);
+
+  // Column checkboxes
+  const grid = $('exportColumnsGrid');
+  EXPORT_COLUMNS.forEach(col => {
+    const label = document.createElement('label');
+    label.className = 'export-col-check';
+    label.innerHTML = `<input type="checkbox" checked data-col="${col.key}"> ${col.label}`;
+    label.querySelector('input').addEventListener('change', () => {
+      advExportCols = [...$$('#exportColumnsGrid input:checked')].map(cb => cb.dataset.col);
+      updateExportPreview();
+    });
+    grid.appendChild(label);
+  });
+
+  $('exportColAll').addEventListener('click', () => {
+    $$('#exportColumnsGrid input').forEach(cb => cb.checked = true);
+    advExportCols = EXPORT_COLUMNS.map(c => c.key);
+    updateExportPreview();
+  });
+
+  $('exportColNone').addEventListener('click', () => {
+    $$('#exportColumnsGrid input').forEach(cb => cb.checked = false);
+    advExportCols = [];
+    updateExportPreview();
+  });
+
+  $('exportColEssential').addEventListener('click', () => {
+    $$('#exportColumnsGrid input').forEach(cb => {
+      const col = EXPORT_COLUMNS.find(c => c.key === cb.dataset.col);
+      cb.checked = col ? col.essential : false;
+    });
+    advExportCols = EXPORT_COLUMNS.filter(c => c.essential).map(c => c.key);
+    updateExportPreview();
+  });
+
+  // Download button
+  $('btnExportDownload').addEventListener('click', executeAdvancedExport);
+}
+
+function getExportSeparator() {
+  const val = $('exportSepSelect').value;
+  if (val === 'custom') return $('exportSepCustom').value || ',';
+  if (val === '\\t') return '\t';
+  return val;
+}
+
+function getExportHeaders() {
+  return advExportCols.map(key => {
+    const col = EXPORT_COLUMNS.find(c => c.key === key);
+    return col ? col.label : key;
+  });
+}
+
+function getFilteredData(maxRows) {
+  const data = maxRows ? contacts.slice(0, maxRows) : contacts;
+  return data.map(c => {
+    const row = {};
+    advExportCols.forEach(key => { row[key] = c[key] || ''; });
+    return row;
+  });
+}
+
+function escapeForSep(v, sep) {
+  if (!v) return '';
+  if (v.includes(sep) || v.includes('"') || v.includes('\n'))
+    return '"' + v.replace(/"/g, '""') + '"';
+  return v;
+}
+
+function generateDelimited(data, sep) {
+  const headers = getExportHeaders();
+  const headerLine = headers.map(h => escapeForSep(h, sep)).join(sep);
+  const rows = data.map(row =>
+    advExportCols.map(key => escapeForSep(row[key], sep)).join(sep)
+  );
+  return '\ufeff' + [headerLine, ...rows].join('\n');
+}
+
+function generateJSON(data) {
+  return JSON.stringify(data, null, 2);
+}
+
+function generateJSONL(data) {
+  return data.map(row => JSON.stringify(row)).join('\n');
+}
+
+function generateXML(data) {
+  const escXml = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<contacts>\n';
+  data.forEach(row => {
+    xml += '  <contact>\n';
+    advExportCols.forEach(key => {
+      const tag = key.replace(/_/g, '-');
+      xml += `    <${tag}>${escXml(row[key])}</${tag}>\n`;
+    });
+    xml += '  </contact>\n';
+  });
+  xml += '</contacts>';
+  return xml;
+}
+
+function generateXLSX(data) {
+  // Build XLSX using SheetJS (loaded on demand)
+  const headers = getExportHeaders();
+  const wsData = [headers];
+  data.forEach(row => {
+    wsData.push(advExportCols.map(key => row[key] || ''));
+  });
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  // Auto-width columns
+  ws['!cols'] = headers.map((h, i) => {
+    let maxW = h.length;
+    data.forEach(row => {
+      const v = row[advExportCols[i]] || '';
+      if (v.length > maxW) maxW = v.length;
+    });
+    return { wch: Math.min(maxW + 2, 40) };
+  });
+  XLSX.utils.book_append_sheet(wb, ws, 'Contatti');
+  return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+}
+
+function generateVcardFiltered() {
+  return contacts.map(contactToVcard).join('\r\n');
+}
+
+function updateExportPreview() {
+  const preview = $('exportPreview');
+  if (!contacts.length || !advExportCols.length) {
+    preview.textContent = advExportCols.length ? 'Nessun contatto' : 'Seleziona almeno una colonna';
+    return;
+  }
+
+  const data = getFilteredData(2);
+
+  try {
+    switch (advExportFormat) {
+      case 'csv':
+      case 'tsv':
+      case 'custom':
+        preview.textContent = generateDelimited(data, getExportSeparator());
+        break;
+      case 'json':
+        preview.textContent = generateJSON(data);
+        break;
+      case 'jsonl':
+        preview.textContent = generateJSONL(data);
+        break;
+      case 'xml':
+        preview.textContent = generateXML(data);
+        break;
+      case 'xlsx':
+        preview.textContent = '[XLSX] — Foglio Excel con ' + contacts.length + ' righe e ' + advExportCols.length + ' colonne.\nAnteprima non disponibile per formato binario.';
+        break;
+      case 'vcard':
+        const vcards = contacts.slice(0, 2).map(contactToVcard).join('\r\n\r\n');
+        preview.textContent = vcards;
+        break;
+    }
+  } catch (e) {
+    preview.textContent = 'Errore: ' + e.message;
+  }
+}
+
+let sheetJSLoaded = false;
+
+async function loadSheetJS() {
+  if (sheetJSLoaded) return;
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onload = () => { sheetJSLoaded = true; resolve(); };
+    s.onerror = () => reject(new Error('Impossibile caricare SheetJS'));
+    document.head.appendChild(s);
+  });
+}
+
+async function executeAdvancedExport() {
+  if (!contacts.length) { toast('Nessun contatto', 'error'); return; }
+  if (!advExportCols.length && advExportFormat !== 'vcard') {
+    toast('Seleziona almeno una colonna', 'error'); return;
+  }
+
+  const data = getFilteredData();
+  const ts = new Date().toISOString().slice(0, 10);
+
+  try {
+    switch (advExportFormat) {
+      case 'csv': {
+        const content = generateDelimited(data, getExportSeparator());
+        downloadFile(content, `contatti_${ts}.csv`, 'text/csv');
+        break;
+      }
+      case 'tsv': {
+        const content = generateDelimited(data, '\t');
+        downloadFile(content, `contatti_${ts}.tsv`, 'text/tab-separated-values');
+        break;
+      }
+      case 'custom': {
+        const sep = getExportSeparator();
+        const content = generateDelimited(data, sep);
+        downloadFile(content, `contatti_${ts}.txt`, 'text/plain');
+        break;
+      }
+      case 'json': {
+        downloadFile(generateJSON(data), `contatti_${ts}.json`, 'application/json');
+        break;
+      }
+      case 'jsonl': {
+        downloadFile(generateJSONL(data), `contatti_${ts}.jsonl`, 'application/x-ndjson');
+        break;
+      }
+      case 'xml': {
+        downloadFile(generateXML(data), `contatti_${ts}.xml`, 'application/xml');
+        break;
+      }
+      case 'xlsx': {
+        toast('Caricamento SheetJS...', 'info');
+        await loadSheetJS();
+        const xlsxData = generateXLSX(data);
+        const blob = new Blob([xlsxData], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `contatti_${ts}.xlsx`;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
+        break;
+      }
+      case 'vcard': {
+        downloadFile(generateVcardFiltered(), `contatti_${ts}.vcf`, 'text/vcard');
+        break;
+      }
+    }
+
+    toast(`✅ ${contacts.length} contatti esportati come ${advExportFormat.toUpperCase()}`, 'success');
+    $('exportModalBackdrop').classList.remove('visible');
+
+  } catch (e) {
+    toast('Errore export: ' + e.message, 'error');
+    console.error('[Export]', e);
+  }
 }
 
 function hashCode(s) {
