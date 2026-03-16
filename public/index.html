@@ -1887,10 +1887,13 @@ async function startCamera() {
     const caps = track.getCapabilities ? track.getCapabilities() : {};
     bt.style.display = caps.torch ? 'inline-flex' : 'none';
   } catch (e) {
+    console.warn('[Camera] Access failed:', e.message);
     v.style.display = 'none';
     ph.style.display = 'flex';
     bf.style.display = 'none';
     bt.style.display = 'none';
+    // Enable scan button anyway — user can switch to Upload or Remote mode
+    $('btnSmartScan').disabled = false;
   }
 }
 
@@ -2006,7 +2009,12 @@ let smartScanAborted = false;
 async function startSmartScan() {
   const video = $('video');
   if (!video.srcObject || video.videoWidth === 0) {
-    toast('Camera non pronta', 'error');
+    // No camera — suggest alternatives
+    if (currentMode === 'local') {
+      toast('📷 Camera non disponibile — usa "File" o "Remoto"', 'info');
+      // Auto-switch to upload mode
+      document.querySelector('[data-mode="upload"]').click();
+    }
     return;
   }
 
