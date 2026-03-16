@@ -314,7 +314,64 @@ main { flex: 1; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
 }
 .photo-preview.zoomed { max-height: none; cursor: zoom-out; }
 
-/* ─── Text Blocks ─── */
+/* ─── Clean Contact Card ─── */
+.clean-card {
+  opacity: 0; transform: translateY(12px);
+  transition: opacity .4s ease, transform .4s ease;
+}
+.clean-card.visible { opacity: 1; transform: translateY(0); }
+.clean-card-header {
+  display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px;
+}
+.clean-card-photo {
+  width: 80px; height: 80px; border-radius: var(--radius2); object-fit: cover;
+  background: #000; flex-shrink: 0; cursor: zoom-in;
+}
+.clean-card-photo.zoomed { width: 100%; height: auto; max-height: none; cursor: zoom-out; }
+.clean-card-identity { flex: 1; min-width: 0; }
+.clean-card-name {
+  font-size: 1.3rem; font-weight: 700; color: var(--fg); line-height: 1.3;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.clean-card-name.placeholder { color: var(--fg4); font-style: italic; }
+.clean-card-role {
+  font-size: .85rem; color: var(--accent2); margin-top: 4px;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.clean-card-company {
+  font-size: .85rem; color: var(--fg3); margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.clean-card-fields {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.cc-field {
+  display: flex; align-items: flex-start; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--bg3);
+}
+.cc-field:last-child { border-bottom: none; }
+.cc-field-icon { font-size: 1rem; width: 24px; text-align: center; flex-shrink: 0; padding-top: 1px; }
+.cc-field-content { flex: 1; min-width: 0; }
+.cc-field-label {
+  font-size: .65rem; color: var(--fg4); text-transform: uppercase; letter-spacing: .5px;
+  margin-bottom: 2px;
+}
+.cc-field-value {
+  font-size: .9rem; color: var(--fg); word-break: break-word; line-height: 1.4;
+}
+.cc-link {
+  color: var(--accent2); text-decoration: none; transition: color var(--transition);
+}
+.cc-link:hover { color: var(--accent3); text-decoration: underline; }
+.clean-card-logo {
+  margin-top: 12px; padding: 10px 12px; background: var(--bg); border-radius: var(--radius2);
+  font-size: .75rem; color: var(--fg4); line-height: 1.4;
+}
+.btn-scan-main {
+  font-size: 1.05rem; padding: 12px 28px;
+}
+
+/* ─── Text Blocks (hidden, kept for compatibility) ─── */
 .text-block {
   display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: var(--radius2);
   margin-bottom: 6px; background: var(--bg); border: 1px solid var(--bg3);
@@ -661,8 +718,7 @@ body {
         </div>
       </div>
       <div class="controls">
-        <button class="btn btn-primary" id="btnCapture" disabled aria-label="Scatta foto">📸 Scatta foto</button>
-        <button class="btn btn-accent" id="btnSmartScan" disabled aria-label="Smart Scan AI">🧠 Smart Scan</button>
+        <button class="btn btn-primary btn-scan-main" id="btnSmartScan" disabled aria-label="Scansiona">📸 Scansiona</button>
         <button class="btn btn-ar" id="btnARScan" disabled aria-label="AR Scan">✨ AR Scan</button>
         <button class="btn btn-secondary" id="btnFlip" style="display:none" aria-label="Inverti fotocamera">🔄 Inverti</button>
         <button class="btn btn-secondary" id="btnTorch" style="display:none" aria-label="Flash">🔦 Flash</button>
@@ -721,18 +777,25 @@ body {
       <div class="progress-bar"><div class="fill" id="ocrProgress" style="width:0"></div></div>
     </div>
 
-    <!-- Results -->
+    <!-- Results — Clean Contact Card -->
     <div class="result-section" id="resultSection" style="display:none">
-      <h3>📋 Testo rilevato</h3>
-      <img class="photo-preview" id="photoPreview" alt="Foto acquisita" loading="lazy">
-      <div id="ocrEngineLabel" style="font-size:.7rem;color:var(--fg4);margin-bottom:12px"></div>
-      <div id="textBlocksContainer" role="list" aria-label="Blocchi di testo rilevati"></div>
-      <div class="field-summary" id="fieldSummary">
-        <h4>Campi assegnati</h4>
-        <div id="fieldRows"></div>
+      <div class="clean-card" id="cleanCard">
+        <div class="clean-card-header">
+          <img class="clean-card-photo" id="photoPreview" alt="Foto acquisita" loading="lazy">
+          <div class="clean-card-identity">
+            <div class="clean-card-name" id="ccName"></div>
+            <div class="clean-card-role" id="ccRole"></div>
+            <div class="clean-card-company" id="ccCompany"></div>
+          </div>
+        </div>
+        <div class="clean-card-fields" id="cleanCardFields"></div>
+        <div class="clean-card-logo" id="ccLogo" style="display:none"></div>
       </div>
+      <!-- Hidden legacy containers for backwards compat -->
+      <div id="ocrEngineLabel" style="display:none"></div>
+      <div id="textBlocksContainer" style="display:none"></div>
+      <div id="fieldSummary" style="display:none"><div id="fieldRows"></div></div>
       <div class="controls" style="margin-top:16px;margin-bottom:0">
-        <button class="btn btn-primary" id="btnNormalizeAI" title="Normalizza i dati con intelligenza artificiale">🤖 Normalizza con AI</button>
         <button class="btn btn-success" id="btnSaveContact">💾 Salva contatto</button>
         <button class="btn btn-secondary" id="btnRetake">🔄 Nuova scansione</button>
       </div>
@@ -1053,7 +1116,6 @@ async function initTesseractFallback() {
       }
     });
     tesseractReady = true;
-    $('btnCapture').disabled = false;
   } catch (e) {
     console.warn('[BizCard] Tesseract init failed:', e);
   }
@@ -1105,7 +1167,6 @@ function switchMode(mode) {
 // ─── LOCAL CAMERA ─────────────────────────────────────────────
 function initScanner() {
   startCamera();
-  $('btnCapture').addEventListener('click', captureLocalPhoto);
   $('btnSmartScan').addEventListener('click', startSmartScan);
   $('btnSmartScanStop').addEventListener('click', () => { smartScanAborted = true; });
   $('btnFlip').addEventListener('click', () => { facingMode = facingMode === 'environment' ? 'user' : 'environment'; startCamera(); });
@@ -1121,7 +1182,6 @@ function initScanner() {
   dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('dragover'); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('image/')) processFile(f); });
   fi.addEventListener('change', (e) => { const f = e.target.files[0]; if (f) processFile(f); fi.value = ''; });
 
-  $('btnNormalizeAI').addEventListener('click', normalizeWithAI);
   $('btnSaveContact').addEventListener('click', saveContact);
   $('btnRetake').addEventListener('click', resetScan);
   $('btnRemoteSmartScan').addEventListener('click', startRemoteSmartScan);
@@ -1145,7 +1205,6 @@ async function startCamera() {
     v.style.display = 'block';
     ph.style.display = 'none';
     bf.style.display = 'inline-flex';
-    $('btnCapture').disabled = false;
     $('btnSmartScan').disabled = false;
     $('btnARScan').disabled = false;
 
@@ -1290,7 +1349,6 @@ async function startSmartScan() {
   $('smartScanOverlay').style.display = 'flex';
   $('btnSmartScan').classList.add('scanning');
   $('btnSmartScan').disabled = true;
-  $('btnCapture').disabled = true;
   $('ssFrameCount').textContent = '0';
   $('ssStatus').textContent = '📸 Acquisizione frame...';
   $('ssDetail').textContent = 'Tieni fermo il biglietto nella guida';
@@ -1385,14 +1443,9 @@ async function startSmartScan() {
     saveState();
 
     classifyBlocks(mergedText);
-    renderBlocks();
-    renderFieldSummary();
-
-    $('resultSection').style.display = 'block';
-    $('ocrEngineLabel').textContent = `Smart Scan: ${ocrResults.length} frame | ${ocrResults[0].engine || 'tesseract'}`;
 
     // ── PHASE 5: Auto AI Normalization ──
-    if (SMART_SCAN_CONFIG.autoNormalize && openaiApiKey && detectedBlocks.length > 0) {
+    if (openaiApiKey && detectedBlocks.length > 0) {
       $('ssStatus').textContent = '✨ Normalizzazione AI...';
       $('ssDetail').textContent = 'GPT-4o-mini sta pulendo i dati...';
       updateSmartScanRing(92);
@@ -1403,10 +1456,14 @@ async function startSmartScan() {
       updateSmartScanRing(100);
     }
 
+    // Show clean contact card
+    $('resultSection').style.display = 'block';
+    renderCleanCard();
+
     // Done!
-    $('ssStatus').textContent = '✅ Smart Scan completato!';
+    $('ssStatus').textContent = '✅ Completato!';
     const fieldCount = detectedBlocks.filter(b => b.type !== 'other' && b.type !== 'ignore').length;
-    $('ssDetail').textContent = `${fieldCount} campi rilevati e normalizzati`;
+    $('ssDetail').textContent = `${fieldCount} campi rilevati`;
     if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
 
     toast('🧠 Smart Scan completato — ' + fieldCount + ' campi trovati!', 'success');
@@ -1430,7 +1487,6 @@ function cleanupSmartScan() {
   smartScanActive = false;
   $('btnSmartScan').classList.remove('scanning');
   $('btnSmartScan').disabled = false;
-  $('btnCapture').disabled = false;
   if (smartScanAborted) {
     $('smartScanOverlay').style.display = 'none';
     toast('Smart Scan interrotto', 'info');
@@ -1651,7 +1707,6 @@ async function startARScan() {
   // UI
   $('btnARScan').classList.add('scanning');
   $('btnARScan').disabled = true;
-  $('btnCapture').disabled = true;
   $('btnSmartScan').disabled = true;
   $('arHud').style.display = 'block';
   $('arCompleteCard').classList.remove('visible', 'flip');
@@ -1677,7 +1732,6 @@ function stopARScan() {
 
   $('btnARScan').classList.remove('scanning');
   $('btnARScan').disabled = false;
-  $('btnCapture').disabled = false;
   $('btnSmartScan').disabled = false;
   $('cameraGuide').style.display = '';
   $('arHud').style.display = 'none';
@@ -2045,10 +2099,8 @@ async function arNormalizeWithAI() {
         const mergedText = Object.values(arDetectedFields).filter(Boolean).join('\n');
         classifyBlocks(mergedText);
         applyNormalizedData(normalized);
-        renderBlocks();
-        renderFieldSummary();
         $('resultSection').style.display = 'block';
-        $('ocrEngineLabel').textContent = 'AR Scan + GPT-4o-mini vision';
+        renderCleanCard();
         scanCount++;
         saveState();
       }
@@ -2537,11 +2589,6 @@ async function finishRemoteSmartScan() {
     saveState();
 
     classifyBlocks(mergedText);
-    renderBlocks();
-    renderFieldSummary();
-
-    $('resultSection').style.display = 'block';
-    $('ocrEngineLabel').textContent = `Smart Scan remoto: ${ocrResults.length} foto | ${ocrResults[0].engine || 'tesseract'}`;
 
     // AI Normalize
     if (openaiApiKey && detectedBlocks.length > 0) {
@@ -2550,8 +2597,12 @@ async function finishRemoteSmartScan() {
       await normalizeWithAI();
     }
 
+    // Show clean contact card
+    $('resultSection').style.display = 'block';
+    renderCleanCard();
+
     updateSmartScanRing(100);
-    $('ssStatus').textContent = '✅ Smart Scan completato!';
+    $('ssStatus').textContent = '✅ Completato!';
     const fieldCount = detectedBlocks.filter(b => b.type !== 'other' && b.type !== 'ignore').length;
     $('ssDetail').textContent = `${fieldCount} campi da ${photos.length} foto`;
     toast('🧠 Smart Scan completato — ' + fieldCount + ' campi!', 'success');
@@ -2575,8 +2626,6 @@ async function processOCR(base64, dataUrl) {
   lastPhotoDataUrl = dataUrl; // Store for saving with contact
   $('photoPreview').src = dataUrl;
   $('photoPreview').classList.remove('zoomed');
-  $('resultSection').style.display = 'block';
-  $('textBlocksContainer').innerHTML = '<div style="color:var(--fg4);text-align:center;padding:24px">⏳ Elaborazione in corso...</div>';
 
   let ocrResult = null;
 
@@ -2620,17 +2669,24 @@ async function processOCR(base64, dataUrl) {
     return;
   }
 
-  $('ocrProgress').style.width = '100%';
-  os.className = 'ocr-status ready';
-
-  const lines = ocrResult.text.split('\n').filter(l => l.trim());
-  $('ocrStatusText').textContent = `✅ ${lines.length} righe rilevate — ${ocrResult.engine || 'tesseract'}`;
-  $('ocrEngineLabel').textContent = `Motore: ${ocrResult.engine || 'tesseract'} | ${lines.length} righe`;
-  setTimeout(() => { os.style.display = 'none'; }, 4000);
+  $('ocrProgress').style.width = '80%';
 
   classifyBlocks(ocrResult.text);
-  renderBlocks();
-  renderFieldSummary();
+
+  // Auto AI Normalization
+  if (openaiApiKey && detectedBlocks.length > 0) {
+    $('ocrStatusText').textContent = '✨ Normalizzazione AI...';
+    await normalizeWithAI();
+  }
+
+  $('ocrProgress').style.width = '100%';
+  os.className = 'ocr-status ready';
+  $('ocrStatusText').textContent = '✅ Analisi completata';
+  setTimeout(() => { os.style.display = 'none'; }, 2000);
+
+  // Show clean contact card
+  $('resultSection').style.display = 'block';
+  renderCleanCard();
 }
 
 async function runTesseract(dataUrl) {
@@ -2936,6 +2992,74 @@ function renderFieldSummary() {
   container.innerHTML = html;
 }
 
+// ─── CLEAN CONTACT CARD RENDERER ──────────────────────────────
+function renderCleanCard() {
+  // Extract field values from detectedBlocks
+  const fields = {};
+  FIELD_TYPES.forEach(ft => {
+    if (ft.key === 'other' || ft.key === 'ignore') return;
+    const values = detectedBlocks
+      .filter(b => b.type === ft.key)
+      .map(b => b.text)
+      .filter(Boolean);
+    if (values.length) fields[ft.key] = values.join(', ');
+  });
+
+  // Header: name, role, company
+  $('ccName').textContent = fields.name || 'Nome non rilevato';
+  $('ccName').classList.toggle('placeholder', !fields.name);
+  $('ccRole').textContent = fields.role || '';
+  $('ccRole').style.display = fields.role ? 'block' : 'none';
+  $('ccCompany').textContent = fields.company || '';
+  $('ccCompany').style.display = fields.company ? 'block' : 'none';
+
+  // Build field rows (skip name/role/company — already in header)
+  const skipKeys = ['name', 'role', 'company'];
+  const fieldOrder = ['email', 'mobile', 'phone', 'web', 'linkedin', 'address', 'city', 'country', 'piva', 'cf', 'fax', 'notes'];
+  const container = $('cleanCardFields');
+  let html = '';
+
+  fieldOrder.forEach(key => {
+    if (!fields[key]) return;
+    const ft = FIELD_TYPES.find(f => f.key === key);
+    if (!ft) return;
+
+    // Make actionable links
+    let valueHtml = esc(fields[key]);
+    if (key === 'email') {
+      valueHtml = fields[key].split(',').map(e => `<a href="mailto:${e.trim()}" class="cc-link">${esc(e.trim())}</a>`).join(', ');
+    } else if (key === 'mobile' || key === 'phone' || key === 'fax') {
+      const num = fields[key].replace(/[^\d+]/g, '');
+      valueHtml = `<a href="tel:${num}" class="cc-link">${esc(fields[key])}</a>`;
+    } else if (key === 'web') {
+      valueHtml = `<a href="${fields[key]}" target="_blank" rel="noopener" class="cc-link">${esc(fields[key])}</a>`;
+    } else if (key === 'linkedin') {
+      valueHtml = `<a href="${fields[key]}" target="_blank" rel="noopener" class="cc-link">${esc(fields[key])}</a>`;
+    }
+
+    html += `<div class="cc-field">
+      <span class="cc-field-icon">${ft.icon}</span>
+      <div class="cc-field-content">
+        <div class="cc-field-label">${ft.label}</div>
+        <div class="cc-field-value">${valueHtml}</div>
+      </div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+
+  // Logo description
+  if (window._lastLogoDescription) {
+    $('ccLogo').textContent = '🏷️ ' + window._lastLogoDescription;
+    $('ccLogo').style.display = 'block';
+  } else {
+    $('ccLogo').style.display = 'none';
+  }
+
+  // Show card with animation
+  $('cleanCard').classList.add('visible');
+}
+
 // ─── AI NORMALIZATION ──────────────────────────────────────────
 const AI_NORMALIZE_PROMPT = `Sei un sistema di data enrichment per un CRM/database commerciale. Ricevi dati OCR grezzi da biglietti da visita e devi restituire dati COMPLETI, PULITI e STRUTTURATI per un database professionale.
 
@@ -3024,11 +3148,7 @@ async function normalizeWithAI() {
   const others = detectedBlocks.filter(b => b.type === 'other');
   if (others.length) currentData.notes = others.map(b => b.text).join('; ');
 
-  // Show loading state
-  const btn = $('btnNormalizeAI');
-  const originalText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = '⏳ Normalizzazione AI...';
+  // Show loading state (button removed — normalization is now automatic)
 
   try {
     // Build messages — if we have the photo, use GPT-4o with vision for logo detection
@@ -3117,8 +3237,6 @@ Rispondi con il JSON completo. Il campo "logo_description" deve descrivere il lo
 
     // Apply normalized data back to detectedBlocks
     applyNormalizedData(normalized);
-    renderBlocks();
-    renderFieldSummary();
 
     toast('✅ Dati normalizzati con AI!', 'success');
     $('apiKeyStatus').textContent = '✅ Funzionante';
@@ -3132,8 +3250,7 @@ Rispondi con il JSON completo. Il campo "logo_description" deve descrivere il lo
       toast('Errore AI: ' + e.message, 'error');
     }
   } finally {
-    btn.disabled = false;
-    btn.textContent = originalText;
+    // normalization complete (automatic pipeline)
   }
 }
 
@@ -3279,8 +3396,11 @@ function resetScan() {
   if (arActive) stopARScan();
   detectedBlocks = [];
   lastPhotoDataUrl = null;
+  window._lastLogoDescription = null;
   $('resultSection').style.display = 'none';
   $('ocrStatus').style.display = 'none';
+  $('cleanCard').classList.remove('visible');
+  $('cleanCardFields').innerHTML = '';
 }
 
 // ─── CONTACTS ─────────────────────────────────────────────────
