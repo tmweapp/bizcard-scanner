@@ -412,6 +412,52 @@ main { flex: 1; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
   border: .5px solid var(--glass-border);
 }
 
+/* ─── 3D Country Flag ─── */
+.cc-flag-wrap {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 14px; padding-bottom: 12px;
+  border-bottom: .5px solid var(--glass-border);
+}
+.cc-flag-3d {
+  perspective: 400px; flex-shrink: 0;
+}
+.cc-flag-img {
+  display: block; width: 56px; height: auto; border-radius: 4px;
+  transform: rotateY(-12deg) rotateX(4deg);
+  box-shadow:
+    3px 3px 8px rgba(0,0,0,.4),
+    6px 6px 20px rgba(0,0,0,.2),
+    -1px -1px 4px rgba(255,255,255,.05);
+  transition: transform .4s cubic-bezier(.4,0,.2,1), box-shadow .4s ease;
+  animation: flag-wave 3s ease-in-out infinite;
+  border: .5px solid rgba(255,255,255,.15);
+}
+.cc-flag-img:hover {
+  transform: rotateY(0deg) rotateX(0deg) scale(1.15);
+  box-shadow:
+    0 8px 24px rgba(0,0,0,.4),
+    0 0 30px var(--glow-purple);
+}
+.cc-flag-shadow {
+  width: 48px; height: 6px; margin: 4px auto 0;
+  background: radial-gradient(ellipse, rgba(0,0,0,.35) 0%, transparent 70%);
+  filter: blur(2px);
+  transform: scaleX(.85);
+  animation: flag-shadow 3s ease-in-out infinite;
+}
+@keyframes flag-wave {
+  0%, 100% { transform: rotateY(-12deg) rotateX(4deg); }
+  50% { transform: rotateY(-8deg) rotateX(2deg) translateY(-1px); }
+}
+@keyframes flag-shadow {
+  0%, 100% { transform: scaleX(.85); opacity: .7; }
+  50% { transform: scaleX(.75); opacity: .5; }
+}
+.cc-flag-country {
+  font-size: .78rem; color: var(--fg3); font-weight: 500;
+  letter-spacing: .3px;
+}
+
 /* ─── Session Banner ─── */
 .session-banner {
   display: flex; justify-content: space-between; align-items: center;
@@ -895,6 +941,14 @@ body {
     <!-- Results — Clean Contact Card -->
     <div class="result-section" id="resultSection" style="display:none">
       <div class="clean-card" id="cleanCard">
+        <!-- 3D Flag -->
+        <div class="cc-flag-wrap" id="ccFlagWrap" style="display:none">
+          <div class="cc-flag-3d">
+            <img class="cc-flag-img" id="ccFlagImg" alt="" loading="lazy">
+            <div class="cc-flag-shadow"></div>
+          </div>
+          <span class="cc-flag-country" id="ccFlagCountry"></span>
+        </div>
         <div class="clean-card-header">
           <img class="clean-card-photo" id="photoPreview" alt="Foto acquisita" loading="lazy">
           <div class="clean-card-identity">
@@ -3135,6 +3189,105 @@ function renderFieldSummary() {
   container.innerHTML = html;
 }
 
+// ─── COUNTRY → ISO FLAG MAP ──────────────────────────────────
+const COUNTRY_ISO = {
+  // Italian names
+  'italia':'it','germania':'de','francia':'fr','spagna':'es','regno unito':'gb','inghilterra':'gb',
+  'svizzera':'ch','austria':'at','belgio':'be','olanda':'nl','paesi bassi':'nl','portogallo':'pt',
+  'grecia':'gr','svezia':'se','norvegia':'no','danimarca':'dk','finlandia':'fi','irlanda':'ie',
+  'polonia':'pl','romania':'ro','ungheria':'hu','repubblica ceca':'cz','slovacchia':'sk',
+  'croazia':'hr','slovenia':'si','serbia':'rs','bulgaria':'bg','lussemburgo':'lu','malta':'mt',
+  'cipro':'cy','estonia':'ee','lettonia':'lv','lituania':'lt','islanda':'is','turchia':'tr',
+  'russia':'ru','ucraina':'ua','bielorussia':'by','moldavia':'md','albania':'al','kosovo':'xk',
+  'macedonia del nord':'mk','montenegro':'me','bosnia':'ba','bosnia ed erzegovina':'ba',
+  'stati uniti':'us','usa':'us','canada':'ca','messico':'mx','brasile':'br','argentina':'ar',
+  'cile':'cl','colombia':'co','peru':'pe','perù':'pe','venezuela':'ve','ecuador':'ec',
+  'uruguay':'uy','paraguay':'py','bolivia':'bo','costa rica':'cr','panama':'pa','cuba':'cu',
+  'repubblica dominicana':'do','guatemala':'gt','honduras':'hn','el salvador':'sv','nicaragua':'ni',
+  'cina':'cn','giappone':'jp','corea del sud':'kr','corea del nord':'kp','india':'in',
+  'indonesia':'id','filippine':'ph','vietnam':'vn','thailandia':'th','malesia':'my',
+  'singapore':'sg','taiwan':'tw','hong kong':'hk','macao':'mo','mongolia':'mn',
+  'pakistan':'pk','bangladesh':'bd','sri lanka':'lk','nepal':'np','myanmar':'mm',
+  'cambogia':'kh','laos':'la','brunei':'bn','timor est':'tl',
+  'arabia saudita':'sa','emirati arabi':'ae','emirati arabi uniti':'ae','qatar':'qa',
+  'kuwait':'kw','bahrein':'bh','oman':'om','yemen':'ye','iraq':'iq','iran':'ir',
+  'israele':'il','palestina':'ps','giordania':'jo','libano':'lb','siria':'sy',
+  'egitto':'eg','marocco':'ma','tunisia':'tn','algeria':'dz','libia':'ly',
+  'sudafrica':'za','sud africa':'za','nigeria':'ng','kenya':'ke','etiopia':'et',
+  'ghana':'gh','tanzania':'tz','uganda':'ug','mozambico':'mz','angola':'ao',
+  'camerun':'cm','costa d\'avorio':'ci','senegal':'sn','madagascar':'mg','congo':'cd',
+  'australia':'au','nuova zelanda':'nz','fiji':'fj','papua nuova guinea':'pg',
+  // English names
+  'italy':'it','germany':'de','france':'fr','spain':'es','united kingdom':'gb','england':'gb',
+  'great britain':'gb','switzerland':'ch','netherlands':'nl','portugal':'pt','greece':'gr',
+  'sweden':'se','norway':'no','denmark':'dk','finland':'fi','ireland':'ie','poland':'pl',
+  'romania':'ro','hungary':'hu','czech republic':'cz','czechia':'cz','slovakia':'sk',
+  'croatia':'hr','serbia':'rs','bulgaria':'bg','luxembourg':'lu','iceland':'is',
+  'turkey':'tr','türkiye':'tr','russia':'ru','ukraine':'ua','belarus':'by',
+  'united states':'us','united states of america':'us','brazil':'br','chile':'cl',
+  'colombia':'co','peru':'pe','costa rica':'cr','dominican republic':'do',
+  'china':'cn','japan':'jp','south korea':'kr','north korea':'kp','india':'in',
+  'indonesia':'id','philippines':'ph','thailand':'th','malaysia':'my','singapore':'sg',
+  'taiwan':'tw','mongolia':'mn','pakistan':'pk','bangladesh':'bd','sri lanka':'lk',
+  'cambodia':'kh','saudi arabia':'sa','united arab emirates':'ae','uae':'ae',
+  'qatar':'qa','kuwait':'kw','bahrain':'bh','iraq':'iq','iran':'ir','israel':'il',
+  'jordan':'jo','lebanon':'lb','syria':'sy','egypt':'eg','morocco':'ma',
+  'tunisia':'tn','algeria':'dz','libya':'ly','south africa':'za','nigeria':'ng',
+  'kenya':'ke','ethiopia':'et','ghana':'gh','tanzania':'tz','australia':'au',
+  'new zealand':'nz',
+  // German names
+  'deutschland':'de','frankreich':'fr','spanien':'es','vereinigtes königreich':'gb',
+  'österreich':'at','belgien':'be','niederlande':'nl','schweden':'se','norwegen':'no',
+  'dänemark':'dk','finnland':'fi','irland':'ie','griechenland':'gr','tschechien':'cz',
+  'slowakei':'sk','kroatien':'hr','serbien':'rs','bulgarien':'bg','rumänien':'ro',
+  'ungarn':'hu','luxemburg':'lu','vereinigte staaten':'us','brasilien':'br',
+  'argentinien':'ar','mexiko':'mx','kolumbien':'co','china':'cn','indien':'in',
+  'südafrika':'za','ägypten':'eg','marokko':'ma','australien':'au','neuseeland':'nz',
+  // French names
+  'allemagne':'de','espagne':'es','royaume-uni':'gb','suisse':'ch','autriche':'at',
+  'belgique':'be','pays-bas':'nl','suède':'se','norvège':'no','danemark':'dk',
+  'finlande':'fi','irlande':'ie','grèce':'gr','pologne':'pl','roumanie':'ro',
+  'hongrie':'hu','états-unis':'us','brésil':'br','argentine':'ar','mexique':'mx',
+  'chine':'cn','japon':'jp','inde':'in','afrique du sud':'za','égypte':'eg',
+  'maroc':'ma','tunisie':'tn','algérie':'dz','australie':'au','nouvelle-zélande':'nz',
+  // Spanish names
+  'alemania':'de','francia':'fr','españa':'es','reino unido':'gb','suiza':'ch',
+  'países bajos':'nl','suecia':'se','noruega':'no','dinamarca':'dk','finlandia':'fi',
+  'irlanda':'ie','grecia':'gr','hungría':'hu','estados unidos':'us','brasil':'br',
+  'japón':'jp','corea del sur':'kr','sudáfrica':'za','egipto':'eg','marruecos':'ma',
+  // Portuguese names
+  'alemanha':'de','espanha':'es','reino unido':'gb','suíça':'ch','países baixos':'nl',
+  'suécia':'se','noruega':'no','dinamarca':'dk','finlândia':'fi','irlanda':'ie',
+  'grécia':'gr','hungria':'hu','estados unidos':'us','japão':'jp','china':'cn',
+  'índia':'in','áfrica do sul':'za','egito':'eg','marrocos':'ma','austrália':'au',
+  // Common abbreviations
+  'uk':'gb','gb':'gb','us':'us','usa':'us','uae':'ae','rsa':'za','prc':'cn','rok':'kr',
+  'ch':'ch','de':'de','fr':'fr','es':'es','it':'it','nl':'nl','at':'at','be':'be',
+  'pt':'pt','pl':'pl','se':'se','no':'no','dk':'dk','fi':'fi','ie':'ie','cz':'cz',
+  'jp':'jp','cn':'cn','kr':'kr','in':'in','au':'au','nz':'nz','br':'br','ar':'ar',
+  'mx':'mx','ca':'ca','za':'za','eg':'eg','ma':'ma','tn':'tn','tr':'tr','ru':'ru',
+  'il':'il','sg':'sg','hk':'hk','tw':'tw','th':'th','my':'my','id':'id','ph':'ph',
+  'vn':'vn',
+};
+
+function getCountryISO(countryStr) {
+  if (!countryStr) return null;
+  // Clean: remove parentheses content, trim
+  let c = countryStr.replace(/\(.*?\)/g, '').trim().toLowerCase();
+  // Direct match
+  if (COUNTRY_ISO[c]) return COUNTRY_ISO[c];
+  // Try without accents
+  const noAccent = c.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (COUNTRY_ISO[noAccent]) return COUNTRY_ISO[noAccent];
+  // Try partial match (country name contains one of our keys)
+  for (const [name, code] of Object.entries(COUNTRY_ISO)) {
+    if (name.length > 3 && c.includes(name)) return code;
+  }
+  // If it's already a 2-letter code
+  if (c.length === 2 && /^[a-z]{2}$/.test(c)) return c;
+  return null;
+}
+
 // ─── CLEAN CONTACT CARD RENDERER ──────────────────────────────
 function renderCleanCard() {
   // Extract field values from detectedBlocks
@@ -3197,6 +3350,21 @@ function renderCleanCard() {
     $('ccLogo').style.display = 'block';
   } else {
     $('ccLogo').style.display = 'none';
+  }
+
+  // 3D Flag from country
+  const isoCode = getCountryISO(fields.country);
+  if (isoCode) {
+    const flagUrl = `https://flagcdn.com/w160/${isoCode}.png`;
+    $('ccFlagImg').src = flagUrl;
+    $('ccFlagImg').alt = fields.country;
+    $('ccFlagCountry').textContent = fields.country;
+    $('ccFlagWrap').style.display = 'flex';
+    // Preload to avoid flicker
+    const preload = new Image();
+    preload.src = flagUrl;
+  } else {
+    $('ccFlagWrap').style.display = 'none';
   }
 
   // Show card with animation
