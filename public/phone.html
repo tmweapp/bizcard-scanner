@@ -333,12 +333,21 @@ body {
         document.getElementById('btnTorch').style.visibility = caps.torch ? 'visible' : 'hidden';
       } catch (e) {}
 
-      // Enable capture ONLY after video is ready
-      video.addEventListener('loadedmetadata', () => {
-        if (conn && conn.open) {
+      // Track that camera is ready — button enabled when BOTH camera + connection are ready
+      const enableCaptureIfReady = () => {
+        if (currentStream && conn && conn.open) {
           document.getElementById('btnCapture').disabled = false;
+          dbg('Capture enabled');
         }
+      };
+      video.addEventListener('loadedmetadata', () => {
         dbg('Video ready: ' + video.videoWidth + 'x' + video.videoHeight);
+        enableCaptureIfReady();
+      }, { once: true });
+      // Also try on 'playing' event (more reliable on iOS Safari)
+      video.addEventListener('playing', () => {
+        dbg('Video playing');
+        enableCaptureIfReady();
       }, { once: true });
 
     } catch (e) {
@@ -431,11 +440,19 @@ body {
         setStatus('connected', '✅ Connesso al desktop');
         dbg('Connected to desktop!');
 
-        // Enable capture if video is ready
+        // Enable capture — camera may already be ready
         const video = document.getElementById('video');
-        if (video.srcObject && video.videoWidth > 0) {
+        if (currentStream) {
+          // Enable immediately if stream exists, even if videoWidth is 0 (Safari quirk)
           document.getElementById('btnCapture').disabled = false;
+          dbg('Capture enabled on connection open');
         }
+        // Also retry after a short delay for Safari where videoWidth lags
+        setTimeout(() => {
+          if (currentStream && conn && conn.open) {
+            document.getElementById('btnCapture').disabled = false;
+          }
+        }, 500);
       });
 
       conn.on('close', () => {
@@ -504,8 +521,11 @@ body {
   // ─── Capture Photo ───
   document.getElementById('btnCapture').addEventListener('click', () => {
     const video = document.getElementById('video');
-    if (!video.srcObject || video.videoWidth === 0) {
-      dbg('Cannot capture: video not ready');
+    // Use videoWidth, fall back to clientWidth (Safari sometimes reports 0 for videoWidth)
+    const vw = video.videoWidth || video.clientWidth || 1280;
+    const vh = video.videoHeight || video.clientHeight || 720;
+    if (!video.srcObject) {
+      dbg('Cannot capture: no video stream');
       return;
     }
 
@@ -517,15 +537,15 @@ body {
     setTimeout(() => guide.classList.remove('flash'), 400);
 
     // Capture at reduced resolution for WebRTC
-    const scale = Math.min(MAX_IMAGE_WIDTH / video.videoWidth, 1);
-    captureCanvas.width = Math.round(video.videoWidth * scale);
-    captureCanvas.height = Math.round(video.videoHeight * scale);
+    const scale = Math.min(MAX_IMAGE_WIDTH / vw, 1);
+    captureCanvas.width = Math.round(vw * scale);
+    captureCanvas.height = Math.round(vh * scale);
     captureCtx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
 
     const dataUrl = captureCanvas.toDataURL('image/jpeg', JPEG_QUALITY);
     pendingBase64 = dataUrl.split(',')[1];
 
-    dbg('Photo captured: ' + captureCanvas.width + 'x' + captureCanvas.height + ', size: ' + Math.round(pendingBase64.length / 1024) + 'KB');
+    dbg('Photo captured: ' + captureCanvas.width + 'x' + captureCanvas.height + ' (src: ' + vw + 'x' + vh + '), size: ' + Math.round(pendingBase64.length / 1024) + 'KB');
 
     // Show preview
     document.getElementById('previewImg').src = dataUrl;

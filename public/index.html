@@ -60,6 +60,34 @@ header h1 { font-size: 1.15rem; font-weight: 700; display: flex; align-items: ce
 header h1 span { font-size: 1.3rem; }
 .version-badge { font-size: .6rem; background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
 
+/* ─── API Key Bar ─── */
+.api-key-bar {
+  background: var(--bg2); border-bottom: 1px solid var(--bg3);
+  padding: 8px 16px; font-size: .8rem;
+}
+.api-key-inner {
+  max-width: 900px; margin: 0 auto;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.api-key-label { color: var(--fg3); font-weight: 600; white-space: nowrap; font-size: .78rem; }
+.api-key-input-wrap { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 200px; }
+.api-key-input-wrap input {
+  flex: 1; background: var(--bg); border: 1px solid var(--bg3); color: var(--fg);
+  padding: 6px 10px; border-radius: var(--radius2); font-size: .8rem;
+  font-family: 'SF Mono', 'Fira Code', monospace; min-width: 0;
+}
+.api-key-input-wrap input:focus { border-color: var(--accent); outline: none; }
+.api-key-toggle, .api-key-save {
+  background: var(--bg3); border: none; color: var(--fg2); padding: 6px 10px;
+  border-radius: var(--radius2); cursor: pointer; font-size: .75rem; white-space: nowrap;
+  transition: all var(--transition);
+}
+.api-key-save { background: var(--accent); color: #fff; font-weight: 600; }
+.api-key-save:hover { background: var(--accent2); }
+.api-key-status { font-size: .72rem; color: var(--green); white-space: nowrap; }
+.api-key-status.error { color: var(--red); }
+.api-key-bar.has-key .api-key-input-wrap input { color: var(--fg4); }
+
 /* ─── Navigation ─── */
 nav { display: flex; background: var(--bg2); border-bottom: 1px solid var(--bg3); overflow-x: auto; -webkit-overflow-scrolling: touch; }
 nav button {
@@ -336,6 +364,15 @@ body {
   .mode-btn { padding: 8px; }
   header h1 .version-badge { display: none; }
   .export-options { grid-template-columns: 1fr; }
+  .api-key-bar { padding: 6px 10px; }
+  .api-key-label { display: none; }
+}
+
+/* ─── Phones ─── */
+@media (max-width: 600px) {
+  .api-key-inner { flex-wrap: wrap; }
+  .api-key-input-wrap { min-width: 100%; order: 2; }
+  .api-key-status { order: 3; }
 }
 
 /* ─── Tablets ─── */
@@ -356,6 +393,19 @@ body {
 <header>
   <h1><span>📇</span> BizCard Scanner <span class="version-badge">v4</span></h1>
 </header>
+
+<!-- API Key Bar -->
+<div class="api-key-bar" id="apiKeyBar">
+  <div class="api-key-inner">
+    <span class="api-key-label">🔑 OpenAI API Key</span>
+    <div class="api-key-input-wrap">
+      <input type="password" id="openaiKeyInput" placeholder="sk-..." autocomplete="off" spellcheck="false">
+      <button class="api-key-toggle" id="btnToggleKey" title="Mostra/nascondi">👁️</button>
+      <button class="api-key-save" id="btnSaveKey">Salva</button>
+    </div>
+    <span class="api-key-status" id="apiKeyStatus"></span>
+  </div>
+</div>
 
 <nav role="tablist" aria-label="Sezioni principali">
   <button class="active" data-tab="scanner" role="tab" aria-selected="true" aria-controls="panel-scanner">📷 Scansiona</button>
@@ -439,6 +489,7 @@ body {
         <div id="fieldRows"></div>
       </div>
       <div class="controls" style="margin-top:16px;margin-bottom:0">
+        <button class="btn btn-primary" id="btnNormalizeAI" title="Normalizza i dati con intelligenza artificiale">🤖 Normalizza con AI</button>
         <button class="btn btn-success" id="btnSaveContact">💾 Salva contatto</button>
         <button class="btn btn-secondary" id="btnRetake">🔄 Nuova scansione</button>
       </div>
@@ -599,6 +650,7 @@ const MAX_PEER_RETRIES = 10;
 let phoneConnected = false;
 let lastPhotoDataUrl = null; // Store photo with contact
 let detectedBlocks = []; // [{ text, type, confidence }]
+let openaiApiKey = ''; // Stored in memory only (not in localStorage for security)
 
 // ─── DOM HELPERS ──────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
@@ -613,6 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initContacts();
   initExport();
   initSettings();
+  initApiKeyBar();
   checkOcrApi();
   initTesseractFallback();
 });
@@ -739,6 +792,7 @@ function initScanner() {
   dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('dragover'); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('image/')) processFile(f); });
   fi.addEventListener('change', (e) => { const f = e.target.files[0]; if (f) processFile(f); fi.value = ''; });
 
+  $('btnNormalizeAI').addEventListener('click', normalizeWithAI);
   $('btnSaveContact').addEventListener('click', saveContact);
   $('btnRetake').addEventListener('click', resetScan);
 
@@ -1374,6 +1428,193 @@ function renderFieldSummary() {
   container.innerHTML = html;
 }
 
+// ─── AI NORMALIZATION ──────────────────────────────────────────
+const AI_NORMALIZE_PROMPT = `Sei un assistente specializzato nella normalizzazione dei dati estratti da biglietti da visita tramite OCR.
+
+Riceverai un JSON con i campi estratti da un biglietto da visita. Il tuo compito è:
+
+1. **Nome**: Formatta in Title Case corretto (es. "MARIO ROSSI" → "Mario Rossi", "mario rossi" → "Mario Rossi"). Rimuovi titoli professionali (Dott., Ing., Avv.) dal nome e spostali nel ruolo se non già presente.
+2. **Azienda**: Formatta correttamente (es. "ACME SRL" → "Acme S.r.l.", mantieni abbreviazioni standard).
+3. **Email**: Minuscolo, rimuovi spazi accidentali.
+4. **Telefono**: Formato internazionale italiano +39 XXX XXX XXXX. Separa più numeri con virgola.
+5. **Ruolo/Titolo**: Capitalizza correttamente. Traduci abbreviazioni (es. "amm. del." → "Amministratore Delegato").
+6. **Sito web**: Aggiungi https:// se mancante. Minuscolo.
+7. **Indirizzo**: Formatta correttamente con maiuscole appropriate (Via, Piazza, ecc.). CAP + Città + Provincia.
+8. **P.IVA**: Formato IT + 11 cifre, rimuovi spazi.
+9. **Codice Fiscale**: Tutto maiuscolo, rimuovi spazi.
+10. **Fax**: Stesso formato del telefono.
+
+REGOLE IMPORTANTI:
+- Se un campo è vuoto o non presente, restituisci stringa vuota "".
+- NON inventare dati. Se un dato sembra corrotto o illeggibile, restituiscilo come era con minime correzioni.
+- Se il testo OCR ha errori evidenti di riconoscimento (es. "0" al posto di "O", "l" al posto di "1"), correggili intelligentemente.
+- Rispondi SOLO con il JSON normalizzato, senza spiegazioni.
+
+Formato di risposta richiesto (JSON):
+{
+  "name": "",
+  "company": "",
+  "email": "",
+  "phone": "",
+  "role": "",
+  "web": "",
+  "address": "",
+  "piva": "",
+  "cf": "",
+  "fax": "",
+  "notes": ""
+}`;
+
+async function normalizeWithAI() {
+  if (!openaiApiKey) {
+    toast('Inserisci la tua API Key OpenAI nel campo in alto', 'error');
+    $('openaiKeyInput').focus();
+    $('apiKeyBar').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+
+  if (!detectedBlocks.length) {
+    toast('Nessun dato da normalizzare', 'error');
+    return;
+  }
+
+  // Build current data from detected blocks
+  const currentData = {};
+  FIELD_TYPES.forEach(ft => {
+    if (ft.key === 'other' || ft.key === 'ignore') return;
+    const values = detectedBlocks
+      .filter(b => b.type === ft.key)
+      .map(b => b.text)
+      .join(', ');
+    currentData[ft.key] = values;
+  });
+  const others = detectedBlocks.filter(b => b.type === 'other');
+  if (others.length) currentData.notes = others.map(b => b.text).join('; ');
+
+  // Show loading state
+  const btn = $('btnNormalizeAI');
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Normalizzazione AI...';
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + openaiApiKey,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: AI_NORMALIZE_PROMPT },
+          { role: 'user', content: 'Normalizza questi dati del biglietto da visita:\n\n' + JSON.stringify(currentData, null, 2) },
+        ],
+        temperature: 0.1,
+        max_tokens: 1000,
+      }),
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        toast('API Key OpenAI non valida. Verifica la chiave.', 'error');
+        $('apiKeyStatus').textContent = '❌ Chiave non valida';
+        $('apiKeyStatus').className = 'api-key-status error';
+      } else if (response.status === 429) {
+        toast('Limite richieste OpenAI raggiunto. Riprova tra poco.', 'error');
+      } else {
+        toast('Errore OpenAI: ' + (errData.error?.message || response.status), 'error');
+      }
+      return;
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+
+    if (!content) {
+      toast('Risposta AI vuota', 'error');
+      return;
+    }
+
+    // Parse the JSON response (handle markdown code blocks)
+    let normalized;
+    try {
+      const jsonStr = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      normalized = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      console.error('[BizCard] AI response parse error:', content);
+      toast('Errore nel parsing della risposta AI', 'error');
+      return;
+    }
+
+    // Apply normalized data back to detectedBlocks
+    applyNormalizedData(normalized);
+    renderBlocks();
+    renderFieldSummary();
+
+    toast('✅ Dati normalizzati con AI!', 'success');
+    $('apiKeyStatus').textContent = '✅ Funzionante';
+    $('apiKeyStatus').className = 'api-key-status';
+
+  } catch (e) {
+    console.error('[BizCard] AI normalization error:', e);
+    if (e.name === 'TypeError' && e.message.includes('fetch')) {
+      toast('Errore di rete. Verifica la connessione.', 'error');
+    } else {
+      toast('Errore AI: ' + e.message, 'error');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
+function applyNormalizedData(normalized) {
+  // For each field type, update existing blocks or create new ones
+  const fieldKeys = FIELD_TYPES.filter(f => f.key !== 'other' && f.key !== 'ignore').map(f => f.key);
+
+  fieldKeys.forEach(key => {
+    const newValue = (normalized[key] || '').trim();
+    if (!newValue) return;
+
+    // Find existing blocks of this type
+    const existingBlocks = detectedBlocks.filter(b => b.type === key);
+
+    if (existingBlocks.length > 0) {
+      // If the AI merged multiple values into one, update the first and remove extras
+      if (existingBlocks.length === 1) {
+        existingBlocks[0].text = newValue;
+        existingBlocks[0].confidence = 0.99; // AI-normalized
+      } else {
+        // Multiple blocks → keep first with merged value, mark others as ignore
+        existingBlocks[0].text = newValue;
+        existingBlocks[0].confidence = 0.99;
+        for (let i = 1; i < existingBlocks.length; i++) {
+          existingBlocks[i].type = 'ignore';
+          existingBlocks[i].confidence = 0.5;
+        }
+      }
+    } else if (newValue) {
+      // AI found a field that wasn't detected — check if any 'other' block should be reassigned
+      const otherBlock = detectedBlocks.find(b => b.type === 'other' || b.type === 'ignore');
+      if (otherBlock) {
+        otherBlock.text = newValue;
+        otherBlock.type = key;
+        otherBlock.confidence = 0.95;
+      }
+    }
+  });
+
+  // Handle notes from AI
+  if (normalized.notes) {
+    const existingNotes = detectedBlocks.find(b => b.type === 'other');
+    if (existingNotes) {
+      existingNotes.text = normalized.notes;
+    }
+  }
+}
+
 // ─── SAVE CONTACT ─────────────────────────────────────────────
 function saveContact() {
   const contact = {
@@ -1610,6 +1851,71 @@ function initSettings() {
 function updateStats() {
   $('statContacts').textContent = contacts.length;
   $('statScans').textContent = scanCount;
+}
+
+// ─── API KEY BAR ──────────────────────────────────────────────
+function initApiKeyBar() {
+  const input = $('openaiKeyInput');
+  const btnSave = $('btnSaveKey');
+  const btnToggle = $('btnToggleKey');
+  const status = $('apiKeyStatus');
+
+  // Load from localStorage (encrypted/obfuscated for basic protection)
+  try {
+    const stored = localStorage.getItem('bizcard_oai_key');
+    if (stored) {
+      openaiApiKey = atob(stored); // decode
+      input.value = openaiApiKey;
+      $('apiKeyBar').classList.add('has-key');
+      status.textContent = '✅ Chiave salvata';
+      status.className = 'api-key-status';
+    }
+  } catch (e) { /* no stored key */ }
+
+  // Save key
+  btnSave.addEventListener('click', () => {
+    const key = input.value.trim();
+    if (!key) {
+      // Clear key
+      openaiApiKey = '';
+      localStorage.removeItem('bizcard_oai_key');
+      $('apiKeyBar').classList.remove('has-key');
+      status.textContent = '';
+      toast('API Key rimossa', 'info');
+      return;
+    }
+    if (!key.startsWith('sk-')) {
+      toast('La chiave OpenAI deve iniziare con "sk-"', 'error');
+      status.textContent = '❌ Formato non valido';
+      status.className = 'api-key-status error';
+      return;
+    }
+    openaiApiKey = key;
+    // Store encoded in localStorage
+    try { localStorage.setItem('bizcard_oai_key', btoa(key)); } catch (e) {}
+    $('apiKeyBar').classList.add('has-key');
+    status.textContent = '✅ Chiave salvata';
+    status.className = 'api-key-status';
+    toast('API Key OpenAI salvata', 'success');
+    // Clear the visible value and show dots
+    input.type = 'password';
+  });
+
+  // Toggle visibility
+  btnToggle.addEventListener('click', () => {
+    if (input.type === 'password') {
+      input.type = 'text';
+      btnToggle.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btnToggle.textContent = '👁️';
+    }
+  });
+
+  // Enter key to save
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') btnSave.click();
+  });
 }
 
 // ─── UTILITIES ────────────────────────────────────────────────
