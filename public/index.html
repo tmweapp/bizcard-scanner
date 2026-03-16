@@ -3927,6 +3927,11 @@ function autoSaveAndContinue() {
   currentSession.photoCount++;
   saveState();
 
+  // Update UI: contacts list, stats, export state
+  renderContacts();
+  updateStats();
+  updateExportState();
+
   // Update session banner
   $('sessionCardCount').textContent = currentSession.cardIds.length;
 
@@ -4059,6 +4064,9 @@ function saveContact() {
 
   contacts.push(contact);
   saveState();
+  renderContacts();
+  updateStats();
+  updateExportState();
   toast('✅ Salvato: ' + (contact.name || contact.email || contact.phone), 'success');
   if (navigator.vibrate) navigator.vibrate(200);
   resetScan();
@@ -4160,6 +4168,8 @@ function deleteContact(id) {
   contacts = contacts.filter(c => c.id !== id);
   saveState();
   renderContacts();
+  updateStats();
+  updateExportState();
   toast('Contatto eliminato', 'info');
 }
 
@@ -4258,7 +4268,9 @@ function initSettings() {
     scanCount = 0;
     saveState();
     toast('Tutti i dati sono stati eliminati', 'info');
+    renderContacts();
     updateStats();
+    updateExportState();
   });
 }
 
