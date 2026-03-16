@@ -167,6 +167,8 @@ let remoteSmartBuffer = []; // Accumulate remote photos for Smart Scan
 let remoteSmartActive = false; // Whether we're collecting for Smart Scan
 let phoneBridgeConn = null;    // PeerJS connection to desktop (when this device is the phone)
 let isPhoneBridge = false;     // True when running as remote phone (?s= param detected)
+let dualFaceMode = false;      // Two-sided business card scanning
+let dualFacePending = null;    // Stores OCR text from face 1 while waiting for face 2
 
 // ─── DOM HELPERS ──────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);

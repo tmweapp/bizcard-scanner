@@ -189,7 +189,30 @@ main { flex: 1; padding: 8px; max-width: 1200px; margin: 0 auto; width: 100%; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
 
 /* ─── Buttons ─── */
-.controls { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.controls { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; align-items: center; }
+
+/* Dual face toggle */
+.dual-face-toggle {
+  background: var(--glass2); border: .5px solid var(--glass-border); color: var(--fg3);
+  padding: 6px 8px; border-radius: 8px; position: relative;
+}
+.dual-face-toggle.active {
+  background: rgba(124,91,245,.2); border-color: var(--accent); color: var(--accent);
+  box-shadow: 0 0 12px var(--glow-purple);
+}
+.dual-face-badge {
+  position: absolute; top: -5px; right: -5px; width: 16px; height: 16px;
+  background: var(--accent); color: #fff; border-radius: 50%;
+  font-size: .55rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,.4);
+}
+.dual-face-status {
+  display: none; padding: 6px 12px; border-radius: 8px; font-size: .75rem; font-weight: 600;
+  background: rgba(124,91,245,.12); border: .5px solid var(--accent); color: var(--accent);
+  text-align: center; margin-bottom: 6px; animation: pulse 1.5s ease-in-out infinite;
+}
+.dual-face-status.visible { display: block; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
 .btn {
   display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px;
   border: .5px solid var(--glass-border); border-radius: 8px; font-size: .75rem; font-weight: 600;

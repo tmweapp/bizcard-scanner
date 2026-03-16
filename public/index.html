@@ -24,7 +24,7 @@
 <header>
   <h1>
     <svg class="header-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--lilac)" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M4 18c0-2 2.5-3.5 5-3.5s5 1.5 5 3.5"/><line x1="15" y1="9" x2="20" y2="9"/><line x1="15" y1="12" x2="19" y2="12"/></svg>
-    BizCard <span class="version-badge">v5.1</span>
+    BizCard <span class="version-badge">v5.2</span>
   </h1>
 </header>
 
@@ -109,7 +109,10 @@
       <div class="controls">
         <button class="btn btn-primary btn-scan-main" id="btnSmartScan" disabled aria-label="Scansiona">
           <svg class="btn-ico" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          Scansiona
+          <span id="btnScanLabel">Scansiona</span>
+        </button>
+        <button class="btn btn-icon dual-face-toggle" id="btnDualFace" title="Biglietto a 2 facciate" aria-label="Modalità doppia facciata">
+          <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/><text x="7" y="14" font-size="8" fill="currentColor" stroke="none" text-anchor="middle">1</text><text x="17" y="14" font-size="8" fill="currentColor" stroke="none" text-anchor="middle">2</text></svg>
         </button>
         <button class="btn btn-secondary btn-icon" id="btnFlip" style="display:none" aria-label="Inverti fotocamera" title="Inverti">
           <svg class="btn-ico" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -153,6 +156,9 @@
 
     <!-- ─── RIGHT: Live Card + Results ─── -->
     <div class="scanner-right">
+
+    <!-- Dual Face Status -->
+    <div class="dual-face-status" id="dualFaceStatus">📸 Facciata 1 di 2 — scansiona il fronte del biglietto</div>
 
     <!-- Smart Scan Progress Overlay (shared by local + remote) -->
     <div class="smart-scan-overlay" id="smartScanOverlay" style="display:none">

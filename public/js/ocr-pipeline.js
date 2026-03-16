@@ -53,7 +53,29 @@ async function processOCR(base64, dataUrl) {
 
   $('ocrProgress').style.width = '80%';
 
-  classifyBlocks(ocrResult.text);
+  // ── DUAL FACE: intercept before classification ──
+  if (dualFaceMode && !dualFacePending) {
+    // Face 1 captured — store text and wait for face 2
+    dualFacePending = ocrResult.text;
+    $('ocrProgress').style.width = '100%';
+    os.className = 'ocr-status ready';
+    $('ocrStatusText').textContent = '✅ Fronte acquisito — ora scansiona il retro';
+    setTimeout(() => { os.style.display = 'none'; }, 2000);
+    advanceDualFaceUI();
+    toast('Fronte acquisito! Ora scansiona il retro del biglietto', 'success');
+    return;
+  }
+
+  let finalText = ocrResult.text;
+  if (dualFaceMode && dualFacePending) {
+    // Face 2 captured — merge both faces
+    finalText = dualFacePending + '\n' + ocrResult.text;
+    dualFacePending = null;
+    resetDualFaceUI();
+    toast('Entrambe le facciate acquisite! Elaborazione...', 'success');
+  }
+
+  classifyBlocks(finalText);
 
   // Auto AI Normalization
   if (openaiApiKey && detectedBlocks.length > 0) {

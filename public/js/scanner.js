@@ -111,6 +111,60 @@ function initScanner() {
 
   // Photo preview zoom toggle
   $('photoPreview').addEventListener('click', function() { this.classList.toggle('zoomed'); });
+
+  // Dual face (two-sided business card) toggle
+  $('btnDualFace').addEventListener('click', toggleDualFace);
+}
+
+// ─── DUAL FACE MODE ────────────────────────────────────────────
+function toggleDualFace() {
+  dualFaceMode = !dualFaceMode;
+  const btn = $('btnDualFace');
+  const status = $('dualFaceStatus');
+  const label = $('btnScanLabel');
+
+  if (dualFaceMode) {
+    btn.classList.add('active');
+    // Add badge "2"
+    if (!btn.querySelector('.dual-face-badge')) {
+      const badge = document.createElement('span');
+      badge.className = 'dual-face-badge';
+      badge.textContent = '2';
+      btn.appendChild(badge);
+    }
+    label.textContent = 'Scansiona Fronte';
+    status.textContent = '📸 Facciata 1 di 2 — scansiona il fronte del biglietto';
+    status.classList.add('visible');
+    toast('Modalità doppia facciata attivata', 'info');
+  } else {
+    btn.classList.remove('active');
+    const badge = btn.querySelector('.dual-face-badge');
+    if (badge) badge.remove();
+    label.textContent = 'Scansiona';
+    status.classList.remove('visible');
+    dualFacePending = null;
+    toast('Modalità doppia facciata disattivata', 'info');
+  }
+}
+
+function resetDualFaceUI() {
+  const label = $('btnScanLabel');
+  const status = $('dualFaceStatus');
+  if (dualFaceMode) {
+    label.textContent = 'Scansiona Fronte';
+    status.textContent = '📸 Facciata 1 di 2 — scansiona il fronte del biglietto';
+    status.classList.add('visible');
+  } else {
+    label.textContent = 'Scansiona';
+    status.classList.remove('visible');
+  }
+  dualFacePending = null;
+}
+
+function advanceDualFaceUI() {
+  // Called after face 1 is captured — update UI for face 2
+  $('btnScanLabel').textContent = 'Scansiona Retro';
+  $('dualFaceStatus').textContent = '📸 Facciata 2 di 2 — ora scansiona il retro del biglietto';
 }
 
 async function startCamera() {

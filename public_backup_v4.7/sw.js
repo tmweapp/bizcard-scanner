@@ -1,22 +1,12 @@
 // ═══════════════════════════════════════════════════════════
-//  BizCard Scanner — Service Worker v5.0
+//  BizCard Scanner — Service Worker v4
 //  Handles: offline caching, PWA install, background sync
 // ═══════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'bizcard-v5.2';
+const CACHE_NAME = 'bizcard-v4.7';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/styles.css',
-  '/js/app-config.js',
-  '/js/supabase-sync.js',
-  '/js/scanner.js',
-  '/js/smart-scan.js',
-  '/js/phone-bridge.js',
-  '/js/ocr-pipeline.js',
-  '/js/contacts.js',
-  '/js/export.js',
-  '/js/ui-init.js',
   '/manifest.json',
   '/icon-192x192.png',
   '/icon-512x512.png',
@@ -76,7 +66,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For app pages and JS files: network-first, fall back to cache
+  // For app pages: network-first, fall back to cache
   event.respondWith(
     fetch(event.request)
       .then((response) => {

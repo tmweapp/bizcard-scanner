@@ -134,7 +134,25 @@ async function startSmartScan() {
     scanCount++;
     saveState();
 
-    classifyBlocks(mergedText);
+    // ── DUAL FACE: intercept before classification ──
+    if (dualFaceMode && !dualFacePending) {
+      dualFacePending = mergedText;
+      updateLiveProgress(100);
+      advanceDualFaceUI();
+      toast('Fronte acquisito! Ora scansiona il retro del biglietto', 'success');
+      cleanupSmartScan();
+      return;
+    }
+
+    let finalText = mergedText;
+    if (dualFaceMode && dualFacePending) {
+      finalText = dualFacePending + '\n' + mergedText;
+      dualFacePending = null;
+      resetDualFaceUI();
+      toast('Entrambe le facciate acquisite! Elaborazione...', 'success');
+    }
+
+    classifyBlocks(finalText);
     populateLiveCardFromBlocks();
 
     // ── PHASE 5: Auto AI Normalization ──
@@ -790,10 +808,26 @@ async function arNormalizeWithAI() {
         if (lastPhotoDataUrl) $('photoPreview').src = lastPhotoDataUrl;
 
         const mergedText = Object.values(arDetectedFields).filter(Boolean).join('\n');
-        classifyBlocks(mergedText);
-        applyNormalizedData(normalized);
-        $('resultSection').style.display = 'block';
-        renderCleanCard();
+
+        // ── DUAL FACE: intercept before classification ──
+        if (dualFaceMode && !dualFacePending) {
+          dualFacePending = mergedText;
+          advanceDualFaceUI();
+          toast('Fronte acquisito! Ora scansiona il retro del biglietto', 'success');
+          // Don't classify yet — wait for face 2
+        } else {
+          let arFinalText = mergedText;
+          if (dualFaceMode && dualFacePending) {
+            arFinalText = dualFacePending + '\n' + mergedText;
+            dualFacePending = null;
+            resetDualFaceUI();
+            toast('Entrambe le facciate acquisite!', 'success');
+          }
+          classifyBlocks(arFinalText);
+          applyNormalizedData(normalized);
+          $('resultSection').style.display = 'block';
+          renderCleanCard();
+        }
         scanCount++;
         saveState();
       }

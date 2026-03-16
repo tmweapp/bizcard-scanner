@@ -420,7 +420,24 @@ async function finishRemoteSmartScan() {
     scanCount++;
     saveState();
 
-    classifyBlocks(mergedText);
+    // ── DUAL FACE: intercept before classification ──
+    if (dualFaceMode && !dualFacePending) {
+      dualFacePending = mergedText;
+      advanceDualFaceUI();
+      toast('Fronte acquisito! Ora scansiona il retro del biglietto', 'success');
+      $('smartScanOverlay').style.display = 'none';
+      return;
+    }
+
+    let finalText = mergedText;
+    if (dualFaceMode && dualFacePending) {
+      finalText = dualFacePending + '\n' + mergedText;
+      dualFacePending = null;
+      resetDualFaceUI();
+      toast('Entrambe le facciate acquisite! Elaborazione...', 'success');
+    }
+
+    classifyBlocks(finalText);
 
     // AI Normalize
     if (openaiApiKey && detectedBlocks.length > 0) {
