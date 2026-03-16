@@ -5,8 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>BizCard Scanner</title>
 <meta name="description" content="Scansiona biglietti da visita con OCR professionale — Google Vision, multi-lingua, export vCard/CSV">
-<meta name="theme-color" content="#0f172a">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📇</text></svg>">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BizCard">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="msapplication-TileColor" content="#0a0e1a">
+<meta name="msapplication-TileImage" content="/icon-144x144.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/icon-192x192.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/icon-152x152.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/icon-144x144.png">
+<link rel="apple-touch-icon" sizes="128x128" href="/icon-128x128.png">
 <style>
 /* ══════════════════════════════════════════════════════
    BIZCARD SCANNER v4 — DESIGN SYSTEM
@@ -62,22 +73,23 @@ body { min-height: 100dvh; display: flex; flex-direction: column; }
 /* ─── Header ─── */
 header {
   background: var(--bg2); border-bottom: .5px solid var(--glass-border);
-  padding: 8px 16px; display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 12px; display: flex; align-items: center; justify-content: space-between;
   position: sticky; top: 0; z-index: 100;
   backdrop-filter: blur(20px) saturate(1.4);
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  min-height: 32px;
 }
-header h1 { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-header h1 span { font-size: 1.1rem; }
+header h1 { font-size: .82rem; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+header h1 span.header-icon { font-size: .9rem; }
 .version-badge {
-  font-size: .55rem; background: linear-gradient(135deg, var(--accent), var(--lilac));
-  color: #fff; padding: 2px 7px; border-radius: 6px; font-weight: 700;
+  font-size: .5rem; background: linear-gradient(135deg, var(--accent), var(--lilac));
+  color: #fff; padding: 1px 6px; border-radius: 5px; font-weight: 700;
 }
 
 /* ─── API Key Bar ─── */
 .api-key-bar {
   background: var(--bg2); border-bottom: .5px solid var(--glass-border);
-  padding: 5px 12px; font-size: .72rem;
+  padding: 3px 10px; font-size: .68rem;
   backdrop-filter: blur(16px);
 }
 .api-key-inner {
@@ -110,17 +122,22 @@ nav {
   border-bottom: .5px solid var(--glass-border);
   overflow-x: auto; -webkit-overflow-scrolling: touch;
   backdrop-filter: blur(16px);
-  padding: 0 4px;
-  gap: 2px;
+  padding: 0 2px;
+  gap: 0;
 }
 nav button {
   flex: 1; background: none; border: none; color: var(--fg4);
-  padding: 8px 6px;
-  font-size: .72rem; cursor: pointer; border-bottom: 2px solid transparent;
+  padding: 6px 4px 5px;
+  font-size: .62rem; cursor: pointer; border-bottom: 1.5px solid transparent;
   transition: all var(--transition); white-space: nowrap; font-weight: 600;
   letter-spacing: -.2px;
   position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
 }
+nav button svg.nav-ico {
+  width: 15px; height: 15px; stroke-width: 1.5; stroke: currentColor; fill: none;
+}
+nav button .nav-label { font-size: .58rem; line-height: 1; }
 nav button.active {
   color: var(--lilac); border-bottom-color: var(--accent);
   background: linear-gradient(to bottom, transparent 60%, rgba(124,91,245,.06) 100%);
@@ -128,29 +145,35 @@ nav button.active {
 nav button:hover { color: var(--fg2); }
 
 /* ─── Main ─── */
-main { flex: 1; padding: 12px; max-width: 900px; margin: 0 auto; width: 100%; }
+main { flex: 1; padding: 8px; max-width: 1200px; margin: 0 auto; width: 100%; }
 .panel { display: none; } .panel.active { display: block; }
 
+/* ─── Desktop Split Layout ─── */
+.scanner-split {
+  display: flex; flex-direction: column; gap: 8px;
+}
+
 /* ─── Mode Selector ─── */
-.mode-selector { display: flex; gap: 6px; margin-bottom: 12px; }
+.mode-selector { display: flex; gap: 4px; margin-bottom: 8px; }
 .mode-btn {
-  flex: 1; padding: 8px 6px; border: .5px solid var(--glass-border); border-radius: var(--radius2);
+  flex: 1; padding: 5px 4px; border: .5px solid var(--glass-border); border-radius: 8px;
   background: var(--glass2); color: var(--fg3); cursor: pointer; text-align: center;
-  transition: all var(--transition); font-size: .8rem;
+  transition: all var(--transition); font-size: .7rem;
   backdrop-filter: blur(12px);
 }
 .mode-btn:hover { border-color: var(--accent); color: var(--fg); transform: translateY(-1px); }
-.mode-btn.active { border-color: var(--accent); background: rgba(124,91,245,.1); color: var(--accent2); box-shadow: 0 0 16px var(--glow-purple); }
-.mode-btn .mode-icon { font-size: 1.2rem; display: block; margin-bottom: 2px; }
-.mode-btn .mode-label { font-weight: 600; font-size: .75rem; }
-.mode-btn .mode-desc { font-size: .62rem; color: var(--fg4); margin-top: 1px; }
+.mode-btn.active { border-color: var(--accent); background: rgba(124,91,245,.1); color: var(--accent2); box-shadow: 0 0 12px var(--glow-purple); }
+.mode-btn .mode-icon { font-size: .9rem; display: block; margin-bottom: 1px; }
+.mode-btn .mode-label { font-weight: 600; font-size: .65rem; }
+.mode-btn .mode-desc { display: none; }
 
 /* ─── Camera ─── */
 .camera-area {
   position: relative; width: 100%; border-radius: var(--radius); overflow: hidden;
-  background: #000; aspect-ratio: 4/3; margin-bottom: 12px;
+  background: #000; aspect-ratio: 16/10; margin-bottom: 6px;
   border: .5px solid var(--glass-border);
   box-shadow: 0 4px 24px rgba(0,0,0,.4);
+  max-height: 38vh;
 }
 .camera-area video { width: 100%; height: 100%; object-fit: cover; }
 .camera-area .guide {
@@ -186,35 +209,36 @@ main { flex: 1; padding: 12px; max-width: 900px; margin: 0 auto; width: 100%; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
 
 /* ─── Buttons ─── */
-.controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.controls { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
 .btn {
-  display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px;
-  border: .5px solid var(--glass-border); border-radius: var(--radius2); font-size: .85rem; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px;
+  border: .5px solid var(--glass-border); border-radius: 8px; font-size: .75rem; font-weight: 600;
   cursor: pointer; transition: all var(--transition); user-select: none;
   backdrop-filter: blur(8px);
 }
 .btn:active { transform: scale(.96); }
 .btn:hover { transform: translateY(-1px); }
+.btn svg.btn-ico { width: 14px; height: 14px; stroke-width: 1.5; stroke: currentColor; fill: none; flex-shrink: 0; }
 .btn-primary {
   background: linear-gradient(135deg, var(--accent), var(--lilac));
   color: #fff; border: none;
-  box-shadow: 0 4px 16px var(--glow-purple);
+  box-shadow: 0 3px 12px var(--glow-purple);
 }
-.btn-primary:hover { box-shadow: 0 6px 24px var(--glow-purple); transform: translateY(-2px) scale(1.02); }
+.btn-primary:hover { box-shadow: 0 5px 20px var(--glow-purple); transform: translateY(-2px) scale(1.02); }
 .btn-primary:disabled { opacity: .35; cursor: not-allowed; transform: none; box-shadow: none; }
 .btn-secondary { background: var(--glass2); color: var(--fg2); }
 .btn-secondary:hover { background: var(--bg4); border-color: var(--fg4); }
 .btn-danger { background: linear-gradient(135deg, var(--red), var(--orange2)); color: #fff; border: none; }
-.btn-success { background: linear-gradient(135deg, var(--green), #2dd4bf); color: #fff; border: none; box-shadow: 0 4px 16px rgba(52,211,153,.2); }
-.btn-success:hover { box-shadow: 0 6px 24px rgba(52,211,153,.3); transform: translateY(-2px) scale(1.02); }
-.btn-small { padding: 5px 11px; font-size: .78rem; }
-.btn-icon { width: 38px; height: 38px; padding: 0; justify-content: center; border-radius: 50%; }
+.btn-success { background: linear-gradient(135deg, var(--green), #2dd4bf); color: #fff; border: none; box-shadow: 0 3px 12px rgba(52,211,153,.2); }
+.btn-success:hover { box-shadow: 0 5px 20px rgba(52,211,153,.3); transform: translateY(-2px) scale(1.02); }
+.btn-small { padding: 4px 9px; font-size: .7rem; }
+.btn-icon { width: 32px; height: 32px; padding: 0; justify-content: center; border-radius: 50%; }
 .btn-scan-main {
-  font-size: 1rem; padding: 12px 30px;
+  font-size: .85rem; padding: 8px 20px;
   background: linear-gradient(135deg, var(--accent), var(--orange));
-  border: none; box-shadow: 0 4px 20px var(--glow-purple), 0 0 40px var(--glow-orange);
+  border: none; box-shadow: 0 3px 16px var(--glow-purple), 0 0 30px var(--glow-orange);
 }
-.btn-scan-main:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 8px 30px var(--glow-purple), 0 0 50px var(--glow-orange); }
+.btn-scan-main:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 6px 24px var(--glow-purple), 0 0 40px var(--glow-orange); }
 
 /* ─── OCR Status ─── */
 .ocr-status {
@@ -816,6 +840,41 @@ select:focus, input[type="url"]:focus, input[type="text"]:focus { border-color: 
 .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: rgba(124,91,245,.08); box-shadow: 0 0 20px var(--glow-purple); }
 .drop-zone .drop-icon { font-size: 3rem; margin-bottom: 8px; }
 
+/* ─── PWA Install Banner ─── */
+.pwa-install-banner {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 900;
+  background: var(--bg2); border-top: .5px solid rgba(124,91,245,.3);
+  padding: 10px 16px; backdrop-filter: blur(20px);
+  animation: slideUp .3s ease;
+}
+.pwa-install-inner {
+  max-width: 600px; margin: 0 auto;
+  display: flex; align-items: center; gap: 12px;
+}
+.pwa-install-icon { width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0; }
+.pwa-install-text { flex: 1; }
+.pwa-install-title { font-size: .8rem; font-weight: 600; color: var(--fg); }
+.pwa-install-sub { font-size: .65rem; color: var(--fg3); }
+.pwa-install-actions { display: flex; gap: 6px; }
+.pwa-install-close { background: none; border: none; color: var(--fg4); font-size: 1.1rem; cursor: pointer; padding: 4px; }
+
+/* ─── Export History ─── */
+.export-history { margin-top: 20px; }
+.export-history-title { font-size: .82rem; font-weight: 600; color: var(--fg3); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.export-history-list { display: flex; flex-direction: column; gap: 6px; }
+.export-history-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--glass); border: .5px solid var(--glass-border); border-radius: 8px;
+  padding: 8px 12px; font-size: .78rem; transition: all var(--transition);
+}
+.export-history-item:hover { border-color: var(--accent); background: rgba(124,91,245,.06); }
+.eh-icon { font-size: 1rem; flex-shrink: 0; }
+.eh-info { flex: 1; min-width: 0; }
+.eh-title { font-weight: 600; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eh-meta { font-size: .65rem; color: var(--fg4); }
+.eh-download { background: none; border: none; color: var(--lilac); cursor: pointer; font-size: .75rem; padding: 4px 8px; border-radius: 6px; }
+.eh-download:hover { background: rgba(124,91,245,.1); }
+
 /* ─── Safe Areas (notch, dynamic island, home indicator) ─── */
 body {
   padding-top: env(safe-area-inset-top);
@@ -824,61 +883,55 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* ─── Responsive: phones ─── */
+/* ─── Mobile (default) ─── */
 @media (max-width: 600px) {
-  main { padding: 12px; }
-  .mode-selector { flex-direction: column; gap: 6px; }
-  .mode-btn { padding: 10px 8px; }
-  .mode-btn .mode-icon { font-size: 1.2rem; margin-bottom: 2px; }
-  .export-options { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .controls { flex-direction: column; }
-  .controls .btn { justify-content: center; min-height: 44px; }
-  .text-block { padding: 8px 10px; gap: 6px; }
-  .text-block .tb-text { font-size: .85rem; }
-  .fs-label { width: 65px; font-size: .7rem; }
-  .contact-item { padding: 12px; }
-  .settings-section { padding: 14px; }
-  .qr-section { padding: 20px 16px; }
-  header { padding: 10px 16px; }
-  header h1 { font-size: 1rem; }
-  nav button { padding: 10px 12px; font-size: .8rem; }
-}
-
-/* ─── Small phones (iPhone SE, Galaxy S mini) ─── */
-@media (max-width: 375px) {
-  main { padding: 8px; }
-  .mode-btn .mode-desc { display: none; }
-  .mode-btn { padding: 8px; }
-  header h1 .version-badge { display: none; }
-  .export-options { grid-template-columns: 1fr; }
-  .api-key-bar { padding: 6px 10px; }
-  .api-key-label { display: none; }
-}
-
-/* ─── Phones ─── */
-@media (max-width: 600px) {
+  main { padding: 6px; }
+  .camera-area { max-height: 32vh; aspect-ratio: 16/9; }
+  .export-options { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .controls .btn { justify-content: center; }
+  .contact-item { padding: 10px; }
+  .settings-section { padding: 12px; }
+  .qr-section { padding: 16px 12px; }
   .api-key-inner { flex-wrap: wrap; }
   .api-key-input-wrap { min-width: 100%; order: 2; }
   .api-key-status { order: 3; }
+  .smart-scan-overlay { padding: 14px; }
+  .live-card { padding: 12px; }
 }
 
-/* ─── Tablets ─── */
-@media (min-width: 768px) and (max-width: 1024px) {
-  main { max-width: 720px; }
-  .mode-selector { gap: 12px; }
-  .export-options { grid-template-columns: repeat(2, 1fr); }
+/* ─── Small phones ─── */
+@media (max-width: 375px) {
+  main { padding: 4px; }
+  .camera-area { max-height: 28vh; }
+  header h1 .version-badge { display: none; }
+  .export-options { grid-template-columns: 1fr; }
+  .api-key-bar { padding: 3px 8px; }
+  .api-key-label { display: none; }
 }
 
-/* ─── Desktop wide ─── */
+/* ─── Tablet ─── */
+@media (min-width: 768px) {
+  .scanner-split { flex-direction: row; gap: 12px; align-items: flex-start; }
+  .scanner-split .scanner-left { flex: 0 0 45%; max-width: 45%; }
+  .scanner-split .scanner-right { flex: 1; min-width: 0; }
+  .camera-area { max-height: 50vh; aspect-ratio: 4/3; }
+  main { max-width: 960px; }
+}
+
+/* ─── Desktop ─── */
 @media (min-width: 1024px) {
-  main { max-width: 900px; }
-  .camera-area { max-height: 500px; }
+  main { max-width: 1100px; padding: 12px 16px; }
+  .scanner-split .scanner-left { flex: 0 0 42%; max-width: 42%; }
+  .camera-area { max-height: 55vh; }
 }
 </style>
 </head>
 <body>
 <header>
-  <h1><span>📇</span> BizCard Scanner <span class="version-badge">v4</span></h1>
+  <h1>
+    <svg class="header-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--lilac)" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M4 18c0-2 2.5-3.5 5-3.5s5 1.5 5 3.5"/><line x1="15" y1="9" x2="20" y2="9"/><line x1="15" y1="12" x2="19" y2="12"/></svg>
+    BizCard <span class="version-badge">v4</span>
+  </h1>
 </header>
 
 <!-- API Key Bar -->
@@ -895,24 +948,39 @@ body {
 </div>
 
 <nav role="tablist" aria-label="Sezioni principali">
-  <button class="active" data-tab="scanner" role="tab" aria-selected="true" aria-controls="panel-scanner">📷 Scansiona</button>
-  <button data-tab="contacts" role="tab" aria-selected="false" aria-controls="panel-contacts">👥 Contatti</button>
-  <button data-tab="export" role="tab" aria-selected="false" aria-controls="panel-export">📤 Esporta</button>
-  <button data-tab="settings" role="tab" aria-selected="false" aria-controls="panel-settings">⚙️ Impostazioni</button>
+  <button class="active" data-tab="scanner" role="tab" aria-selected="true" aria-controls="panel-scanner">
+    <svg class="nav-ico" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    <span class="nav-label">Scan</span>
+  </button>
+  <button data-tab="contacts" role="tab" aria-selected="false" aria-controls="panel-contacts">
+    <svg class="nav-ico" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span class="nav-label">Contatti</span>
+  </button>
+  <button data-tab="export" role="tab" aria-selected="false" aria-controls="panel-export">
+    <svg class="nav-ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <span class="nav-label">Esporta</span>
+  </button>
+  <button data-tab="settings" role="tab" aria-selected="false" aria-controls="panel-settings">
+    <svg class="nav-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span class="nav-label">Setup</span>
+  </button>
 </nav>
 
 <main>
   <!-- ═══ SCANNER TAB ═══ -->
   <div class="panel active" id="panel-scanner" role="tabpanel">
+   <div class="scanner-split">
+    <!-- ─── LEFT: Camera + Controls ─── -->
+    <div class="scanner-left">
     <div class="mode-selector" role="radiogroup" aria-label="Modalità acquisizione">
       <div class="mode-btn active" data-mode="local" role="radio" aria-checked="true" tabindex="0">
-        <span class="mode-icon">📷</span><span class="mode-label">Camera locale</span><span class="mode-desc">Usa questa fotocamera</span>
+        <span class="mode-icon">📷</span><span class="mode-label">Camera</span>
       </div>
       <div class="mode-btn" data-mode="remote" role="radio" aria-checked="false" tabindex="0">
-        <span class="mode-icon">📱</span><span class="mode-label">Telefono remoto</span><span class="mode-desc">Scansiona via QR code</span>
+        <span class="mode-icon">📱</span><span class="mode-label">Remoto</span>
       </div>
       <div class="mode-btn" data-mode="upload" role="radio" aria-checked="false" tabindex="0">
-        <span class="mode-icon">📁</span><span class="mode-label">Carica immagine</span><span class="mode-desc">Da file</span>
+        <span class="mode-icon">📁</span><span class="mode-label">File</span>
       </div>
     </div>
 
@@ -921,9 +989,7 @@ body {
       <div class="camera-area" role="img" aria-label="Anteprima fotocamera">
         <video id="video" autoplay playsinline muted></video>
         <div class="guide" id="cameraGuide"></div>
-        <!-- AR Overlay Canvas — sits on top of video -->
         <canvas id="arCanvas" class="ar-canvas"></canvas>
-        <!-- AR Completion 3D Card -->
         <div class="ar-complete-card" id="arCompleteCard">
           <div class="ar-card-inner" id="arCardInner">
             <div class="ar-card-front" id="arCardFront"></div>
@@ -933,7 +999,6 @@ body {
             </div>
           </div>
         </div>
-        <!-- AR Status HUD -->
         <div class="ar-hud" id="arHud" style="display:none">
           <div class="ar-hud-top">
             <span class="ar-hud-label">🔍 AR SCAN</span>
@@ -944,15 +1009,56 @@ body {
         </div>
         <div class="scanner-placeholder" id="placeholder" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <p>Camera non disponibile.<br>Prova "Telefono remoto" o "Carica immagine".</p>
+          <p>Camera non disponibile.<br>Prova "Remoto" o "File".</p>
         </div>
       </div>
       <div class="controls">
-        <button class="btn btn-primary btn-scan-main" id="btnSmartScan" disabled aria-label="Scansiona">📸 Scansiona</button>
-        <button class="btn btn-secondary" id="btnFlip" style="display:none" aria-label="Inverti fotocamera">🔄 Inverti</button>
-        <button class="btn btn-secondary" id="btnTorch" style="display:none" aria-label="Flash">🔦 Flash</button>
+        <button class="btn btn-primary btn-scan-main" id="btnSmartScan" disabled aria-label="Scansiona">
+          <svg class="btn-ico" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Scansiona
+        </button>
+        <button class="btn btn-secondary btn-icon" id="btnFlip" style="display:none" aria-label="Inverti fotocamera" title="Inverti">
+          <svg class="btn-ico" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+        <button class="btn btn-secondary btn-icon" id="btnTorch" style="display:none" aria-label="Flash" title="Flash">
+          <svg class="btn-ico" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </button>
       </div>
     </div>
+    <!-- Remote Phone View -->
+    <div id="viewRemote" style="display:none">
+      <div class="qr-section" id="qrSection">
+        <h3>📱 Collega il telefono</h3>
+        <div class="qr-sub">Scansiona il QR con la fotocamera del telefono</div>
+        <canvas id="qrCanvas" width="180" height="180" aria-label="QR Code per connessione telefono"></canvas>
+        <div class="session-code" id="sessionCode" aria-label="Codice sessione">---</div>
+        <div class="qr-url" id="qrUrl" aria-label="URL connessione">---</div>
+        <div class="qr-status">
+          <div class="dot waiting" id="qrDot" role="status"></div>
+          <span id="qrStatusText">In attesa del telefono...</span>
+        </div>
+        <div style="margin-top:12px">
+          <button class="btn btn-accent btn-small" id="btnRemoteSmartScan" disabled>
+            <svg class="btn-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            Smart Scan
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload View -->
+    <div id="viewUpload" style="display:none">
+      <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="Trascina o seleziona un'immagine">
+        <div class="drop-icon">📁</div>
+        <h3 style="font-size:.9rem">Trascina un'immagine qui</h3>
+        <div class="qr-sub">oppure clicca per selezionare</div>
+        <input type="file" id="fileInputUpload" accept="image/*" style="display:none" aria-hidden="true">
+      </div>
+    </div>
+    </div><!-- /scanner-left -->
+
+    <!-- ─── RIGHT: Live Card + Results ─── -->
+    <div class="scanner-right">
 
     <!-- Smart Scan Progress Overlay (shared by local + remote) -->
     <div class="smart-scan-overlay" id="smartScanOverlay" style="display:none">
@@ -985,34 +1091,6 @@ body {
 
       <div class="ss-detail" id="ssDetail"></div>
       <button class="btn btn-secondary btn-small" id="btnSmartScanStop">⏹ Interrompi</button>
-    </div>
-
-    <!-- Remote Phone View -->
-    <div id="viewRemote" style="display:none">
-      <div class="qr-section" id="qrSection">
-        <h3>📱 Collega il telefono</h3>
-        <div class="qr-sub">Scansiona questo QR code con la fotocamera del telefono</div>
-        <canvas id="qrCanvas" width="200" height="200" aria-label="QR Code per connessione telefono"></canvas>
-        <div class="session-code" id="sessionCode" aria-label="Codice sessione">---</div>
-        <div class="qr-url" id="qrUrl" aria-label="URL connessione">---</div>
-        <div class="qr-status">
-          <div class="dot waiting" id="qrDot" role="status"></div>
-          <span id="qrStatusText">In attesa del telefono...</span>
-        </div>
-        <div style="margin-top:16px">
-          <button class="btn btn-accent" id="btnRemoteSmartScan" disabled>🧠 Smart Scan (multi-foto)</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Upload View -->
-    <div id="viewUpload" style="display:none">
-      <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="Trascina o seleziona un'immagine">
-        <div class="drop-icon">📁</div>
-        <h3>Trascina un'immagine qui</h3>
-        <div class="qr-sub">oppure clicca per selezionare un file</div>
-        <input type="file" id="fileInputUpload" accept="image/*" style="display:none" aria-hidden="true">
-      </div>
     </div>
 
     <!-- OCR Status -->
@@ -1069,19 +1147,34 @@ body {
       </div>
 
       <!-- Progressive action buttons -->
-      <div class="controls session-controls" style="margin-top:16px;margin-bottom:0">
-        <button class="btn btn-success btn-scan-main" id="btnScanNext">📸 Scansiona prossimo</button>
-        <button class="btn btn-secondary" id="btnEndSession">✅ Termina sessione</button>
+      <div class="controls session-controls" style="margin-top:12px;margin-bottom:0">
+        <button class="btn btn-success btn-scan-main" id="btnScanNext">
+          <svg class="btn-ico" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Prossimo
+        </button>
+        <button class="btn btn-secondary" id="btnEndSession">
+          <svg class="btn-ico" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Termina
+        </button>
       </div>
     </div>
+
+    </div><!-- /scanner-right -->
+   </div><!-- /scanner-split -->
 
     <!-- Session Summary (shown after ending session) -->
     <div class="session-summary" id="sessionSummary" style="display:none">
       <div class="session-summary-header">📊 Riepilogo sessione</div>
       <div class="session-summary-stats" id="sessionStats"></div>
-      <div class="controls" style="margin-top:16px">
-        <button class="btn btn-primary" id="btnNewSession">📸 Nuova sessione</button>
-        <button class="btn btn-accent" id="btnExportSession">📤 Esporta sessione</button>
+      <div class="controls" style="margin-top:12px">
+        <button class="btn btn-primary" id="btnNewSession">
+          <svg class="btn-ico" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Nuova sessione
+        </button>
+        <button class="btn btn-accent" id="btnExportSession">
+          <svg class="btn-ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Esporta
+        </button>
       </div>
     </div>
   </div>
@@ -1123,6 +1216,15 @@ body {
     </div>
     <div class="empty-state" id="emptyExport" style="display:none">
       <div class="empty-icon">📤</div><p>Nessun contatto da esportare.</p>
+    </div>
+
+    <!-- Export History -->
+    <div class="export-history" id="exportHistory" style="display:none">
+      <div class="export-history-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Cronologia esportazioni
+      </div>
+      <div class="export-history-list" id="exportHistoryList"></div>
     </div>
   </div>
 
@@ -1217,11 +1319,39 @@ body {
       <div class="setting-row"><label>Scansioni effettuate</label><span id="statScans">0</span></div>
     </div>
     <div class="settings-section">
+      <h3>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M7 2v20"/><path d="M17 2v20"/><path d="M2 12h20"/><path d="M2 7h5"/><path d="M2 17h5"/><path d="M17 7h5"/><path d="M17 17h5"/></svg>
+        Archiviazione locale
+      </h3>
+      <div class="setting-row"><label>Dati salvati su</label><span style="color:var(--green)">📱 Questo dispositivo</span></div>
+      <div class="setting-row"><label>Spazio occupato</label><span id="storageUsage">Calcolo...</span></div>
+      <div class="setting-row"><label>Esportazioni salvate</label><span id="exportCount">0</span></div>
+      <div style="margin-top:8px;font-size:.68rem;color:var(--fg4);line-height:1.4">
+        I dati restano sul tuo dispositivo. Le chiavi API, i contatti e la cronologia esportazioni non vengono mai inviati a server esterni. Ogni dispositivo ha la propria memoria indipendente.
+      </div>
+    </div>
+    <div class="settings-section">
       <h3>🗑️ Gestione dati</h3>
       <button class="btn btn-danger btn-small" id="btnClearAll">Cancella tutti i contatti</button>
+      <button class="btn btn-secondary btn-small" id="btnClearExports" style="margin-top:6px">Cancella cronologia esportazioni</button>
     </div>
   </div>
 </main>
+
+<!-- PWA Install Banner -->
+<div class="pwa-install-banner" id="pwaInstallBanner">
+  <div class="pwa-install-inner">
+    <img class="pwa-install-icon" src="/icon-96x96.png" alt="BizCard">
+    <div class="pwa-install-text">
+      <div class="pwa-install-title">Installa BizCard Scanner</div>
+      <div class="pwa-install-sub">Accesso rapido dalla home del dispositivo</div>
+    </div>
+    <div class="pwa-install-actions">
+      <button class="btn btn-primary btn-small" id="btnPwaInstall">Installa</button>
+      <button class="pwa-install-close" id="btnPwaDismiss">&times;</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast-container" id="toasts" aria-live="polite"></div>
 
@@ -1645,6 +1775,10 @@ async function startSmartScan() {
     // ── PHASE 1: Burst Capture ──
     const frames = await captureFrameBurst(video);
     if (smartScanAborted) return cleanupSmartScan();
+
+    // Notify user: card can be removed now
+    toast('✅ Foto acquisite — puoi rimuovere il biglietto!', 'success', 4000);
+    $('ssStatus').textContent = '🧠 Elaborazione in corso...';
 
     // ── PHASE 2: Quality Scoring ──
     $('ssStatus').textContent = '🔍 Analisi qualità frame...';
@@ -4206,24 +4340,33 @@ function copyContactToClipboard(id) {
 function initExport() {
   $('exportVcard').addEventListener('click', () => {
     if (!contacts.length) { toast('Nessun contatto da esportare', 'error'); return; }
-    downloadFile(contacts.map(contactToVcard).join('\r\n'), 'contatti.vcf', 'text/vcard');
+    const ts = new Date().toISOString().slice(0, 10);
+    const fname = `contatti_${ts}.vcf`;
+    downloadFile(contacts.map(contactToVcard).join('\r\n'), fname, 'text/vcard');
+    saveExportHistory('vCard', fname, contacts.length);
     toast(contacts.length + ' contatti esportati come vCard', 'success');
   });
 
   $('exportCsv').addEventListener('click', () => {
     if (!contacts.length) { toast('Nessun contatto da esportare', 'error'); return; }
+    const ts = new Date().toISOString().slice(0, 10);
     const headers = ['Nome', 'Azienda', 'Ruolo', 'Email', 'Cellulare', 'Tel. Fisso', 'Fax', 'Web', 'LinkedIn', 'Indirizzo', 'Città', 'Paese', 'P.IVA', 'C.F.', 'Logo', 'Note', 'Data'];
     const rows = contacts.map(c =>
       [c.name, c.company, c.role, c.email, c.mobile, c.phone, c.fax, c.web, c.linkedin, c.address, c.city, c.country, c.piva, c.cf, c.logo_description, c.notes, c.createdAt].map(csvEsc)
     );
-    const csv = '\ufeff' + [headers.join(',')].concat(rows.map(r => r.join(','))).join('\n');
-    downloadFile(csv, 'contatti.csv', 'text/csv');
+    const csv = '\ufeff' + [headers.map(csvEsc).join(';')].concat(rows.map(r => r.join(';'))).join('\r\n');
+    const fname = `contatti_${ts}.csv`;
+    downloadFile(csv, fname, 'text/csv');
+    saveExportHistory('CSV', fname, contacts.length);
     toast(contacts.length + ' contatti esportati come CSV', 'success');
   });
 
   $('exportJson').addEventListener('click', () => {
     if (!contacts.length) { toast('Nessun contatto da esportare', 'error'); return; }
-    downloadFile(JSON.stringify(contacts, null, 2), 'contatti.json', 'application/json');
+    const ts = new Date().toISOString().slice(0, 10);
+    const fname = `contatti_${ts}.json`;
+    downloadFile(JSON.stringify(contacts, null, 2), fname, 'application/json');
+    saveExportHistory('JSON', fname, contacts.length);
     toast(contacts.length + ' contatti esportati come JSON', 'success');
   });
 
@@ -4238,6 +4381,7 @@ function initExport() {
         headers,
         body: JSON.stringify({ contacts, timestamp: new Date().toISOString() }),
       });
+      if (resp.ok) saveExportHistory('Webhook', settings.webhookUrl, contacts.length);
       toast(resp.ok ? `✅ ${contacts.length} contatti inviati al CRM` : 'Errore: HTTP ' + resp.status, resp.ok ? 'success' : 'error');
     } catch (e) {
       toast('Errore di rete: ' + e.message, 'error');
@@ -4270,7 +4414,38 @@ function initSettings() {
     renderContacts();
     updateStats();
     updateExportState();
+    updateStorageStats();
   });
+
+  $('btnClearExports').addEventListener('click', () => {
+    if (!confirm('Cancellare la cronologia delle esportazioni?')) return;
+    localStorage.removeItem('bizcard_exports');
+    renderExportHistory();
+    updateStorageStats();
+    toast('Cronologia esportazioni cancellata', 'info');
+  });
+
+  updateStorageStats();
+}
+
+function updateStorageStats() {
+  try {
+    let totalBytes = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('bizcard_')) {
+        totalBytes += (localStorage.getItem(key) || '').length * 2; // UTF-16
+      }
+    }
+    const kb = (totalBytes / 1024).toFixed(1);
+    $('storageUsage').textContent = totalBytes > 1048576
+      ? (totalBytes / 1048576).toFixed(1) + ' MB'
+      : kb + ' KB';
+    const exports = JSON.parse(localStorage.getItem('bizcard_exports') || '[]');
+    $('exportCount').textContent = exports.length;
+  } catch (e) {
+    $('storageUsage').textContent = 'N/D';
+  }
 }
 
 function updateStats() {
@@ -4351,10 +4526,8 @@ function esc(s) {
 }
 
 function csvEsc(v) {
-  if (!v) return '';
-  return (v.includes(',') || v.includes('"') || v.includes('\n'))
-    ? '"' + v.replace(/"/g, '""') + '"'
-    : v;
+  if (!v) return '""';
+  return '"' + v.replace(/"/g, '""') + '"';
 }
 
 function contactToVcard(c) {
@@ -4538,18 +4711,17 @@ function getFilteredData(maxRows) {
 
 function escapeForSep(v, sep) {
   if (!v) return '';
-  if (v.includes(sep) || v.includes('"') || v.includes('\n'))
-    return '"' + v.replace(/"/g, '""') + '"';
-  return v;
+  // Always quote for clean, safe output
+  return '"' + v.replace(/"/g, '""') + '"';
 }
 
 function generateDelimited(data, sep) {
   const headers = getExportHeaders();
   const headerLine = headers.map(h => escapeForSep(h, sep)).join(sep);
   const rows = data.map(row =>
-    advExportCols.map(key => escapeForSep(row[key], sep)).join(sep)
+    advExportCols.map(key => escapeForSep(row[key] || '', sep)).join(sep)
   );
-  return '\ufeff' + [headerLine, ...rows].join('\n');
+  return '\ufeff' + [headerLine, ...rows].join('\r\n');
 }
 
 function generateJSON(data) {
@@ -4709,6 +4881,7 @@ async function executeAdvancedExport() {
       }
     }
 
+    saveExportHistory(advExportFormat.toUpperCase(), `contatti_${ts}.${advExportFormat === 'vcard' ? 'vcf' : advExportFormat}`, contacts.length);
     toast(`✅ ${contacts.length} contatti esportati come ${advExportFormat.toUpperCase()}`, 'success');
     $('exportModalBackdrop').classList.remove('visible');
 
@@ -4727,7 +4900,115 @@ function hashCode(s) {
   return h;
 }
 
-function toast(msg, type = 'success') {
+// ─── EXPORT HISTORY (localStorage) ────────────────────────────
+function saveExportHistory(format, filename, count) {
+  try {
+    const history = JSON.parse(localStorage.getItem('bizcard_exports') || '[]');
+    history.unshift({
+      id: Date.now(),
+      format: format,
+      filename: filename,
+      count: count,
+      date: new Date().toISOString(),
+    });
+    // Keep last 50
+    if (history.length > 50) history.length = 50;
+    localStorage.setItem('bizcard_exports', JSON.stringify(history));
+    renderExportHistory();
+  } catch (e) { console.warn('[ExportHistory]', e); }
+}
+
+function renderExportHistory() {
+  const history = JSON.parse(localStorage.getItem('bizcard_exports') || '[]');
+  const container = $('exportHistoryList');
+  const wrap = $('exportHistory');
+  if (!history.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  const formatIcons = { CSV: '📊', TSV: '📋', JSON: '🔧', JSONL: '📝', XML: '📄', XLSX: '📗', VCARD: '📇', CUSTOM: '✂️', WEBHOOK: '🔗' };
+
+  container.innerHTML = history.slice(0, 10).map(h => {
+    const d = new Date(h.date);
+    const dateStr = d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    const icon = formatIcons[h.format.toUpperCase()] || '📄';
+    return `<div class="export-history-item">
+      <span class="eh-icon">${icon}</span>
+      <div class="eh-info">
+        <div class="eh-title">${h.filename}</div>
+        <div class="eh-meta">${h.format} · ${h.count} contatti · ${dateStr} ${timeStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── PWA: SERVICE WORKER & INSTALL ───────────────────────────
+let deferredInstallPrompt = null;
+
+function initPWA() {
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('[SW] Registered:', reg.scope))
+      .catch(err => console.warn('[SW] Registration failed:', err));
+  }
+
+  // Listen for install prompt
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    // Show custom install banner
+    const dismissed = localStorage.getItem('bizcard_pwa_dismissed');
+    if (!dismissed) {
+      $('pwaInstallBanner').style.display = 'block';
+    }
+  });
+
+  // Install button
+  $('btnPwaInstall').addEventListener('click', async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    const result = await deferredInstallPrompt.userChoice;
+    if (result.outcome === 'accepted') {
+      toast('✅ App installata!', 'success');
+    }
+    deferredInstallPrompt = null;
+    $('pwaInstallBanner').style.display = 'none';
+  });
+
+  // Dismiss button
+  $('btnPwaDismiss').addEventListener('click', () => {
+    $('pwaInstallBanner').style.display = 'none';
+    localStorage.setItem('bizcard_pwa_dismissed', '1');
+  });
+
+  // Detect if already installed
+  window.addEventListener('appinstalled', () => {
+    $('pwaInstallBanner').style.display = 'none';
+    deferredInstallPrompt = null;
+    toast('✅ BizCard Scanner installata sul dispositivo!', 'success');
+  });
+
+  // iOS Safari: show manual install hint
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isIOS && !isStandalone) {
+    const dismissed = localStorage.getItem('bizcard_pwa_dismissed');
+    if (!dismissed) {
+      setTimeout(() => {
+        toast('💡 Per installare: tocca Condividi ⬆️ → Aggiungi a Home', 'info', 6000);
+      }, 3000);
+    }
+  }
+
+  // Render export history on load
+  renderExportHistory();
+}
+
+// Init PWA on load
+initPWA();
+
+function toast(msg, type = 'success', duration = 3500) {
   const container = $('toasts');
   const el = document.createElement('div');
   el.className = 'toast ' + type;
@@ -4739,7 +5020,7 @@ function toast(msg, type = 'success') {
     el.style.transform = 'translateY(8px)';
     el.style.transition = 'all .3s';
     setTimeout(() => el.remove(), 300);
-  }, 3500);
+  }, duration);
 }
 </script>
 </body>
