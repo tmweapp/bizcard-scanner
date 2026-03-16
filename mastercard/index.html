@@ -14,40 +14,31 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:      #0a0e1a;
-  --bg2:     rgba(18, 24, 42, .75);
-  --bg3:     rgba(40, 50, 80, .5);
-  --bg4:     rgba(60, 70, 110, .4);
-  --fg:      #eef0f6;
-  --fg2:     #b8bdd0;
-  --fg3:     #7c82a0;
-  --fg4:     #4e5470;
-  --accent:  #7c5bf5;
-  --accent2: #a78bfa;
-  --accent3: #c4b5fd;
-  --green:   #34d399;
-  --green2:  #6ee7b7;
-  --red:     #f87171;
-  --orange:  #e67e45;
-  --orange2: #d4633a;
+  --bg:      #0f172a;
+  --bg2:     #1e293b;
+  --bg3:     #334155;
+  --bg4:     #475569;
+  --fg:      #f8fafc;
+  --fg2:     #cbd5e1;
+  --fg3:     #94a3b8;
+  --fg4:     #64748b;
+  --accent:  #3b82f6;
+  --accent2: #60a5fa;
+  --accent3: #93c5fd;
+  --green:   #22c55e;
+  --green2:  #4ade80;
+  --red:     #ef4444;
+  --orange:  #f59e0b;
   --purple:  #a855f7;
-  --lilac:   #c084fc;
-  --glass:   rgba(255,255,255,.04);
-  --glass2:  rgba(255,255,255,.07);
-  --glass-border: rgba(255,255,255,.08);
-  --glow-purple: rgba(168,85,247,.25);
-  --glow-blue: rgba(96,165,250,.2);
-  --glow-orange: rgba(230,126,69,.2);
-  --radius:  14px;
-  --radius2: 10px;
-  --shadow:  0 4px 30px rgba(0,0,0,.3), 0 0 60px rgba(124,91,245,.06);
-  --transition: .25s cubic-bezier(.4,0,.2,1);
+  --radius:  12px;
+  --radius2: 8px;
+  --shadow:  0 4px 24px rgba(0,0,0,.4);
+  --transition: .2s cubic-bezier(.4,0,.2,1);
 }
 
 html {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0f1629 100%);
-  background-attachment: fixed;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  background: var(--bg);
   color: var(--fg);
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
@@ -61,24 +52,18 @@ body { min-height: 100dvh; display: flex; flex-direction: column; }
 
 /* ─── Header ─── */
 header {
-  background: var(--bg2); border-bottom: .5px solid var(--glass-border);
-  padding: 8px 16px; display: flex; align-items: center; justify-content: space-between;
-  position: sticky; top: 0; z-index: 100;
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  background: var(--bg2); border-bottom: 1px solid var(--bg3);
+  padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px);
 }
-header h1 { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-header h1 span { font-size: 1.1rem; }
-.version-badge {
-  font-size: .55rem; background: linear-gradient(135deg, var(--accent), var(--lilac));
-  color: #fff; padding: 2px 7px; border-radius: 6px; font-weight: 700;
-}
+header h1 { font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+header h1 span { font-size: 1.3rem; }
+.version-badge { font-size: .6rem; background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
 
 /* ─── API Key Bar ─── */
 .api-key-bar {
-  background: var(--bg2); border-bottom: .5px solid var(--glass-border);
-  padding: 5px 12px; font-size: .72rem;
-  backdrop-filter: blur(16px);
+  background: var(--bg2); border-bottom: 1px solid var(--bg3);
+  padding: 8px 16px; font-size: .8rem;
 }
 .api-key-inner {
   max-width: 900px; margin: 0 auto;
@@ -87,78 +72,61 @@ header h1 span { font-size: 1.1rem; }
 .api-key-label { color: var(--fg3); font-weight: 600; white-space: nowrap; font-size: .78rem; }
 .api-key-input-wrap { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 200px; }
 .api-key-input-wrap input {
-  flex: 1; background: var(--glass2); border: .5px solid var(--glass-border); color: var(--fg);
-  padding: 5px 10px; border-radius: var(--radius2); font-size: .78rem;
+  flex: 1; background: var(--bg); border: 1px solid var(--bg3); color: var(--fg);
+  padding: 6px 10px; border-radius: var(--radius2); font-size: .8rem;
   font-family: 'SF Mono', 'Fira Code', monospace; min-width: 0;
-  transition: all var(--transition);
 }
-.api-key-input-wrap input:focus { border-color: var(--accent); box-shadow: 0 0 12px var(--glow-purple); outline: none; }
+.api-key-input-wrap input:focus { border-color: var(--accent); outline: none; }
 .api-key-toggle, .api-key-save {
-  background: var(--glass2); border: .5px solid var(--glass-border); color: var(--fg2); padding: 5px 10px;
-  border-radius: var(--radius2); cursor: pointer; font-size: .72rem; white-space: nowrap;
+  background: var(--bg3); border: none; color: var(--fg2); padding: 6px 10px;
+  border-radius: var(--radius2); cursor: pointer; font-size: .75rem; white-space: nowrap;
   transition: all var(--transition);
 }
-.api-key-save { background: linear-gradient(135deg, var(--accent), var(--lilac)); color: #fff; font-weight: 600; border: none; }
-.api-key-save:hover { transform: scale(1.03); box-shadow: 0 0 16px var(--glow-purple); }
+.api-key-save { background: var(--accent); color: #fff; font-weight: 600; }
+.api-key-save:hover { background: var(--accent2); }
 .api-key-status { font-size: .72rem; color: var(--green); white-space: nowrap; }
 .api-key-status.error { color: var(--red); }
 .api-key-bar.has-key .api-key-input-wrap input { color: var(--fg4); }
 
 /* ─── Navigation ─── */
-nav {
-  display: flex; background: var(--bg2);
-  border-bottom: .5px solid var(--glass-border);
-  overflow-x: auto; -webkit-overflow-scrolling: touch;
-  backdrop-filter: blur(16px);
-  padding: 0 4px;
-  gap: 2px;
-}
+nav { display: flex; background: var(--bg2); border-bottom: 1px solid var(--bg3); overflow-x: auto; -webkit-overflow-scrolling: touch; }
 nav button {
-  flex: 1; background: none; border: none; color: var(--fg4);
-  padding: 8px 6px;
-  font-size: .72rem; cursor: pointer; border-bottom: 2px solid transparent;
-  transition: all var(--transition); white-space: nowrap; font-weight: 600;
-  letter-spacing: -.2px;
-  position: relative;
+  flex: 1; background: none; border: none; color: var(--fg4); padding: 12px 16px;
+  font-size: .85rem; cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all var(--transition); white-space: nowrap; font-weight: 500;
 }
-nav button.active {
-  color: var(--lilac); border-bottom-color: var(--accent);
-  background: linear-gradient(to bottom, transparent 60%, rgba(124,91,245,.06) 100%);
-}
+nav button.active { color: var(--accent2); border-bottom-color: var(--accent); }
 nav button:hover { color: var(--fg2); }
 
 /* ─── Main ─── */
-main { flex: 1; padding: 12px; max-width: 900px; margin: 0 auto; width: 100%; }
+main { flex: 1; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
 .panel { display: none; } .panel.active { display: block; }
 
 /* ─── Mode Selector ─── */
-.mode-selector { display: flex; gap: 6px; margin-bottom: 12px; }
+.mode-selector { display: flex; gap: 8px; margin-bottom: 16px; }
 .mode-btn {
-  flex: 1; padding: 8px 6px; border: .5px solid var(--glass-border); border-radius: var(--radius2);
-  background: var(--glass2); color: var(--fg3); cursor: pointer; text-align: center;
-  transition: all var(--transition); font-size: .8rem;
-  backdrop-filter: blur(12px);
+  flex: 1; padding: 14px 8px; border: 2px solid var(--bg3); border-radius: var(--radius);
+  background: var(--bg2); color: var(--fg3); cursor: pointer; text-align: center;
+  transition: all var(--transition); font-size: .9rem;
 }
 .mode-btn:hover { border-color: var(--accent); color: var(--fg); transform: translateY(-1px); }
-.mode-btn.active { border-color: var(--accent); background: rgba(124,91,245,.1); color: var(--accent2); box-shadow: 0 0 16px var(--glow-purple); }
-.mode-btn .mode-icon { font-size: 1.2rem; display: block; margin-bottom: 2px; }
-.mode-btn .mode-label { font-weight: 600; font-size: .75rem; }
-.mode-btn .mode-desc { font-size: .62rem; color: var(--fg4); margin-top: 1px; }
+.mode-btn.active { border-color: var(--accent); background: rgba(59,130,246,.08); color: var(--accent2); }
+.mode-btn .mode-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+.mode-btn .mode-label { font-weight: 600; font-size: .85rem; }
+.mode-btn .mode-desc { font-size: .7rem; color: var(--fg4); margin-top: 2px; }
 
 /* ─── Camera ─── */
 .camera-area {
   position: relative; width: 100%; border-radius: var(--radius); overflow: hidden;
   background: #000; aspect-ratio: 4/3; margin-bottom: 12px;
-  border: .5px solid var(--glass-border);
-  box-shadow: 0 4px 24px rgba(0,0,0,.4);
 }
 .camera-area video { width: 100%; height: 100%; object-fit: cover; }
 .camera-area .guide {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-  width: 88%; height: 62%; border: 1px dashed rgba(255,255,255,.18); border-radius: 10px;
+  width: 88%; height: 62%; border: 2px dashed rgba(255,255,255,.25); border-radius: 10px;
   pointer-events: none; transition: all .3s;
 }
-.camera-area .guide.flash { border-color: var(--green); box-shadow: 0 0 40px rgba(52,211,153,.3); }
+.camera-area .guide.flash { border-color: var(--green); box-shadow: 0 0 40px rgba(34,197,94,.3); }
 .scanner-placeholder {
   width: 100%; height: 100%; display: flex; flex-direction: column;
   align-items: center; justify-content: center; color: var(--fg4); gap: 12px; padding: 20px; text-align: center;
@@ -167,9 +135,8 @@ main { flex: 1; padding: 12px; max-width: 900px; margin: 0 auto; width: 100%; }
 
 /* ─── QR Section ─── */
 .qr-section {
-  background: var(--glass2); border-radius: var(--radius); padding: 24px; text-align: center;
-  margin-bottom: 14px; border: .5px solid var(--glass-border);
-  backdrop-filter: blur(16px);
+  background: var(--bg2); border-radius: var(--radius); padding: 28px; text-align: center;
+  margin-bottom: 16px; border: 1px solid var(--bg3);
 }
 .qr-section h3 { font-size: 1rem; margin-bottom: 4px; color: var(--fg); }
 .qr-section .qr-sub { font-size: .8rem; color: var(--fg4); margin-bottom: 20px; }
@@ -188,41 +155,27 @@ main { flex: 1; padding: 12px; max-width: 900px; margin: 0 auto; width: 100%; }
 /* ─── Buttons ─── */
 .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
 .btn {
-  display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px;
-  border: .5px solid var(--glass-border); border-radius: var(--radius2); font-size: .85rem; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px;
+  border: none; border-radius: var(--radius2); font-size: .9rem; font-weight: 600;
   cursor: pointer; transition: all var(--transition); user-select: none;
-  backdrop-filter: blur(8px);
 }
-.btn:active { transform: scale(.96); }
-.btn:hover { transform: translateY(-1px); }
-.btn-primary {
-  background: linear-gradient(135deg, var(--accent), var(--lilac));
-  color: #fff; border: none;
-  box-shadow: 0 4px 16px var(--glow-purple);
-}
-.btn-primary:hover { box-shadow: 0 6px 24px var(--glow-purple); transform: translateY(-2px) scale(1.02); }
-.btn-primary:disabled { opacity: .35; cursor: not-allowed; transform: none; box-shadow: none; }
-.btn-secondary { background: var(--glass2); color: var(--fg2); }
-.btn-secondary:hover { background: var(--bg4); border-color: var(--fg4); }
-.btn-danger { background: linear-gradient(135deg, var(--red), var(--orange2)); color: #fff; border: none; }
-.btn-success { background: linear-gradient(135deg, var(--green), #2dd4bf); color: #fff; border: none; box-shadow: 0 4px 16px rgba(52,211,153,.2); }
-.btn-success:hover { box-shadow: 0 6px 24px rgba(52,211,153,.3); transform: translateY(-2px) scale(1.02); }
-.btn-small { padding: 5px 11px; font-size: .78rem; }
-.btn-icon { width: 38px; height: 38px; padding: 0; justify-content: center; border-radius: 50%; }
-.btn-scan-main {
-  font-size: 1rem; padding: 12px 30px;
-  background: linear-gradient(135deg, var(--accent), var(--orange));
-  border: none; box-shadow: 0 4px 20px var(--glow-purple), 0 0 40px var(--glow-orange);
-}
-.btn-scan-main:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 8px 30px var(--glow-purple), 0 0 50px var(--glow-orange); }
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+.btn-secondary { background: var(--bg3); color: var(--fg2); }
+.btn-secondary:hover { background: var(--bg4); }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-success { background: var(--green); color: #fff; }
+.btn-success:hover { background: var(--green2); }
+.btn-small { padding: 6px 12px; font-size: .8rem; }
+.btn-icon { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 50%; }
 
 /* ─── OCR Status ─── */
 .ocr-status {
-  background: var(--glass2); border-radius: var(--radius); padding: 12px 16px;
-  margin-bottom: 14px; display: flex; align-items: center; gap: 10px; font-size: .85rem;
-  border-left: 2px solid var(--bg4); transition: border-color .3s;
-  border: .5px solid var(--glass-border); border-left: 2px solid var(--bg4);
-  backdrop-filter: blur(12px);
+  background: var(--bg2); border-radius: var(--radius); padding: 14px 16px;
+  margin-bottom: 16px; display: flex; align-items: center; gap: 10px; font-size: .9rem;
+  border-left: 3px solid var(--bg3); transition: border-color .3s;
 }
 .ocr-status .spinner {
   width: 20px; height: 20px; border: 2px solid var(--bg3); border-top-color: var(--accent);
@@ -327,11 +280,10 @@ main { flex: 1; padding: 12px; max-width: 900px; margin: 0 auto; width: 100%; }
 @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 8px rgba(168,85,247,.4); } 50% { box-shadow: 0 0 20px rgba(168,85,247,.7); } }
 
 .smart-scan-overlay {
-  background: rgba(10,14,26,.92); border-radius: var(--radius); padding: 24px;
-  text-align: center; margin-bottom: 14px; border: .5px solid rgba(168,85,247,.3);
+  background: rgba(15,23,42,.95); border-radius: var(--radius); padding: 28px;
+  text-align: center; margin-bottom: 16px; border: 1px solid var(--purple);
   display: flex; flex-direction: column; align-items: center; gap: 12px;
-  backdrop-filter: blur(16px);
-  box-shadow: 0 0 40px var(--glow-purple);
+  backdrop-filter: blur(8px);
 }
 .ss-progress-ring { position: relative; width: 120px; height: 120px; }
 .ss-progress-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
@@ -350,83 +302,10 @@ main { flex: 1; padding: 12px; max-width: 900px; margin: 0 auto; width: 100%; }
 .ss-status { font-size: .95rem; font-weight: 600; color: var(--fg); }
 .ss-detail { font-size: .75rem; color: var(--fg3); min-height: 1.2em; }
 
-/* ─── Live Building Card ─── */
-.ss-top-bar { width: 100%; margin-bottom: 16px; }
-.ss-top-status { font-size: .82rem; font-weight: 600; color: var(--fg); margin-bottom: 6px; text-align: left; }
-.ss-top-progress { height: 3px; background: var(--glass2); border-radius: 2px; overflow: hidden; }
-.ss-top-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--lilac)); border-radius: 2px; transition: width .3s ease; width: 0; }
-
-.live-card {
-  width: 100%; max-width: 400px;
-  background: var(--glass2); border: .5px solid var(--glass-border);
-  border-radius: var(--radius); padding: 18px;
-  backdrop-filter: blur(16px);
-  box-shadow: 0 8px 40px rgba(0,0,0,.3), 0 0 30px var(--glow-purple);
-  transition: all .4s ease;
-}
-.live-card-header { margin-bottom: 14px; }
-.live-field { margin-bottom: 6px; min-height: 1.1em; position: relative; overflow: hidden; }
-.live-name { font-size: 1.2rem; font-weight: 700; color: var(--fg); }
-.live-role { font-size: .82rem; color: var(--lilac); }
-.live-company { font-size: .82rem; color: var(--fg3); }
-
-/* Shimmer placeholder */
-.shimmer-line {
-  height: .9em; border-radius: 4px;
-  background: linear-gradient(90deg, var(--glass) 25%, var(--glass2) 50%, var(--glass) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* Live field row */
-.live-body-field {
-  display: flex; align-items: center; gap: 10px; padding: 6px 0;
-  border-top: .5px solid var(--glass-border);
-  animation: fieldAppear .4s ease-out;
-  opacity: 0; animation-fill-mode: forwards;
-}
-@keyframes fieldAppear {
-  from { opacity: 0; transform: translateX(-10px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-.live-body-icon { font-size: .85rem; width: 20px; text-align: center; flex-shrink: 0; }
-.live-body-content { flex: 1; min-width: 0; }
-.live-body-label { font-size: .6rem; color: var(--fg4); text-transform: uppercase; letter-spacing: .5px; }
-.live-body-value { font-size: .82rem; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* AI refine glow effect */
-.live-field.refined { animation: fieldGlow .6s ease; }
-@keyframes fieldGlow {
-  0% { text-shadow: 0 0 0 transparent; }
-  50% { text-shadow: 0 0 12px var(--lilac); }
-  100% { text-shadow: 0 0 0 transparent; }
-}
-
-/* Flag entrance */
-.live-card-flag {
-  margin-bottom: 10px;
-}
-.live-card-flag img {
-  width: 44px; height: auto; border-radius: 3px;
-  transform: rotateY(-12deg) rotateX(4deg);
-  box-shadow: 2px 2px 8px rgba(0,0,0,.4);
-  animation: flagLand .5s cubic-bezier(.34,1.56,.64,1);
-}
-@keyframes flagLand {
-  from { opacity: 0; transform: rotateY(-30deg) rotateX(10deg) translateY(-20px) scale(.5); }
-  to { opacity: 1; transform: rotateY(-12deg) rotateX(4deg) translateY(0) scale(1); }
-}
-
 /* ─── Results ─── */
 .result-section {
-  background: var(--glass2); border-radius: var(--radius); padding: 16px;
-  margin-bottom: 16px; border: .5px solid var(--glass-border);
-  backdrop-filter: blur(16px);
-  box-shadow: var(--shadow);
+  background: var(--bg2); border-radius: var(--radius); padding: 16px;
+  margin-bottom: 16px; border: 1px solid var(--bg3);
 }
 .result-section h3 { font-size: .95rem; color: var(--fg3); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 .photo-preview {
@@ -435,160 +314,7 @@ main { flex: 1; padding: 12px; max-width: 900px; margin: 0 auto; width: 100%; }
 }
 .photo-preview.zoomed { max-height: none; cursor: zoom-out; }
 
-/* ─── Clean Contact Card ─── */
-.clean-card {
-  opacity: 0; transform: translateY(12px);
-  transition: opacity .4s ease, transform .4s ease;
-}
-.clean-card.visible { opacity: 1; transform: translateY(0); }
-.clean-card-header {
-  display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px;
-}
-.clean-card-photo {
-  width: 72px; height: 72px; border-radius: var(--radius2); object-fit: cover;
-  background: #000; flex-shrink: 0; cursor: zoom-in;
-  border: .5px solid var(--glass-border);
-  box-shadow: 0 4px 16px rgba(0,0,0,.3);
-}
-.clean-card-photo.zoomed { width: 100%; height: auto; max-height: none; cursor: zoom-out; }
-.clean-card-identity { flex: 1; min-width: 0; }
-.clean-card-name {
-  font-size: 1.25rem; font-weight: 700; color: var(--fg); line-height: 1.3;
-  overflow: hidden; text-overflow: ellipsis;
-}
-.clean-card-name.placeholder { color: var(--fg4); font-style: italic; }
-.clean-card-role {
-  font-size: .82rem; color: var(--lilac); margin-top: 3px;
-  overflow: hidden; text-overflow: ellipsis;
-}
-.clean-card-company {
-  font-size: .82rem; color: var(--fg3); margin-top: 1px;
-  overflow: hidden; text-overflow: ellipsis;
-}
-.clean-card-fields {
-  display: flex; flex-direction: column; gap: 2px;
-}
-.cc-field {
-  display: flex; align-items: flex-start; gap: 12px; padding: 8px 0;
-  border-bottom: .5px solid var(--glass-border);
-}
-.cc-field:last-child { border-bottom: none; }
-.cc-field-icon { font-size: 1rem; width: 24px; text-align: center; flex-shrink: 0; padding-top: 1px; }
-.cc-field-content { flex: 1; min-width: 0; }
-.cc-field-label {
-  font-size: .65rem; color: var(--fg4); text-transform: uppercase; letter-spacing: .5px;
-  margin-bottom: 2px;
-}
-.cc-field-value {
-  font-size: .9rem; color: var(--fg); word-break: break-word; line-height: 1.4;
-}
-.cc-link {
-  color: var(--lilac); text-decoration: none; transition: color var(--transition);
-}
-.cc-link:hover { color: var(--accent3); text-decoration: underline; }
-.clean-card-logo {
-  margin-top: 10px; padding: 8px 12px; background: var(--glass); border-radius: var(--radius2);
-  font-size: .72rem; color: var(--fg4); line-height: 1.4;
-  border: .5px solid var(--glass-border);
-}
-
-/* ─── 3D Country Flag ─── */
-.cc-flag-wrap {
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 14px; padding-bottom: 12px;
-  border-bottom: .5px solid var(--glass-border);
-}
-.cc-flag-3d {
-  perspective: 400px; flex-shrink: 0;
-}
-.cc-flag-img {
-  display: block; width: 56px; height: auto; border-radius: 4px;
-  transform: rotateY(-12deg) rotateX(4deg);
-  box-shadow:
-    3px 3px 8px rgba(0,0,0,.4),
-    6px 6px 20px rgba(0,0,0,.2),
-    -1px -1px 4px rgba(255,255,255,.05);
-  transition: transform .4s cubic-bezier(.4,0,.2,1), box-shadow .4s ease;
-  animation: flag-wave 3s ease-in-out infinite;
-  border: .5px solid rgba(255,255,255,.15);
-}
-.cc-flag-img:hover {
-  transform: rotateY(0deg) rotateX(0deg) scale(1.15);
-  box-shadow:
-    0 8px 24px rgba(0,0,0,.4),
-    0 0 30px var(--glow-purple);
-}
-.cc-flag-shadow {
-  width: 48px; height: 6px; margin: 4px auto 0;
-  background: radial-gradient(ellipse, rgba(0,0,0,.35) 0%, transparent 70%);
-  filter: blur(2px);
-  transform: scaleX(.85);
-  animation: flag-shadow 3s ease-in-out infinite;
-}
-@keyframes flag-wave {
-  0%, 100% { transform: rotateY(-12deg) rotateX(4deg); }
-  50% { transform: rotateY(-8deg) rotateX(2deg) translateY(-1px); }
-}
-@keyframes flag-shadow {
-  0%, 100% { transform: scaleX(.85); opacity: .7; }
-  50% { transform: scaleX(.75); opacity: .5; }
-}
-.cc-flag-country {
-  font-size: .78rem; color: var(--fg3); font-weight: 500;
-  letter-spacing: .3px;
-}
-
-/* ─── Session Banner ─── */
-.session-banner {
-  display: flex; justify-content: space-between; align-items: center;
-  background: linear-gradient(135deg, rgba(230,126,69,.1), rgba(230,126,69,.04));
-  border: .5px solid rgba(230,126,69,.25); border-radius: var(--radius2);
-  padding: 9px 16px; margin-bottom: 12px; font-size: .78rem;
-  backdrop-filter: blur(12px);
-}
-.session-banner-left { display: flex; align-items: center; gap: 8px; color: var(--orange); font-weight: 600; }
-.session-banner-right { color: var(--fg3); font-size: .75rem; }
-.session-pulse {
-  width: 7px; height: 7px; border-radius: 50%; background: var(--orange);
-  animation: pulse-dot 1.5s ease-in-out infinite;
-  box-shadow: 0 0 8px var(--glow-orange);
-}
-@keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(1.3); } }
-
-/* ─── Scan Result Row (orange accent) ─── */
-.scan-result-row {
-  display: flex; align-items: center; gap: 10px;
-  background: linear-gradient(135deg, rgba(230,126,69,.12), rgba(230,126,69,.05));
-  border: .5px solid rgba(230,126,69,.3); border-radius: var(--radius2);
-  padding: 11px 16px; margin-top: 12px;
-  animation: slideUp .3s ease;
-  backdrop-filter: blur(8px);
-}
-@keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.scan-result-icon { font-size: 1.1rem; }
-.scan-result-text { flex: 1; font-size: .85rem; color: var(--fg); font-weight: 500; }
-.scan-result-count { font-size: .72rem; color: var(--orange); font-weight: 700; background: rgba(230,126,69,.12); padding: 3px 10px; border-radius: 12px; }
-
-/* ─── Session Summary ─── */
-.session-summary {
-  background: var(--glass2); border-radius: var(--radius); padding: 18px;
-  margin-bottom: 16px; border: .5px solid var(--glass-border);
-  backdrop-filter: blur(16px); box-shadow: var(--shadow);
-}
-.session-summary-header { font-size: 1rem; font-weight: 700; margin-bottom: 14px; color: var(--fg); }
-.session-summary-stats {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-}
-.session-stat {
-  background: var(--glass); border-radius: var(--radius2); padding: 12px;
-  text-align: center; border: .5px solid var(--glass-border);
-}
-.session-stat-value { font-size: 1.3rem; font-weight: 700; color: var(--lilac); }
-.session-stat-label { font-size: .7rem; color: var(--fg4); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
-
-.session-controls { gap: 10px; }
-
-/* ─── Text Blocks (hidden, kept for compatibility) ─── */
+/* ─── Text Blocks ─── */
 .text-block {
   display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: var(--radius2);
   margin-bottom: 6px; background: var(--bg); border: 1px solid var(--bg3);
@@ -641,16 +367,11 @@ main { flex: 1; padding: 12px; max-width: 900px; margin: 0 auto; width: 100%; }
 /* ─── Contacts ─── */
 .contact-list { display: flex; flex-direction: column; gap: 8px; }
 .contact-item {
-  background: var(--glass2); border-radius: var(--radius); padding: 12px 14px;
+  background: var(--bg2); border-radius: var(--radius); padding: 14px 16px;
   display: flex; align-items: center; gap: 12px; transition: all var(--transition);
-  border: .5px solid var(--glass-border);
-  backdrop-filter: blur(12px);
+  border: 1px solid transparent;
 }
-.contact-item:hover {
-  border-color: var(--accent); background: rgba(124,91,245,.06);
-  transform: translateY(-1px) scale(1.01);
-  box-shadow: 0 6px 24px rgba(0,0,0,.2), 0 0 20px var(--glow-purple);
-}
+.contact-item:hover { border-color: var(--bg3); background: var(--bg3); }
 .contact-avatar {
   width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center;
   justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0; color: #fff;
@@ -673,120 +394,34 @@ main { flex: 1; padding: 12px; max-width: 900px; margin: 0 auto; width: 100%; }
 .contact-actions button:hover { background: var(--bg); color: var(--fg); }
 .search-bar { position: relative; margin-bottom: 16px; }
 .search-bar input {
-  width: 100%; background: var(--glass2); border: .5px solid var(--glass-border); border-radius: var(--radius2);
-  padding: 9px 12px 9px 38px; color: var(--fg); font-size: .85rem; transition: all var(--transition);
-  backdrop-filter: blur(12px);
+  width: 100%; background: var(--bg2); border: 1px solid var(--bg3); border-radius: var(--radius2);
+  padding: 10px 12px 10px 38px; color: var(--fg); font-size: .9rem; transition: border-color var(--transition);
 }
-.search-bar input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 16px var(--glow-purple); }
+.search-bar input:focus { outline: none; border-color: var(--accent); }
 .search-bar svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--fg4); }
 
 /* ─── Export ─── */
 .export-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
 .export-card {
-  background: var(--glass2); border-radius: var(--radius); padding: 18px; text-align: center;
-  cursor: pointer; transition: all var(--transition); border: .5px solid var(--glass-border);
-  backdrop-filter: blur(12px);
+  background: var(--bg2); border-radius: var(--radius); padding: 20px; text-align: center;
+  cursor: pointer; transition: all var(--transition); border: 1px solid transparent;
 }
-.export-card:hover {
-  border-color: var(--lilac); transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 8px 30px rgba(0,0,0,.3), 0 0 24px var(--glow-purple);
-}
+.export-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
 .export-card .export-icon { font-size: 2rem; margin-bottom: 8px; }
 .export-card h4 { font-size: .95rem; margin-bottom: 4px; }
 .export-card p { font-size: .78rem; color: var(--fg4); }
 
-/* ─── Export Modal ─── */
-.export-modal-backdrop {
-  position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 500;
-  display: none; align-items: center; justify-content: center;
-  padding: 20px; backdrop-filter: blur(4px);
-}
-.export-modal-backdrop.visible { display: flex; }
-.export-modal {
-  background: rgba(18,24,42,.92); border-radius: var(--radius); width: 100%; max-width: 560px;
-  max-height: 85vh; overflow-y: auto; border: .5px solid var(--glass-border);
-  box-shadow: 0 8px 60px rgba(0,0,0,.5), 0 0 40px var(--glow-purple);
-  backdrop-filter: blur(24px);
-}
-.export-modal-header {
-  padding: 14px 20px; border-bottom: .5px solid var(--glass-border);
-  display: flex; align-items: center; justify-content: space-between;
-}
-.export-modal-header h3 { font-size: 1.05rem; }
-.export-modal-close {
-  background: none; border: none; color: var(--fg3); font-size: 1.3rem;
-  cursor: pointer; padding: 4px 8px; border-radius: 6px;
-}
-.export-modal-close:hover { background: var(--bg4); color: var(--fg); }
-.export-modal-body { padding: 20px; }
-.export-section { margin-bottom: 18px; }
-.export-section-title {
-  font-size: .82rem; font-weight: 600; color: var(--accent2);
-  margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px;
-}
-.export-format-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px;
-}
-.export-format-btn {
-  background: var(--glass); border: .5px solid var(--glass-border); border-radius: var(--radius2);
-  padding: 10px 8px; text-align: center; cursor: pointer; transition: all var(--transition);
-  color: var(--fg2); font-size: .78rem;
-}
-.export-format-btn:hover { border-color: var(--accent); transform: scale(1.04); }
-.export-format-btn.active { border-color: var(--accent); background: rgba(124,91,245,.15); color: var(--lilac); font-weight: 600; box-shadow: 0 0 12px var(--glow-purple); }
-.export-format-btn .fmt-icon { font-size: 1.3rem; display: block; margin-bottom: 4px; }
-
-.export-columns-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px;
-}
-.export-col-check {
-  display: flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--fg2);
-  cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: background var(--transition);
-}
-.export-col-check:hover { background: var(--bg3); }
-.export-col-check input[type="checkbox"] {
-  accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer;
-}
-.export-col-actions { display: flex; gap: 8px; margin-bottom: 8px; }
-.export-col-actions button {
-  background: none; border: none; color: var(--accent2); font-size: .75rem;
-  cursor: pointer; text-decoration: underline; padding: 0;
-}
-
-.export-separator-row {
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-}
-.export-separator-row select, .export-separator-row input {
-  background: var(--glass); border: .5px solid var(--glass-border); color: var(--fg);
-  padding: 8px 12px; border-radius: var(--radius2); font-size: .85rem;
-}
-.export-separator-row select { min-width: 160px; }
-.export-separator-row input { width: 80px; }
-
-.export-preview-box {
-  background: var(--glass); border: .5px solid var(--glass-border); border-radius: var(--radius2);
-  padding: 10px 14px; font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: .7rem; color: var(--fg3); max-height: 120px; overflow: auto;
-  white-space: pre; line-height: 1.5;
-}
-
-.export-modal-footer {
-  padding: 14px 20px; border-top: .5px solid var(--glass-border);
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-}
-.export-modal-footer .export-count { font-size: .8rem; color: var(--fg3); }
-
 /* ─── Settings ─── */
-.settings-section { background: var(--glass2); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; border: .5px solid var(--glass-border); backdrop-filter: blur(12px); }
+.settings-section { background: var(--bg2); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
 .settings-section h3 { font-size: .95rem; margin-bottom: 14px; color: var(--fg2); display: flex; align-items: center; gap: 8px; }
-.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: .5px solid var(--glass-border); }
+.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--bg3); }
 .setting-row:last-child { border: none; }
 .setting-row label { font-size: .9rem; color: var(--fg3); }
 select, input[type="url"], input[type="text"] {
-  background: var(--glass); border: .5px solid var(--glass-border); border-radius: 8px; padding: 7px 12px;
-  color: var(--fg); font-size: .85rem; transition: all var(--transition);
+  background: var(--bg); border: 1px solid var(--bg3); border-radius: 6px; padding: 8px 12px;
+  color: var(--fg); font-size: .85rem; transition: border-color var(--transition);
 }
-select:focus, input[type="url"]:focus, input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 12px var(--glow-purple); outline: none; }
+select:focus, input[type="url"]:focus, input[type="text"]:focus { outline: none; border-color: var(--accent); }
 
 /* ─── Empty State ─── */
 .empty-state { text-align: center; padding: 48px 20px; color: var(--fg4); }
@@ -797,23 +432,22 @@ select:focus, input[type="url"]:focus, input[type="text"]:focus { border-color: 
 /* ─── Toast ─── */
 .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
 .toast {
-  background: var(--glass2); border: .5px solid var(--glass-border); border-radius: var(--radius2);
+  background: var(--bg2); border: 1px solid var(--bg3); border-radius: var(--radius2);
   padding: 12px 16px; font-size: .9rem; box-shadow: var(--shadow);
   animation: toastIn .3s ease; display: flex; align-items: center; gap: 8px; max-width: 350px;
-  pointer-events: auto; backdrop-filter: blur(12px);
+  pointer-events: auto;
 }
-.toast.success { border-left: 2px solid var(--green); }
-.toast.error { border-left: 2px solid var(--red); }
-.toast.info { border-left: 2px solid var(--accent); }
+.toast.success { border-left: 3px solid var(--green); }
+.toast.error { border-left: 3px solid var(--red); }
+.toast.info { border-left: 3px solid var(--accent); }
 @keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 /* ─── Upload Drop Zone ─── */
 .drop-zone {
-  background: var(--glass2); border-radius: var(--radius); padding: 40px 24px; text-align: center;
-  border: 1px dashed var(--glass-border); cursor: pointer; transition: all var(--transition);
-  backdrop-filter: blur(12px);
+  background: var(--bg2); border-radius: var(--radius); padding: 40px 24px; text-align: center;
+  border: 2px dashed var(--bg3); cursor: pointer; transition: all var(--transition);
 }
-.drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: rgba(124,91,245,.08); box-shadow: 0 0 20px var(--glow-purple); }
+.drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: rgba(59,130,246,.05); }
 .drop-zone .drop-icon { font-size: 3rem; margin-bottom: 8px; }
 
 /* ─── Safe Areas (notch, dynamic island, home indicator) ─── */
@@ -948,7 +582,9 @@ body {
         </div>
       </div>
       <div class="controls">
-        <button class="btn btn-primary btn-scan-main" id="btnSmartScan" disabled aria-label="Scansiona">📸 Scansiona</button>
+        <button class="btn btn-primary" id="btnCapture" disabled aria-label="Scatta foto">📸 Scatta foto</button>
+        <button class="btn btn-accent" id="btnSmartScan" disabled aria-label="Smart Scan AI">🧠 Smart Scan</button>
+        <button class="btn btn-ar" id="btnARScan" disabled aria-label="AR Scan">✨ AR Scan</button>
         <button class="btn btn-secondary" id="btnFlip" style="display:none" aria-label="Inverti fotocamera">🔄 Inverti</button>
         <button class="btn btn-secondary" id="btnTorch" style="display:none" aria-label="Flash">🔦 Flash</button>
       </div>
@@ -956,33 +592,17 @@ body {
 
     <!-- Smart Scan Progress Overlay (shared by local + remote) -->
     <div class="smart-scan-overlay" id="smartScanOverlay" style="display:none">
-      <!-- Compact progress bar at top -->
-      <div class="ss-top-bar">
-        <div class="ss-top-status" id="ssStatus">📸 Acquisizione...</div>
-        <div class="ss-top-progress"><div class="ss-top-fill" id="ssTopFill"></div></div>
-      </div>
-
-      <!-- Live building card -->
-      <div class="live-card" id="liveCard">
-        <div class="live-card-flag" id="liveFlag" style="display:none">
-          <img id="liveFlagImg" alt="">
-        </div>
-        <div class="live-card-header">
-          <div class="live-field live-name" id="liveName">
-            <div class="shimmer-line" style="width:70%"></div>
-          </div>
-          <div class="live-field live-role" id="liveRole">
-            <div class="shimmer-line" style="width:50%"></div>
-          </div>
-          <div class="live-field live-company" id="liveCompany">
-            <div class="shimmer-line" style="width:60%"></div>
-          </div>
-        </div>
-        <div class="live-card-body" id="liveCardBody">
-          <!-- Fields appear here dynamically -->
+      <div class="ss-progress-ring">
+        <svg viewBox="0 0 120 120">
+          <circle class="ss-ring-bg" cx="60" cy="60" r="52" />
+          <circle class="ss-ring-fill" id="ssRingFill" cx="60" cy="60" r="52" />
+        </svg>
+        <div class="ss-center-text">
+          <div class="ss-frame-count" id="ssFrameCount">0</div>
+          <div class="ss-frame-label">frame</div>
         </div>
       </div>
-
+      <div class="ss-status" id="ssStatus">Acquisizione frame...</div>
       <div class="ss-detail" id="ssDetail"></div>
       <button class="btn btn-secondary btn-small" id="btnSmartScanStop">⏹ Interrompi</button>
     </div>
@@ -1022,66 +642,20 @@ body {
       <div class="progress-bar"><div class="fill" id="ocrProgress" style="width:0"></div></div>
     </div>
 
-    <!-- Session Banner -->
-    <div class="session-banner" id="sessionBanner" style="display:none">
-      <div class="session-banner-left">
-        <span class="session-pulse"></span>
-        <span class="session-banner-text">Sessione attiva</span>
-      </div>
-      <div class="session-banner-right">
-        <span id="sessionCardCount">0</span> contatti &bull;
-        <span id="sessionTimer">00:00</span>
-      </div>
-    </div>
-
-    <!-- Results — Clean Contact Card -->
+    <!-- Results -->
     <div class="result-section" id="resultSection" style="display:none">
-      <div class="clean-card" id="cleanCard">
-        <!-- 3D Flag -->
-        <div class="cc-flag-wrap" id="ccFlagWrap" style="display:none">
-          <div class="cc-flag-3d">
-            <img class="cc-flag-img" id="ccFlagImg" alt="" loading="lazy">
-            <div class="cc-flag-shadow"></div>
-          </div>
-          <span class="cc-flag-country" id="ccFlagCountry"></span>
-        </div>
-        <div class="clean-card-header">
-          <img class="clean-card-photo" id="photoPreview" alt="Foto acquisita" loading="lazy">
-          <div class="clean-card-identity">
-            <div class="clean-card-name" id="ccName"></div>
-            <div class="clean-card-role" id="ccRole"></div>
-            <div class="clean-card-company" id="ccCompany"></div>
-          </div>
-        </div>
-        <div class="clean-card-fields" id="cleanCardFields"></div>
-        <div class="clean-card-logo" id="ccLogo" style="display:none"></div>
+      <h3>📋 Testo rilevato</h3>
+      <img class="photo-preview" id="photoPreview" alt="Foto acquisita" loading="lazy">
+      <div id="ocrEngineLabel" style="font-size:.7rem;color:var(--fg4);margin-bottom:12px"></div>
+      <div id="textBlocksContainer" role="list" aria-label="Blocchi di testo rilevati"></div>
+      <div class="field-summary" id="fieldSummary">
+        <h4>Campi assegnati</h4>
+        <div id="fieldRows"></div>
       </div>
-      <!-- Hidden legacy containers -->
-      <div id="ocrEngineLabel" style="display:none"></div>
-      <div id="textBlocksContainer" style="display:none"></div>
-      <div id="fieldSummary" style="display:none"><div id="fieldRows"></div></div>
-
-      <!-- Session scan result summary (red accent row) -->
-      <div class="scan-result-row" id="scanResultRow" style="display:none">
-        <span class="scan-result-icon">✅</span>
-        <span class="scan-result-text" id="scanResultText">Contatto salvato</span>
-        <span class="scan-result-count" id="scanResultCount">#1</span>
-      </div>
-
-      <!-- Progressive action buttons -->
-      <div class="controls session-controls" style="margin-top:16px;margin-bottom:0">
-        <button class="btn btn-success btn-scan-main" id="btnScanNext">📸 Scansiona prossimo</button>
-        <button class="btn btn-secondary" id="btnEndSession">✅ Termina sessione</button>
-      </div>
-    </div>
-
-    <!-- Session Summary (shown after ending session) -->
-    <div class="session-summary" id="sessionSummary" style="display:none">
-      <div class="session-summary-header">📊 Riepilogo sessione</div>
-      <div class="session-summary-stats" id="sessionStats"></div>
-      <div class="controls" style="margin-top:16px">
-        <button class="btn btn-primary" id="btnNewSession">📸 Nuova sessione</button>
-        <button class="btn btn-accent" id="btnExportSession">📤 Esporta sessione</button>
+      <div class="controls" style="margin-top:16px;margin-bottom:0">
+        <button class="btn btn-primary" id="btnNormalizeAI" title="Normalizza i dati con intelligenza artificiale">🤖 Normalizza con AI</button>
+        <button class="btn btn-success" id="btnSaveContact">💾 Salva contatto</button>
+        <button class="btn btn-secondary" id="btnRetake">🔄 Nuova scansione</button>
       </div>
     </div>
   </div>
@@ -1116,79 +690,8 @@ body {
         <div class="export-icon">🔗</div><h4>Webhook CRM</h4><p>Invio diretto al tuo CRM</p>
       </div>
     </div>
-    <div style="margin-top:16px;text-align:center">
-      <button class="btn btn-primary" id="btnAdvancedExport" style="font-size:.95rem;padding:12px 28px">
-        ⚙️ Export Avanzato — Scegli formato, colonne e separatore
-      </button>
-    </div>
     <div class="empty-state" id="emptyExport" style="display:none">
       <div class="empty-icon">📤</div><p>Nessun contatto da esportare.</p>
-    </div>
-  </div>
-
-  <!-- ═══ ADVANCED EXPORT MODAL ═══ -->
-  <div class="export-modal-backdrop" id="exportModalBackdrop">
-    <div class="export-modal" role="dialog" aria-label="Export avanzato">
-      <div class="export-modal-header">
-        <h3>⚙️ Export Avanzato</h3>
-        <button class="export-modal-close" id="exportModalClose" aria-label="Chiudi">&times;</button>
-      </div>
-      <div class="export-modal-body">
-
-        <!-- FORMAT -->
-        <div class="export-section">
-          <div class="export-section-title">📄 Formato</div>
-          <div class="export-format-grid" id="exportFormatGrid">
-            <div class="export-format-btn active" data-format="csv"><span class="fmt-icon">📊</span>CSV</div>
-            <div class="export-format-btn" data-format="tsv"><span class="fmt-icon">📋</span>TSV</div>
-            <div class="export-format-btn" data-format="custom"><span class="fmt-icon">✂️</span>Custom</div>
-            <div class="export-format-btn" data-format="json"><span class="fmt-icon">🔧</span>JSON</div>
-            <div class="export-format-btn" data-format="jsonl"><span class="fmt-icon">📝</span>JSONL</div>
-            <div class="export-format-btn" data-format="xml"><span class="fmt-icon">📄</span>XML</div>
-            <div class="export-format-btn" data-format="xlsx"><span class="fmt-icon">📗</span>XLSX</div>
-            <div class="export-format-btn" data-format="vcard"><span class="fmt-icon">📇</span>vCard</div>
-          </div>
-        </div>
-
-        <!-- SEPARATOR (visible for csv/tsv/custom) -->
-        <div class="export-section" id="exportSepSection">
-          <div class="export-section-title">🔤 Separatore</div>
-          <div class="export-separator-row">
-            <select id="exportSepSelect">
-              <option value=",">Virgola (,)</option>
-              <option value=";">Punto e virgola (;)</option>
-              <option value="\t">Tab</option>
-              <option value="|">Pipe (|)</option>
-              <option value="custom">Personalizzato...</option>
-            </select>
-            <input type="text" id="exportSepCustom" placeholder="es: ::" maxlength="4" style="display:none">
-          </div>
-        </div>
-
-        <!-- COLUMNS -->
-        <div class="export-section" id="exportColSection">
-          <div class="export-section-title">📋 Colonne</div>
-          <div class="export-col-actions">
-            <button id="exportColAll">Seleziona tutte</button>
-            <button id="exportColNone">Deseleziona tutte</button>
-            <button id="exportColEssential">Solo essenziali</button>
-          </div>
-          <div class="export-columns-grid" id="exportColumnsGrid">
-            <!-- Generated by JS -->
-          </div>
-        </div>
-
-        <!-- PREVIEW -->
-        <div class="export-section">
-          <div class="export-section-title">👁️ Anteprima (primi 2 record)</div>
-          <div class="export-preview-box" id="exportPreview">Seleziona un formato...</div>
-        </div>
-
-      </div>
-      <div class="export-modal-footer">
-        <span class="export-count" id="exportRecordCount">0 contatti</span>
-        <button class="btn btn-success" id="btnExportDownload" style="font-size:.95rem">💾 Scarica</button>
-      </div>
     </div>
   </div>
 
@@ -1321,8 +824,6 @@ let detectedBlocks = []; // [{ text, type, confidence }]
 let openaiApiKey = ''; // Stored in memory only (not in localStorage for security)
 let remoteSmartBuffer = []; // Accumulate remote photos for Smart Scan
 let remoteSmartActive = false; // Whether we're collecting for Smart Scan
-let phoneBridgeConn = null;    // PeerJS connection to desktop (when this device is the phone)
-let isPhoneBridge = false;     // True when running as remote phone (?s= param detected)
 
 // ─── DOM HELPERS ──────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
@@ -1337,11 +838,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initContacts();
   initExport();
   initSettings();
-  initAdvancedExport();
   initApiKeyBar();
   checkOcrApi();
   initTesseractFallback();
-  initPhoneBridge(); // Detect ?s= param and auto-connect to desktop
 });
 
 function loadState() {
@@ -1400,6 +899,7 @@ async function initTesseractFallback() {
       }
     });
     tesseractReady = true;
+    $('btnCapture').disabled = false;
   } catch (e) {
     console.warn('[BizCard] Tesseract init failed:', e);
   }
@@ -1451,6 +951,7 @@ function switchMode(mode) {
 // ─── LOCAL CAMERA ─────────────────────────────────────────────
 function initScanner() {
   startCamera();
+  $('btnCapture').addEventListener('click', captureLocalPhoto);
   $('btnSmartScan').addEventListener('click', startSmartScan);
   $('btnSmartScanStop').addEventListener('click', () => { smartScanAborted = true; });
   $('btnFlip').addEventListener('click', () => { facingMode = facingMode === 'environment' ? 'user' : 'environment'; startCamera(); });
@@ -1466,12 +967,11 @@ function initScanner() {
   dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('dragover'); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('image/')) processFile(f); });
   fi.addEventListener('change', (e) => { const f = e.target.files[0]; if (f) processFile(f); fi.value = ''; });
 
-  // Session controls
-  $('btnScanNext').addEventListener('click', () => { autoSaveAndContinue(); scanNext(); });
-  $('btnEndSession').addEventListener('click', () => { autoSaveAndContinue(); endSession(); });
-  $('btnNewSession').addEventListener('click', () => { $('sessionSummary').style.display = 'none'; scanNext(); });
-  $('btnExportSession').addEventListener('click', exportSessionData);
+  $('btnNormalizeAI').addEventListener('click', normalizeWithAI);
+  $('btnSaveContact').addEventListener('click', saveContact);
+  $('btnRetake').addEventListener('click', resetScan);
   $('btnRemoteSmartScan').addEventListener('click', startRemoteSmartScan);
+  $('btnARScan').addEventListener('click', startARScan);
 
   // Photo preview zoom toggle
   $('photoPreview').addEventListener('click', function() { this.classList.toggle('zoomed'); });
@@ -1491,7 +991,9 @@ async function startCamera() {
     v.style.display = 'block';
     ph.style.display = 'none';
     bf.style.display = 'inline-flex';
+    $('btnCapture').disabled = false;
     $('btnSmartScan').disabled = false;
+    $('btnARScan').disabled = false;
 
     // Check torch support
     const track = stream.getVideoTracks()[0];
@@ -1545,21 +1047,14 @@ function captureLocalPhoto() {
   if (!useServerOCR) preprocessImage(ctx, canvas.width, canvas.height);
 
   const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
-  const base64 = dataUrl.split(',')[1];
-
-  // Phone bridge: also send to desktop
-  if (isPhoneBridge) sendPhotoToDesktop(base64);
-
-  processOCR(base64, dataUrl);
+  processOCR(dataUrl.split(',')[1], dataUrl);
 }
 
 function processFile(file) {
   const reader = new FileReader();
   reader.onload = (e) => {
     const dataUrl = e.target.result;
-    const base64 = dataUrl.split(',')[1];
-    if (isPhoneBridge) sendPhotoToDesktop(base64);
-    processOCR(base64, dataUrl);
+    processOCR(dataUrl.split(',')[1], dataUrl);
   };
   reader.readAsDataURL(file);
 }
@@ -1634,10 +1129,11 @@ async function startSmartScan() {
   $('smartScanOverlay').style.display = 'flex';
   $('btnSmartScan').classList.add('scanning');
   $('btnSmartScan').disabled = true;
-  showLiveCard();
+  $('btnCapture').disabled = true;
+  $('ssFrameCount').textContent = '0';
   $('ssStatus').textContent = '📸 Acquisizione frame...';
   $('ssDetail').textContent = 'Tieni fermo il biglietto nella guida';
-  updateLiveProgress(0);
+  updateSmartScanRing(0);
 
   if (navigator.vibrate) navigator.vibrate(100);
 
@@ -1664,14 +1160,14 @@ async function startSmartScan() {
 
     // ── PHASE 3: Multi-frame OCR ──
     $('ssStatus').textContent = '🤖 OCR su frame migliori...';
-    updateLiveProgress(50);
+    updateSmartScanRing(50);
 
     const ocrResults = [];
     for (let i = 0; i < bestFrames.length; i++) {
       if (smartScanAborted) return cleanupSmartScan();
 
       $('ssDetail').textContent = `OCR frame ${i + 1}/${bestFrames.length}...`;
-      updateLiveProgress(50 + (i / bestFrames.length) * 30);
+      updateSmartScanRing(50 + (i / bestFrames.length) * 30);
 
       const frame = bestFrames[i];
       const canvas = document.createElement('canvas');
@@ -1720,41 +1216,36 @@ async function startSmartScan() {
     }
 
     // ── PHASE 4: Merge OCR Results ──
-    $('ssStatus').textContent = '🔀 Fusione risultati...';
-    updateLiveProgress(85);
+    $('ssStatus').textContent = '🔀 Fusione risultati multi-frame...';
+    updateSmartScanRing(85);
 
     const mergedText = mergeOcrResults(ocrResults);
     scanCount++;
     saveState();
 
     classifyBlocks(mergedText);
-    populateLiveCardFromBlocks();
+    renderBlocks();
+    renderFieldSummary();
+
+    $('resultSection').style.display = 'block';
+    $('ocrEngineLabel').textContent = `Smart Scan: ${ocrResults.length} frame | ${ocrResults[0].engine || 'tesseract'}`;
 
     // ── PHASE 5: Auto AI Normalization ──
-    if (openaiApiKey && detectedBlocks.length > 0) {
-      $('ssStatus').textContent = '✨ AI sta raffinando...';
-      $('ssDetail').textContent = 'Pulizia e arricchimento dati...';
-      updateLiveProgress(92);
+    if (SMART_SCAN_CONFIG.autoNormalize && openaiApiKey && detectedBlocks.length > 0) {
+      $('ssStatus').textContent = '✨ Normalizzazione AI...';
+      $('ssDetail').textContent = 'GPT-4o-mini sta pulendo i dati...';
+      updateSmartScanRing(92);
 
       await normalizeWithAI();
-      refineLiveCardFromBlocks();
-      updateLiveProgress(100);
+      updateSmartScanRing(100);
     } else {
-      updateLiveProgress(100);
+      updateSmartScanRing(100);
     }
 
-    // Auto-start session on first scan
-    if (!currentSession) startSession();
-    currentSession.photoCount += ocrResults.length;
-
-    // Show clean contact card
-    $('resultSection').style.display = 'block';
-    renderCleanCard();
-
     // Done!
-    $('ssStatus').textContent = '✅ Completato!';
+    $('ssStatus').textContent = '✅ Smart Scan completato!';
     const fieldCount = detectedBlocks.filter(b => b.type !== 'other' && b.type !== 'ignore').length;
-    $('ssDetail').textContent = `${fieldCount} campi rilevati`;
+    $('ssDetail').textContent = `${fieldCount} campi rilevati e normalizzati`;
     if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
 
     toast('🧠 Smart Scan completato — ' + fieldCount + ' campi trovati!', 'success');
@@ -1778,6 +1269,7 @@ function cleanupSmartScan() {
   smartScanActive = false;
   $('btnSmartScan').classList.remove('scanning');
   $('btnSmartScan').disabled = false;
+  $('btnCapture').disabled = false;
   if (smartScanAborted) {
     $('smartScanOverlay').style.display = 'none';
     toast('Smart Scan interrotto', 'info');
@@ -1785,8 +1277,9 @@ function cleanupSmartScan() {
 }
 
 function updateSmartScanRing(percent) {
-  // Legacy ring removed — redirect to live progress bar
-  updateLiveProgress(percent);
+  const circumference = 2 * Math.PI * 52; // r=52
+  const offset = circumference - (percent / 100) * circumference;
+  $('ssRingFill').style.strokeDashoffset = offset;
 }
 
 // ── Burst Capture ──
@@ -1815,8 +1308,8 @@ function captureFrameBurst(video) {
       frames.push({ imageData, width: w, height: h });
 
       count++;
-      updateLiveProgress((count / config.totalFrames) * 45);
-      $('ssStatus').textContent = '📸 Frame ' + count + '/' + config.totalFrames;
+      $('ssFrameCount').textContent = count;
+      updateSmartScanRing((count / config.totalFrames) * 45);
 
       // Flash guide briefly every 5 frames
       if (count % 5 === 0) {
@@ -1995,6 +1488,9 @@ async function startARScan() {
   canvas.style.height = '100%';
 
   // UI
+  $('btnARScan').classList.add('scanning');
+  $('btnARScan').disabled = true;
+  $('btnCapture').disabled = true;
   $('btnSmartScan').disabled = true;
   $('arHud').style.display = 'block';
   $('arCompleteCard').classList.remove('visible', 'flip');
@@ -2018,6 +1514,9 @@ function stopARScan() {
   if (arAnimFrame) cancelAnimationFrame(arAnimFrame);
   arAnimFrame = null;
 
+  $('btnARScan').classList.remove('scanning');
+  $('btnARScan').disabled = false;
+  $('btnCapture').disabled = false;
   $('btnSmartScan').disabled = false;
   $('cameraGuide').style.display = '';
   $('arHud').style.display = 'none';
@@ -2385,8 +1884,10 @@ async function arNormalizeWithAI() {
         const mergedText = Object.values(arDetectedFields).filter(Boolean).join('\n');
         classifyBlocks(mergedText);
         applyNormalizedData(normalized);
+        renderBlocks();
+        renderFieldSummary();
         $('resultSection').style.display = 'block';
-        renderCleanCard();
+        $('ocrEngineLabel').textContent = 'AR Scan + GPT-4o-mini vision';
         scanCount++;
         saveState();
       }
@@ -2591,138 +2092,6 @@ function cleanupPeer() {
   phoneConnected = false;
 }
 
-// ─── PHONE BRIDGE — Connect to Desktop as Remote Phone ────────
-// When the app opens with ?s=XXXXXX, it acts as a remote phone:
-// same full app, but also sends captured photos to the desktop.
-
-function initPhoneBridge() {
-  const params = new URLSearchParams(location.search);
-  const remoteSession = (params.get('s') || params.get('session') || '').toUpperCase();
-  if (!remoteSession) return; // No session param = normal desktop mode
-
-  isPhoneBridge = true;
-  console.log('[PhoneBridge] Session detected:', remoteSession);
-
-  // Show persistent status bar at top
-  const banner = document.createElement('div');
-  banner.id = 'phoneBridgeBanner';
-  banner.style.cssText = 'background:linear-gradient(135deg,var(--accent),#7c3aed);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.82rem;z-index:99;';
-  banner.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px">
-      <div id="pbDot" style="width:10px;height:10px;border-radius:50%;background:var(--orange);animation:pulse 1s infinite;flex-shrink:0"></div>
-      <span id="pbStatus">Connessione al desktop...</span>
-    </div>
-    <span style="font-size:.72rem;color:rgba(255,255,255,.7)">Sessione: ${remoteSession}</span>
-  `;
-  // Insert after header
-  const header = document.querySelector('header');
-  header.parentNode.insertBefore(banner, header.nextSibling);
-
-  // Connect to the desktop peer
-  connectPhoneBridge(remoteSession);
-}
-
-function connectPhoneBridge(remoteSession, retries = 0) {
-  const MAX_RETRIES = 15;
-  if (retries >= MAX_RETRIES) {
-    updatePhoneBridgeStatus('error', '❌ Connessione fallita dopo ' + MAX_RETRIES + ' tentativi');
-    return;
-  }
-
-  const phonePeer = new Peer({
-    config: {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' },
-        { urls: 'stun:stun3.l.google.com:19302' },
-      ]
-    },
-    debug: 0,
-  });
-
-  phonePeer.on('open', (myId) => {
-    console.log('[PhoneBridge] My ID:', myId, '→ connecting to bizcard-' + remoteSession);
-
-    const conn = phonePeer.connect('bizcard-' + remoteSession);
-    if (!conn) {
-      updatePhoneBridgeStatus('error', 'Impossibile connettersi');
-      retries++;
-      setTimeout(() => connectPhoneBridge(remoteSession, retries), Math.min(2000 + retries * 1500, 15000));
-      return;
-    }
-
-    conn.on('open', () => {
-      phoneBridgeConn = conn;
-      updatePhoneBridgeStatus('connected', '✅ Connesso al desktop — le foto vengono inviate automaticamente');
-      toast('📱 Connesso al desktop! Le foto catturate saranno inviate.', 'success');
-    });
-
-    conn.on('close', () => {
-      phoneBridgeConn = null;
-      updatePhoneBridgeStatus('error', '⚠️ Desktop disconnesso — riconnessione...');
-      retries++;
-      setTimeout(() => connectPhoneBridge(remoteSession, retries), 3000);
-    });
-
-    conn.on('data', (data) => {
-      if (data && data.type === 'ack') {
-        console.log('[PhoneBridge] ACK received from desktop');
-      }
-    });
-
-    conn.on('error', (e) => {
-      console.warn('[PhoneBridge] Connection error:', e);
-      updatePhoneBridgeStatus('error', 'Errore: ' + (e.type || e.message));
-    });
-  });
-
-  phonePeer.on('error', (e) => {
-    console.warn('[PhoneBridge] Peer error:', e.type);
-    if (e.type === 'peer-unavailable') {
-      updatePhoneBridgeStatus('error', 'Desktop non trovato — verifica che sia aperto su "Telefono remoto"');
-    } else {
-      updatePhoneBridgeStatus('error', 'Errore: ' + e.type);
-    }
-    retries++;
-    setTimeout(() => connectPhoneBridge(remoteSession, retries), Math.min(2000 + retries * 1500, 15000));
-  });
-}
-
-function updatePhoneBridgeStatus(state, text) {
-  const dot = $('pbDot');
-  const status = $('pbStatus');
-  if (!dot || !status) return;
-  status.textContent = text;
-  if (state === 'connected') {
-    dot.style.background = 'var(--green)';
-    dot.style.animation = 'none';
-    dot.style.boxShadow = '0 0 8px rgba(34,197,94,.5)';
-  } else if (state === 'error') {
-    dot.style.background = 'var(--red)';
-    dot.style.animation = 'none';
-  } else {
-    dot.style.background = 'var(--orange)';
-    dot.style.animation = 'pulse 1s infinite';
-  }
-}
-
-// Send photo to desktop when this is a phone bridge
-function sendPhotoToDesktop(base64) {
-  if (!isPhoneBridge || !phoneBridgeConn || !phoneBridgeConn.open) return;
-  try {
-    phoneBridgeConn.send({
-      type: 'photo',
-      image: base64,
-      timestamp: Date.now(),
-    });
-    console.log('[PhoneBridge] Photo sent to desktop (' + Math.round(base64.length / 1024) + 'KB)');
-    toast('📤 Foto inviata al desktop', 'info');
-  } catch (e) {
-    console.warn('[PhoneBridge] Send error:', e);
-  }
-}
-
 // ─── PROCESS REMOTE PHOTO (same quality as local) ─────────────
 function processRemotePhoto(base64) {
   // If remote Smart Scan is active, accumulate instead of processing
@@ -2730,8 +2099,8 @@ function processRemotePhoto(base64) {
     remoteSmartBuffer.push(base64);
     const count = remoteSmartBuffer.length;
     toast(`📸 Foto ${count} ricevuta — continua a scattare!`, 'info');
-    updateLiveProgress((count / 5) * 45);
-    $('ssStatus').textContent = '📸 Foto ' + count + '/5 ricevute';
+    $('ssFrameCount').textContent = count;
+    updateSmartScanRing((count / 5) * 45); // assume ~5 photos target
     $('ssDetail').textContent = `${count} foto ricevute — invia ancora oppure premi "Analizza"`;
 
     // Auto-trigger analysis if we have enough
@@ -2783,10 +2152,10 @@ async function startRemoteSmartScan() {
 
   // Show overlay
   $('smartScanOverlay').style.display = 'flex';
+  $('ssFrameCount').textContent = '0';
   $('ssStatus').textContent = '📱 Scatta foto dal telefono!';
   $('ssDetail').textContent = 'Scatta 3-5 foto del biglietto da diversi angoli';
-  updateLiveProgress(0);
-  showLiveCard();
+  updateSmartScanRing(0);
 
   // Change stop button to analyze button
   $('btnSmartScanStop').textContent = '🔍 Analizza';
@@ -2875,6 +2244,11 @@ async function finishRemoteSmartScan() {
     saveState();
 
     classifyBlocks(mergedText);
+    renderBlocks();
+    renderFieldSummary();
+
+    $('resultSection').style.display = 'block';
+    $('ocrEngineLabel').textContent = `Smart Scan remoto: ${ocrResults.length} foto | ${ocrResults[0].engine || 'tesseract'}`;
 
     // AI Normalize
     if (openaiApiKey && detectedBlocks.length > 0) {
@@ -2883,16 +2257,8 @@ async function finishRemoteSmartScan() {
       await normalizeWithAI();
     }
 
-    // Auto-start session on first scan
-    if (!currentSession) startSession();
-    currentSession.photoCount += photos.length;
-
-    // Show clean contact card
-    $('resultSection').style.display = 'block';
-    renderCleanCard();
-
     updateSmartScanRing(100);
-    $('ssStatus').textContent = '✅ Completato!';
+    $('ssStatus').textContent = '✅ Smart Scan completato!';
     const fieldCount = detectedBlocks.filter(b => b.type !== 'other' && b.type !== 'ignore').length;
     $('ssDetail').textContent = `${fieldCount} campi da ${photos.length} foto`;
     toast('🧠 Smart Scan completato — ' + fieldCount + ' campi!', 'success');
@@ -2916,6 +2282,8 @@ async function processOCR(base64, dataUrl) {
   lastPhotoDataUrl = dataUrl; // Store for saving with contact
   $('photoPreview').src = dataUrl;
   $('photoPreview').classList.remove('zoomed');
+  $('resultSection').style.display = 'block';
+  $('textBlocksContainer').innerHTML = '<div style="color:var(--fg4);text-align:center;padding:24px">⏳ Elaborazione in corso...</div>';
 
   let ocrResult = null;
 
@@ -2959,28 +2327,17 @@ async function processOCR(base64, dataUrl) {
     return;
   }
 
-  $('ocrProgress').style.width = '80%';
-
-  classifyBlocks(ocrResult.text);
-
-  // Auto AI Normalization
-  if (openaiApiKey && detectedBlocks.length > 0) {
-    $('ocrStatusText').textContent = '✨ Normalizzazione AI...';
-    await normalizeWithAI();
-  }
-
   $('ocrProgress').style.width = '100%';
   os.className = 'ocr-status ready';
-  $('ocrStatusText').textContent = '✅ Analisi completata';
-  setTimeout(() => { os.style.display = 'none'; }, 2000);
 
-  // Auto-start session on first scan
-  if (!currentSession) startSession();
-  currentSession.photoCount++;
+  const lines = ocrResult.text.split('\n').filter(l => l.trim());
+  $('ocrStatusText').textContent = `✅ ${lines.length} righe rilevate — ${ocrResult.engine || 'tesseract'}`;
+  $('ocrEngineLabel').textContent = `Motore: ${ocrResult.engine || 'tesseract'} | ${lines.length} righe`;
+  setTimeout(() => { os.style.display = 'none'; }, 4000);
 
-  // Show clean contact card
-  $('resultSection').style.display = 'block';
-  renderCleanCard();
+  classifyBlocks(ocrResult.text);
+  renderBlocks();
+  renderFieldSummary();
 }
 
 async function runTesseract(dataUrl) {
@@ -3286,296 +2643,6 @@ function renderFieldSummary() {
   container.innerHTML = html;
 }
 
-// ─── LIVE CARD BUILDER ───────────────────────────────────────
-function showLiveCard() {
-  // Reset live card to skeleton state
-  $('liveName').innerHTML = '<div class="shimmer-line" style="width:70%"></div>';
-  $('liveRole').innerHTML = '<div class="shimmer-line" style="width:50%"></div>';
-  $('liveCompany').innerHTML = '<div class="shimmer-line" style="width:60%"></div>';
-  $('liveCardBody').innerHTML = '';
-  $('liveFlag').style.display = 'none';
-  $('liveCard').style.display = 'block';
-}
-
-function updateLiveProgress(pct) {
-  $('ssTopFill').style.width = pct + '%';
-}
-
-function updateLiveField(key, value, icon) {
-  if (!value) return;
-
-  // Header fields
-  if (key === 'name') {
-    $('liveName').textContent = value;
-    $('liveName').classList.add('refined');
-    setTimeout(() => $('liveName').classList.remove('refined'), 600);
-    return;
-  }
-  if (key === 'role') {
-    $('liveRole').textContent = value;
-    $('liveRole').classList.add('refined');
-    setTimeout(() => $('liveRole').classList.remove('refined'), 600);
-    return;
-  }
-  if (key === 'company') {
-    $('liveCompany').textContent = value;
-    $('liveCompany').classList.add('refined');
-    setTimeout(() => $('liveCompany').classList.remove('refined'), 600);
-    return;
-  }
-
-  // Country → show flag
-  if (key === 'country') {
-    const iso = getCountryISO(value);
-    if (iso) {
-      $('liveFlagImg').src = 'https://flagcdn.com/w80/' + iso + '.png';
-      $('liveFlag').style.display = 'block';
-    }
-  }
-
-  // Body fields — add or update
-  const container = $('liveCardBody');
-  let existing = container.querySelector('[data-key="' + key + '"]');
-  if (existing) {
-    const valEl = existing.querySelector('.live-body-value');
-    valEl.textContent = value;
-    existing.classList.add('refined');
-    setTimeout(() => existing.classList.remove('refined'), 600);
-  } else {
-    const row = document.createElement('div');
-    row.className = 'live-body-field';
-    row.dataset.key = key;
-    row.style.animationDelay = (container.children.length * 80) + 'ms';
-    row.innerHTML = '<span class="live-body-icon">' + (icon || '📌') + '</span>' +
-      '<div class="live-body-content">' +
-        '<div class="live-body-label">' + key + '</div>' +
-        '<div class="live-body-value">' + value + '</div>' +
-      '</div>';
-    container.appendChild(row);
-  }
-}
-
-function populateLiveCardFromBlocks() {
-  // Called after classifyBlocks — show raw classified data on live card
-  const fieldIcons = {};
-  FIELD_TYPES.forEach(ft => { fieldIcons[ft.key] = ft.icon; });
-
-  FIELD_TYPES.forEach(ft => {
-    if (ft.key === 'other' || ft.key === 'ignore') return;
-    const values = detectedBlocks
-      .filter(b => b.type === ft.key)
-      .map(b => b.text)
-      .filter(Boolean);
-    if (values.length) {
-      updateLiveField(ft.key, values.join(', '), ft.icon);
-    }
-  });
-}
-
-function refineLiveCardFromBlocks() {
-  // Called after AI normalization — update with refined data + glow
-  const fieldIcons = {};
-  FIELD_TYPES.forEach(ft => { fieldIcons[ft.key] = ft.icon; });
-
-  const delay = 100;
-  let i = 0;
-  FIELD_TYPES.forEach(ft => {
-    if (ft.key === 'other' || ft.key === 'ignore') return;
-    const values = detectedBlocks
-      .filter(b => b.type === ft.key)
-      .map(b => b.text)
-      .filter(Boolean);
-    if (values.length) {
-      setTimeout(() => {
-        updateLiveField(ft.key, values.join(', '), ft.icon);
-      }, i * delay);
-      i++;
-    }
-  });
-}
-
-// ─── COUNTRY → ISO FLAG MAP ──────────────────────────────────
-const COUNTRY_ISO = {
-  // Italian names
-  'italia':'it','germania':'de','francia':'fr','spagna':'es','regno unito':'gb','inghilterra':'gb',
-  'svizzera':'ch','austria':'at','belgio':'be','olanda':'nl','paesi bassi':'nl','portogallo':'pt',
-  'grecia':'gr','svezia':'se','norvegia':'no','danimarca':'dk','finlandia':'fi','irlanda':'ie',
-  'polonia':'pl','romania':'ro','ungheria':'hu','repubblica ceca':'cz','slovacchia':'sk',
-  'croazia':'hr','slovenia':'si','serbia':'rs','bulgaria':'bg','lussemburgo':'lu','malta':'mt',
-  'cipro':'cy','estonia':'ee','lettonia':'lv','lituania':'lt','islanda':'is','turchia':'tr',
-  'russia':'ru','ucraina':'ua','bielorussia':'by','moldavia':'md','albania':'al','kosovo':'xk',
-  'macedonia del nord':'mk','montenegro':'me','bosnia':'ba','bosnia ed erzegovina':'ba',
-  'stati uniti':'us','usa':'us','canada':'ca','messico':'mx','brasile':'br','argentina':'ar',
-  'cile':'cl','colombia':'co','peru':'pe','perù':'pe','venezuela':'ve','ecuador':'ec',
-  'uruguay':'uy','paraguay':'py','bolivia':'bo','costa rica':'cr','panama':'pa','cuba':'cu',
-  'repubblica dominicana':'do','guatemala':'gt','honduras':'hn','el salvador':'sv','nicaragua':'ni',
-  'cina':'cn','giappone':'jp','corea del sud':'kr','corea del nord':'kp','india':'in',
-  'indonesia':'id','filippine':'ph','vietnam':'vn','thailandia':'th','malesia':'my',
-  'singapore':'sg','taiwan':'tw','hong kong':'hk','macao':'mo','mongolia':'mn',
-  'pakistan':'pk','bangladesh':'bd','sri lanka':'lk','nepal':'np','myanmar':'mm',
-  'cambogia':'kh','laos':'la','brunei':'bn','timor est':'tl',
-  'arabia saudita':'sa','emirati arabi':'ae','emirati arabi uniti':'ae','qatar':'qa',
-  'kuwait':'kw','bahrein':'bh','oman':'om','yemen':'ye','iraq':'iq','iran':'ir',
-  'israele':'il','palestina':'ps','giordania':'jo','libano':'lb','siria':'sy',
-  'egitto':'eg','marocco':'ma','tunisia':'tn','algeria':'dz','libia':'ly',
-  'sudafrica':'za','sud africa':'za','nigeria':'ng','kenya':'ke','etiopia':'et',
-  'ghana':'gh','tanzania':'tz','uganda':'ug','mozambico':'mz','angola':'ao',
-  'camerun':'cm','costa d\'avorio':'ci','senegal':'sn','madagascar':'mg','congo':'cd',
-  'australia':'au','nuova zelanda':'nz','fiji':'fj','papua nuova guinea':'pg',
-  // English names
-  'italy':'it','germany':'de','france':'fr','spain':'es','united kingdom':'gb','england':'gb',
-  'great britain':'gb','switzerland':'ch','netherlands':'nl','portugal':'pt','greece':'gr',
-  'sweden':'se','norway':'no','denmark':'dk','finland':'fi','ireland':'ie','poland':'pl',
-  'romania':'ro','hungary':'hu','czech republic':'cz','czechia':'cz','slovakia':'sk',
-  'croatia':'hr','serbia':'rs','bulgaria':'bg','luxembourg':'lu','iceland':'is',
-  'turkey':'tr','türkiye':'tr','russia':'ru','ukraine':'ua','belarus':'by',
-  'united states':'us','united states of america':'us','brazil':'br','chile':'cl',
-  'colombia':'co','peru':'pe','costa rica':'cr','dominican republic':'do',
-  'china':'cn','japan':'jp','south korea':'kr','north korea':'kp','india':'in',
-  'indonesia':'id','philippines':'ph','thailand':'th','malaysia':'my','singapore':'sg',
-  'taiwan':'tw','mongolia':'mn','pakistan':'pk','bangladesh':'bd','sri lanka':'lk',
-  'cambodia':'kh','saudi arabia':'sa','united arab emirates':'ae','uae':'ae',
-  'qatar':'qa','kuwait':'kw','bahrain':'bh','iraq':'iq','iran':'ir','israel':'il',
-  'jordan':'jo','lebanon':'lb','syria':'sy','egypt':'eg','morocco':'ma',
-  'tunisia':'tn','algeria':'dz','libya':'ly','south africa':'za','nigeria':'ng',
-  'kenya':'ke','ethiopia':'et','ghana':'gh','tanzania':'tz','australia':'au',
-  'new zealand':'nz',
-  // German names
-  'deutschland':'de','frankreich':'fr','spanien':'es','vereinigtes königreich':'gb',
-  'österreich':'at','belgien':'be','niederlande':'nl','schweden':'se','norwegen':'no',
-  'dänemark':'dk','finnland':'fi','irland':'ie','griechenland':'gr','tschechien':'cz',
-  'slowakei':'sk','kroatien':'hr','serbien':'rs','bulgarien':'bg','rumänien':'ro',
-  'ungarn':'hu','luxemburg':'lu','vereinigte staaten':'us','brasilien':'br',
-  'argentinien':'ar','mexiko':'mx','kolumbien':'co','china':'cn','indien':'in',
-  'südafrika':'za','ägypten':'eg','marokko':'ma','australien':'au','neuseeland':'nz',
-  // French names
-  'allemagne':'de','espagne':'es','royaume-uni':'gb','suisse':'ch','autriche':'at',
-  'belgique':'be','pays-bas':'nl','suède':'se','norvège':'no','danemark':'dk',
-  'finlande':'fi','irlande':'ie','grèce':'gr','pologne':'pl','roumanie':'ro',
-  'hongrie':'hu','états-unis':'us','brésil':'br','argentine':'ar','mexique':'mx',
-  'chine':'cn','japon':'jp','inde':'in','afrique du sud':'za','égypte':'eg',
-  'maroc':'ma','tunisie':'tn','algérie':'dz','australie':'au','nouvelle-zélande':'nz',
-  // Spanish names
-  'alemania':'de','francia':'fr','españa':'es','reino unido':'gb','suiza':'ch',
-  'países bajos':'nl','suecia':'se','noruega':'no','dinamarca':'dk','finlandia':'fi',
-  'irlanda':'ie','grecia':'gr','hungría':'hu','estados unidos':'us','brasil':'br',
-  'japón':'jp','corea del sur':'kr','sudáfrica':'za','egipto':'eg','marruecos':'ma',
-  // Portuguese names
-  'alemanha':'de','espanha':'es','reino unido':'gb','suíça':'ch','países baixos':'nl',
-  'suécia':'se','noruega':'no','dinamarca':'dk','finlândia':'fi','irlanda':'ie',
-  'grécia':'gr','hungria':'hu','estados unidos':'us','japão':'jp','china':'cn',
-  'índia':'in','áfrica do sul':'za','egito':'eg','marrocos':'ma','austrália':'au',
-  // Common abbreviations
-  'uk':'gb','gb':'gb','us':'us','usa':'us','uae':'ae','rsa':'za','prc':'cn','rok':'kr',
-  'ch':'ch','de':'de','fr':'fr','es':'es','it':'it','nl':'nl','at':'at','be':'be',
-  'pt':'pt','pl':'pl','se':'se','no':'no','dk':'dk','fi':'fi','ie':'ie','cz':'cz',
-  'jp':'jp','cn':'cn','kr':'kr','in':'in','au':'au','nz':'nz','br':'br','ar':'ar',
-  'mx':'mx','ca':'ca','za':'za','eg':'eg','ma':'ma','tn':'tn','tr':'tr','ru':'ru',
-  'il':'il','sg':'sg','hk':'hk','tw':'tw','th':'th','my':'my','id':'id','ph':'ph',
-  'vn':'vn',
-};
-
-function getCountryISO(countryStr) {
-  if (!countryStr) return null;
-  // Clean: remove parentheses content, trim
-  let c = countryStr.replace(/\(.*?\)/g, '').trim().toLowerCase();
-  // Direct match
-  if (COUNTRY_ISO[c]) return COUNTRY_ISO[c];
-  // Try without accents
-  const noAccent = c.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  if (COUNTRY_ISO[noAccent]) return COUNTRY_ISO[noAccent];
-  // Try partial match (country name contains one of our keys)
-  for (const [name, code] of Object.entries(COUNTRY_ISO)) {
-    if (name.length > 3 && c.includes(name)) return code;
-  }
-  // If it's already a 2-letter code
-  if (c.length === 2 && /^[a-z]{2}$/.test(c)) return c;
-  return null;
-}
-
-// ─── CLEAN CONTACT CARD RENDERER ──────────────────────────────
-function renderCleanCard() {
-  // Extract field values from detectedBlocks
-  const fields = {};
-  FIELD_TYPES.forEach(ft => {
-    if (ft.key === 'other' || ft.key === 'ignore') return;
-    const values = detectedBlocks
-      .filter(b => b.type === ft.key)
-      .map(b => b.text)
-      .filter(Boolean);
-    if (values.length) fields[ft.key] = values.join(', ');
-  });
-
-  // Header: name, role, company
-  $('ccName').textContent = fields.name || 'Nome non rilevato';
-  $('ccName').classList.toggle('placeholder', !fields.name);
-  $('ccRole').textContent = fields.role || '';
-  $('ccRole').style.display = fields.role ? 'block' : 'none';
-  $('ccCompany').textContent = fields.company || '';
-  $('ccCompany').style.display = fields.company ? 'block' : 'none';
-
-  // Build field rows (skip name/role/company — already in header)
-  const skipKeys = ['name', 'role', 'company'];
-  const fieldOrder = ['email', 'mobile', 'phone', 'web', 'linkedin', 'address', 'city', 'country', 'piva', 'cf', 'fax', 'notes'];
-  const container = $('cleanCardFields');
-  let html = '';
-
-  fieldOrder.forEach(key => {
-    if (!fields[key]) return;
-    const ft = FIELD_TYPES.find(f => f.key === key);
-    if (!ft) return;
-
-    // Make actionable links
-    let valueHtml = esc(fields[key]);
-    if (key === 'email') {
-      valueHtml = fields[key].split(',').map(e => `<a href="mailto:${e.trim()}" class="cc-link">${esc(e.trim())}</a>`).join(', ');
-    } else if (key === 'mobile' || key === 'phone' || key === 'fax') {
-      const num = fields[key].replace(/[^\d+]/g, '');
-      valueHtml = `<a href="tel:${num}" class="cc-link">${esc(fields[key])}</a>`;
-    } else if (key === 'web') {
-      valueHtml = `<a href="${fields[key]}" target="_blank" rel="noopener" class="cc-link">${esc(fields[key])}</a>`;
-    } else if (key === 'linkedin') {
-      valueHtml = `<a href="${fields[key]}" target="_blank" rel="noopener" class="cc-link">${esc(fields[key])}</a>`;
-    }
-
-    html += `<div class="cc-field">
-      <span class="cc-field-icon">${ft.icon}</span>
-      <div class="cc-field-content">
-        <div class="cc-field-label">${ft.label}</div>
-        <div class="cc-field-value">${valueHtml}</div>
-      </div>
-    </div>`;
-  });
-
-  container.innerHTML = html;
-
-  // Logo description
-  if (window._lastLogoDescription) {
-    $('ccLogo').textContent = '🏷️ ' + window._lastLogoDescription;
-    $('ccLogo').style.display = 'block';
-  } else {
-    $('ccLogo').style.display = 'none';
-  }
-
-  // 3D Flag from country
-  const isoCode = getCountryISO(fields.country);
-  if (isoCode) {
-    const flagUrl = `https://flagcdn.com/w160/${isoCode}.png`;
-    $('ccFlagImg').src = flagUrl;
-    $('ccFlagImg').alt = fields.country;
-    $('ccFlagCountry').textContent = fields.country;
-    $('ccFlagWrap').style.display = 'flex';
-    // Preload to avoid flicker
-    const preload = new Image();
-    preload.src = flagUrl;
-  } else {
-    $('ccFlagWrap').style.display = 'none';
-  }
-
-  // Show card with animation
-  $('cleanCard').classList.add('visible');
-}
-
 // ─── AI NORMALIZATION ──────────────────────────────────────────
 const AI_NORMALIZE_PROMPT = `Sei un sistema di data enrichment per un CRM/database commerciale. Ricevi dati OCR grezzi da biglietti da visita e devi restituire dati COMPLETI, PULITI e STRUTTURATI per un database professionale.
 
@@ -3664,7 +2731,11 @@ async function normalizeWithAI() {
   const others = detectedBlocks.filter(b => b.type === 'other');
   if (others.length) currentData.notes = others.map(b => b.text).join('; ');
 
-  // Show loading state (button removed — normalization is now automatic)
+  // Show loading state
+  const btn = $('btnNormalizeAI');
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Normalizzazione AI...';
 
   try {
     // Build messages — if we have the photo, use GPT-4o with vision for logo detection
@@ -3753,6 +2824,8 @@ Rispondi con il JSON completo. Il campo "logo_description" deve descrivere il lo
 
     // Apply normalized data back to detectedBlocks
     applyNormalizedData(normalized);
+    renderBlocks();
+    renderFieldSummary();
 
     toast('✅ Dati normalizzati con AI!', 'success');
     $('apiKeyStatus').textContent = '✅ Funzionante';
@@ -3766,7 +2839,8 @@ Rispondi con il JSON completo. Il campo "logo_description" deve descrivere il lo
       toast('Errore AI: ' + e.message, 'error');
     }
   } finally {
-    // normalization complete (automatic pipeline)
+    btn.disabled = false;
+    btn.textContent = originalText;
   }
 }
 
@@ -3836,179 +2910,6 @@ function applyNormalizedData(normalized) {
   }
 }
 
-// ─── SESSION MANAGEMENT ──────────────────────────────────────
-let currentSession = null;
-let sessionTimerInterval = null;
-
-function startSession() {
-  currentSession = {
-    startedAt: new Date(),
-    endedAt: null,
-    cardIds: [],
-    photoCount: 0,
-  };
-  $('sessionBanner').style.display = 'flex';
-  $('sessionCardCount').textContent = '0';
-  $('sessionTimer').textContent = '00:00';
-  $('sessionSummary').style.display = 'none';
-
-  // Start timer
-  sessionTimerInterval = setInterval(() => {
-    if (!currentSession) return;
-    const elapsed = Math.floor((Date.now() - currentSession.startedAt.getTime()) / 1000);
-    const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
-    const s = String(elapsed % 60).padStart(2, '0');
-    $('sessionTimer').textContent = m + ':' + s;
-  }, 1000);
-}
-
-function endSession() {
-  if (!currentSession) return;
-  currentSession.endedAt = new Date();
-  clearInterval(sessionTimerInterval);
-  sessionTimerInterval = null;
-
-  // Hide scan UI, show summary
-  $('sessionBanner').style.display = 'none';
-  $('resultSection').style.display = 'none';
-  $('sessionSummary').style.display = 'block';
-
-  // Calculate stats
-  const duration = Math.floor((currentSession.endedAt - currentSession.startedAt) / 1000);
-  const m = Math.floor(duration / 60);
-  const s = duration % 60;
-
-  $('sessionStats').innerHTML = `
-    <div class="session-stat">
-      <div class="session-stat-value">${currentSession.cardIds.length}</div>
-      <div class="session-stat-label">Contatti acquisiti</div>
-    </div>
-    <div class="session-stat">
-      <div class="session-stat-value">${m > 0 ? m + 'm ' : ''}${s}s</div>
-      <div class="session-stat-label">Durata sessione</div>
-    </div>
-    <div class="session-stat">
-      <div class="session-stat-value">${currentSession.photoCount}</div>
-      <div class="session-stat-label">Foto scattate</div>
-    </div>
-    <div class="session-stat">
-      <div class="session-stat-value">${new Date(currentSession.startedAt).toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})}</div>
-      <div class="session-stat-label">Ora inizio</div>
-    </div>
-  `;
-
-  // Save session metadata to localStorage
-  const sessions = JSON.parse(localStorage.getItem('bizcard_sessions') || '[]');
-  sessions.push({
-    startedAt: currentSession.startedAt.toISOString(),
-    endedAt: currentSession.endedAt.toISOString(),
-    cardIds: currentSession.cardIds,
-    photoCount: currentSession.photoCount,
-  });
-  localStorage.setItem('bizcard_sessions', JSON.stringify(sessions));
-
-  toast('📊 Sessione completata — ' + currentSession.cardIds.length + ' contatti!', 'success');
-}
-
-function autoSaveAndContinue() {
-  // Auto-save the current card
-  const contact = buildContactFromBlocks();
-  if (!contact) {
-    toast('Nessun dato da salvare', 'error');
-    return;
-  }
-
-  // Start session if not started
-  if (!currentSession) startSession();
-
-  contacts.push(contact);
-  currentSession.cardIds.push(contact.id);
-  currentSession.photoCount++;
-  saveState();
-
-  // Update UI: contacts list, stats, export state
-  renderContacts();
-  updateStats();
-  updateExportState();
-
-  // Update session banner
-  $('sessionCardCount').textContent = currentSession.cardIds.length;
-
-  // Show success row
-  $('scanResultRow').style.display = 'flex';
-  const name = contact.name || contact.email || contact.company || 'Contatto';
-  $('scanResultText').textContent = name + ' — salvato';
-  $('scanResultCount').textContent = '#' + currentSession.cardIds.length;
-
-  toast('✅ ' + name + ' salvato!', 'success');
-  if (navigator.vibrate) navigator.vibrate(200);
-}
-
-function buildContactFromBlocks() {
-  const contact = {
-    id: Date.now().toString(36) + Math.random().toString(36).substring(2, 7),
-    createdAt: new Date().toISOString(),
-    source: currentMode,
-  };
-
-  // Store photo thumbnail
-  if (lastPhotoDataUrl) {
-    try {
-      const thumbCanvas = document.createElement('canvas');
-      const thumbImg = $('photoPreview');
-      const thumbScale = Math.min(400 / thumbImg.naturalWidth, 400 / thumbImg.naturalHeight, 1);
-      thumbCanvas.width = Math.round(thumbImg.naturalWidth * thumbScale);
-      thumbCanvas.height = Math.round(thumbImg.naturalHeight * thumbScale);
-      thumbCanvas.getContext('2d').drawImage(thumbImg, 0, 0, thumbCanvas.width, thumbCanvas.height);
-      contact.photo = thumbCanvas.toDataURL('image/jpeg', 0.6);
-    } catch (e) {}
-  }
-
-  FIELD_TYPES.forEach(ft => {
-    if (ft.key === 'other' || ft.key === 'ignore') return;
-    const values = detectedBlocks.filter(b => b.type === ft.key).map(b => b.text).join(', ');
-    contact[ft.key] = values;
-  });
-
-  const others = detectedBlocks.filter(b => b.type === 'other');
-  if (others.length) contact.notes = others.map(b => b.text).join('; ');
-
-  if (window._lastLogoDescription) {
-    contact.logo_description = window._lastLogoDescription;
-    window._lastLogoDescription = null;
-  }
-
-  // Validation
-  if (!contact.name && !contact.email && !contact.phone && !contact.mobile) return null;
-
-  // Duplicate check (silent skip)
-  const dup = findDuplicate(contact);
-  if (dup) contact.possibleDuplicate = dup.id;
-
-  return contact;
-}
-
-function scanNext() {
-  // Reset scan state but keep session active
-  detectedBlocks = [];
-  lastPhotoDataUrl = null;
-  window._lastLogoDescription = null;
-  $('resultSection').style.display = 'none';
-  $('ocrStatus').style.display = 'none';
-  $('cleanCard').classList.remove('visible');
-  $('cleanCardFields').innerHTML = '';
-  $('scanResultRow').style.display = 'none';
-}
-
-function exportSessionData() {
-  if (!currentSession || currentSession.cardIds.length === 0) {
-    toast('Nessun dato da esportare', 'error');
-    return;
-  }
-  // Switch to export tab
-  document.querySelector('[data-tab="export"]').click();
-}
-
 // ─── SAVE CONTACT ─────────────────────────────────────────────
 function saveContact() {
   const contact = {
@@ -4063,9 +2964,6 @@ function saveContact() {
 
   contacts.push(contact);
   saveState();
-  renderContacts();
-  updateStats();
-  updateExportState();
   toast('✅ Salvato: ' + (contact.name || contact.email || contact.phone), 'success');
   if (navigator.vibrate) navigator.vibrate(200);
   resetScan();
@@ -4086,7 +2984,10 @@ function findDuplicate(contact) {
 
 function resetScan() {
   if (arActive) stopARScan();
-  scanNext();
+  detectedBlocks = [];
+  lastPhotoDataUrl = null;
+  $('resultSection').style.display = 'none';
+  $('ocrStatus').style.display = 'none';
 }
 
 // ─── CONTACTS ─────────────────────────────────────────────────
@@ -4167,8 +3068,6 @@ function deleteContact(id) {
   contacts = contacts.filter(c => c.id !== id);
   saveState();
   renderContacts();
-  updateStats();
-  updateExportState();
   toast('Contatto eliminato', 'info');
 }
 
@@ -4267,9 +3166,7 @@ function initSettings() {
     scanCount = 0;
     saveState();
     toast('Tutti i dati sono stati eliminati', 'info');
-    renderContacts();
     updateStats();
-    updateExportState();
   });
 }
 
@@ -4403,319 +3300,6 @@ function downloadFile(content, filename, mime) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-}
-
-// ─── ADVANCED EXPORT ENGINE ──────────────────────────────────
-// Supports: CSV, TSV, Custom separator, JSON, JSONL, XML, XLSX, vCard
-// With column selection and live preview
-
-const EXPORT_COLUMNS = [
-  { key: 'name',     label: 'Nome',       essential: true },
-  { key: 'company',  label: 'Azienda',    essential: true },
-  { key: 'role',     label: 'Ruolo',      essential: false },
-  { key: 'email',    label: 'Email',      essential: true },
-  { key: 'mobile',   label: 'Cellulare',  essential: true },
-  { key: 'phone',    label: 'Tel. Fisso', essential: false },
-  { key: 'fax',      label: 'Fax',        essential: false },
-  { key: 'web',      label: 'Web',        essential: false },
-  { key: 'linkedin', label: 'LinkedIn',   essential: false },
-  { key: 'address',  label: 'Indirizzo',  essential: false },
-  { key: 'city',     label: 'Città',      essential: true },
-  { key: 'country',  label: 'Paese',      essential: true },
-  { key: 'piva',     label: 'P.IVA',      essential: false },
-  { key: 'cf',       label: 'C.F.',       essential: false },
-  { key: 'logo_description', label: 'Logo', essential: false },
-  { key: 'notes',    label: 'Note',       essential: false },
-  { key: 'createdAt', label: 'Data',      essential: false },
-];
-
-let advExportFormat = 'csv';
-let advExportCols = EXPORT_COLUMNS.map(c => c.key);
-
-function initAdvancedExport() {
-  const backdrop = $('exportModalBackdrop');
-  const close = $('exportModalClose');
-
-  $('btnAdvancedExport').addEventListener('click', () => {
-    if (!contacts.length) { toast('Nessun contatto da esportare', 'error'); return; }
-    $('exportRecordCount').textContent = contacts.length + ' contatti';
-    backdrop.classList.add('visible');
-    updateExportPreview();
-  });
-
-  close.addEventListener('click', () => backdrop.classList.remove('visible'));
-  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.classList.remove('visible'); });
-
-  // Format buttons
-  $$('#exportFormatGrid .export-format-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      $$('#exportFormatGrid .export-format-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      advExportFormat = btn.dataset.format;
-
-      // Show/hide separator section
-      const sepFormats = ['csv', 'tsv', 'custom'];
-      $('exportSepSection').style.display = sepFormats.includes(advExportFormat) ? '' : 'none';
-
-      // Show/hide columns section (not for vCard)
-      $('exportColSection').style.display = advExportFormat === 'vcard' ? 'none' : '';
-
-      // Auto-set separator for TSV
-      if (advExportFormat === 'tsv') $('exportSepSelect').value = '\\t';
-      else if (advExportFormat === 'csv') $('exportSepSelect').value = ',';
-
-      updateExportPreview();
-    });
-  });
-
-  // Separator select
-  $('exportSepSelect').addEventListener('change', () => {
-    $('exportSepCustom').style.display = $('exportSepSelect').value === 'custom' ? '' : 'none';
-    updateExportPreview();
-  });
-  $('exportSepCustom').addEventListener('input', updateExportPreview);
-
-  // Column checkboxes
-  const grid = $('exportColumnsGrid');
-  EXPORT_COLUMNS.forEach(col => {
-    const label = document.createElement('label');
-    label.className = 'export-col-check';
-    label.innerHTML = `<input type="checkbox" checked data-col="${col.key}"> ${col.label}`;
-    label.querySelector('input').addEventListener('change', () => {
-      advExportCols = [...$$('#exportColumnsGrid input:checked')].map(cb => cb.dataset.col);
-      updateExportPreview();
-    });
-    grid.appendChild(label);
-  });
-
-  $('exportColAll').addEventListener('click', () => {
-    $$('#exportColumnsGrid input').forEach(cb => cb.checked = true);
-    advExportCols = EXPORT_COLUMNS.map(c => c.key);
-    updateExportPreview();
-  });
-
-  $('exportColNone').addEventListener('click', () => {
-    $$('#exportColumnsGrid input').forEach(cb => cb.checked = false);
-    advExportCols = [];
-    updateExportPreview();
-  });
-
-  $('exportColEssential').addEventListener('click', () => {
-    $$('#exportColumnsGrid input').forEach(cb => {
-      const col = EXPORT_COLUMNS.find(c => c.key === cb.dataset.col);
-      cb.checked = col ? col.essential : false;
-    });
-    advExportCols = EXPORT_COLUMNS.filter(c => c.essential).map(c => c.key);
-    updateExportPreview();
-  });
-
-  // Download button
-  $('btnExportDownload').addEventListener('click', executeAdvancedExport);
-}
-
-function getExportSeparator() {
-  const val = $('exportSepSelect').value;
-  if (val === 'custom') return $('exportSepCustom').value || ',';
-  if (val === '\\t') return '\t';
-  return val;
-}
-
-function getExportHeaders() {
-  return advExportCols.map(key => {
-    const col = EXPORT_COLUMNS.find(c => c.key === key);
-    return col ? col.label : key;
-  });
-}
-
-function getFilteredData(maxRows) {
-  const data = maxRows ? contacts.slice(0, maxRows) : contacts;
-  return data.map(c => {
-    const row = {};
-    advExportCols.forEach(key => { row[key] = c[key] || ''; });
-    return row;
-  });
-}
-
-function escapeForSep(v, sep) {
-  if (!v) return '';
-  if (v.includes(sep) || v.includes('"') || v.includes('\n'))
-    return '"' + v.replace(/"/g, '""') + '"';
-  return v;
-}
-
-function generateDelimited(data, sep) {
-  const headers = getExportHeaders();
-  const headerLine = headers.map(h => escapeForSep(h, sep)).join(sep);
-  const rows = data.map(row =>
-    advExportCols.map(key => escapeForSep(row[key], sep)).join(sep)
-  );
-  return '\ufeff' + [headerLine, ...rows].join('\n');
-}
-
-function generateJSON(data) {
-  return JSON.stringify(data, null, 2);
-}
-
-function generateJSONL(data) {
-  return data.map(row => JSON.stringify(row)).join('\n');
-}
-
-function generateXML(data) {
-  const escXml = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<contacts>\n';
-  data.forEach(row => {
-    xml += '  <contact>\n';
-    advExportCols.forEach(key => {
-      const tag = key.replace(/_/g, '-');
-      xml += `    <${tag}>${escXml(row[key])}</${tag}>\n`;
-    });
-    xml += '  </contact>\n';
-  });
-  xml += '</contacts>';
-  return xml;
-}
-
-function generateXLSX(data) {
-  // Build XLSX using SheetJS (loaded on demand)
-  const headers = getExportHeaders();
-  const wsData = [headers];
-  data.forEach(row => {
-    wsData.push(advExportCols.map(key => row[key] || ''));
-  });
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  // Auto-width columns
-  ws['!cols'] = headers.map((h, i) => {
-    let maxW = h.length;
-    data.forEach(row => {
-      const v = row[advExportCols[i]] || '';
-      if (v.length > maxW) maxW = v.length;
-    });
-    return { wch: Math.min(maxW + 2, 40) };
-  });
-  XLSX.utils.book_append_sheet(wb, ws, 'Contatti');
-  return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-}
-
-function generateVcardFiltered() {
-  return contacts.map(contactToVcard).join('\r\n');
-}
-
-function updateExportPreview() {
-  const preview = $('exportPreview');
-  if (!contacts.length || !advExportCols.length) {
-    preview.textContent = advExportCols.length ? 'Nessun contatto' : 'Seleziona almeno una colonna';
-    return;
-  }
-
-  const data = getFilteredData(2);
-
-  try {
-    switch (advExportFormat) {
-      case 'csv':
-      case 'tsv':
-      case 'custom':
-        preview.textContent = generateDelimited(data, getExportSeparator());
-        break;
-      case 'json':
-        preview.textContent = generateJSON(data);
-        break;
-      case 'jsonl':
-        preview.textContent = generateJSONL(data);
-        break;
-      case 'xml':
-        preview.textContent = generateXML(data);
-        break;
-      case 'xlsx':
-        preview.textContent = '[XLSX] — Foglio Excel con ' + contacts.length + ' righe e ' + advExportCols.length + ' colonne.\nAnteprima non disponibile per formato binario.';
-        break;
-      case 'vcard':
-        const vcards = contacts.slice(0, 2).map(contactToVcard).join('\r\n\r\n');
-        preview.textContent = vcards;
-        break;
-    }
-  } catch (e) {
-    preview.textContent = 'Errore: ' + e.message;
-  }
-}
-
-let sheetJSLoaded = false;
-
-async function loadSheetJS() {
-  if (sheetJSLoaded) return;
-  return new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-    s.onload = () => { sheetJSLoaded = true; resolve(); };
-    s.onerror = () => reject(new Error('Impossibile caricare SheetJS'));
-    document.head.appendChild(s);
-  });
-}
-
-async function executeAdvancedExport() {
-  if (!contacts.length) { toast('Nessun contatto', 'error'); return; }
-  if (!advExportCols.length && advExportFormat !== 'vcard') {
-    toast('Seleziona almeno una colonna', 'error'); return;
-  }
-
-  const data = getFilteredData();
-  const ts = new Date().toISOString().slice(0, 10);
-
-  try {
-    switch (advExportFormat) {
-      case 'csv': {
-        const content = generateDelimited(data, getExportSeparator());
-        downloadFile(content, `contatti_${ts}.csv`, 'text/csv');
-        break;
-      }
-      case 'tsv': {
-        const content = generateDelimited(data, '\t');
-        downloadFile(content, `contatti_${ts}.tsv`, 'text/tab-separated-values');
-        break;
-      }
-      case 'custom': {
-        const sep = getExportSeparator();
-        const content = generateDelimited(data, sep);
-        downloadFile(content, `contatti_${ts}.txt`, 'text/plain');
-        break;
-      }
-      case 'json': {
-        downloadFile(generateJSON(data), `contatti_${ts}.json`, 'application/json');
-        break;
-      }
-      case 'jsonl': {
-        downloadFile(generateJSONL(data), `contatti_${ts}.jsonl`, 'application/x-ndjson');
-        break;
-      }
-      case 'xml': {
-        downloadFile(generateXML(data), `contatti_${ts}.xml`, 'application/xml');
-        break;
-      }
-      case 'xlsx': {
-        toast('Caricamento SheetJS...', 'info');
-        await loadSheetJS();
-        const xlsxData = generateXLSX(data);
-        const blob = new Blob([xlsxData], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = `contatti_${ts}.xlsx`;
-        document.body.appendChild(a); a.click();
-        document.body.removeChild(a); URL.revokeObjectURL(url);
-        break;
-      }
-      case 'vcard': {
-        downloadFile(generateVcardFiltered(), `contatti_${ts}.vcf`, 'text/vcard');
-        break;
-      }
-    }
-
-    toast(`✅ ${contacts.length} contatti esportati come ${advExportFormat.toUpperCase()}`, 'success');
-    $('exportModalBackdrop').classList.remove('visible');
-
-  } catch (e) {
-    toast('Errore export: ' + e.message, 'error');
-    console.error('[Export]', e);
-  }
 }
 
 function hashCode(s) {
