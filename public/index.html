@@ -1323,12 +1323,23 @@ body {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M7 2v20"/><path d="M17 2v20"/><path d="M2 12h20"/><path d="M2 7h5"/><path d="M2 17h5"/><path d="M17 7h5"/><path d="M17 17h5"/></svg>
         Archiviazione locale
       </h3>
-      <div class="setting-row"><label>Dati salvati su</label><span style="color:var(--green)">📱 Questo dispositivo</span></div>
-      <div class="setting-row"><label>Spazio occupato</label><span id="storageUsage">Calcolo...</span></div>
+      <div class="setting-row"><label>Dati salvati su</label><span id="storageLocation" style="color:var(--green)">📱 Locale + ☁️ Cloud</span></div>
+      <div class="setting-row"><label>Spazio locale</label><span id="storageUsage">Calcolo...</span></div>
       <div class="setting-row"><label>Esportazioni salvate</label><span id="exportCount">0</span></div>
-      <div style="margin-top:8px;font-size:.68rem;color:var(--fg4);line-height:1.4">
-        I dati restano sul tuo dispositivo. Le chiavi API, i contatti e la cronologia esportazioni non vengono mai inviati a server esterni. Ogni dispositivo ha la propria memoria indipendente.
+      <div class="setting-row"><label>Sync cloud</label><span id="cloudSyncStatus">⏳ Verifica...</span></div>
+      <div class="setting-row">
+        <label>Ultimo sync</label><span id="lastSyncTime">—</span>
       </div>
+      <div style="margin-top:6px;display:flex;gap:6px">
+        <button class="btn btn-primary btn-small" id="btnForceSync">
+          <svg class="btn-ico" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Sincronizza ora
+        </button>
+      </div>
+      <div style="margin-top:8px;font-size:.68rem;color:var(--fg4);line-height:1.4">
+        I dati sono salvati sul dispositivo e sincronizzati con Supabase. Le chiavi API restano solo su questo dispositivo. Ogni dispositivo ha un ID univoco.
+      </div>
+      <div class="setting-row" style="margin-top:6px"><label>Device ID</label><span id="deviceIdDisplay" style="font-family:monospace;font-size:.65rem;color:var(--fg4)">—</span></div>
     </div>
     <div class="settings-section">
       <h3>🗑️ Gestione dati</h3>
@@ -1358,6 +1369,7 @@ body {
 <!-- External Libraries (preloaded) -->
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 
 <script>
@@ -1472,6 +1484,8 @@ document.addEventListener('DOMContentLoaded', () => {
   checkOcrApi();
   initTesseractFallback();
   initPhoneBridge(); // Detect ?s= param and auto-connect to desktop
+  // Supabase: init after all UI is ready (async, non-blocking)
+  setTimeout(() => initSupabase(), 500);
 });
 
 function loadState() {
@@ -1490,6 +1504,251 @@ function saveState() {
     localStorage.setItem('bizcard_settings', JSON.stringify(settings));
     localStorage.setItem('bizcard_scans', String(scanCount));
   } catch (e) { /* storage full or blocked */ }
+  // Async cloud sync (fire & forget)
+  if (supabaseReady) debouncedCloudSync();
+}
+
+// ─── SUPABASE CLOUD SYNC ──────────────────────────────────────
+const SUPABASE_URL = 'https://hgcscjekdqifwnczrhqj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnY3NjamVrZHFpZnduY3pyaHFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NDkxMjAsImV4cCI6MjA4OTIyNTEyMH0.d0SlxojBgv9mvuKQZ5-DBRouhn-J7IYSV2ITDS_RZVc';
+
+let supabase = null;
+let supabaseReady = false;
+let deviceId = '';
+let syncInProgress = false;
+let syncTimer = null;
+
+function getDeviceId() {
+  let id = localStorage.getItem('bizcard_device_id');
+  if (!id) {
+    id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 10);
+    localStorage.setItem('bizcard_device_id', id);
+  }
+  return id;
+}
+
+function initSupabase() {
+  deviceId = getDeviceId();
+  if ($('deviceIdDisplay')) $('deviceIdDisplay').textContent = deviceId;
+
+  try {
+    if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supabaseReady = true;
+      updateCloudStatus('connected');
+      console.log('[Supabase] Initialized, device:', deviceId);
+      // Initial sync — pull from cloud then push local
+      syncWithCloud();
+    } else {
+      console.warn('[Supabase] Client library not loaded');
+      updateCloudStatus('offline');
+    }
+  } catch (e) {
+    console.error('[Supabase] Init error:', e);
+    updateCloudStatus('error');
+  }
+
+  // Force sync button
+  if ($('btnForceSync')) {
+    $('btnForceSync').addEventListener('click', () => {
+      if (!supabaseReady) { toast('Supabase non connesso', 'error'); return; }
+      syncWithCloud(true);
+    });
+  }
+}
+
+function updateCloudStatus(status) {
+  const el = $('cloudSyncStatus');
+  if (!el) return;
+  const states = {
+    connected: '🟢 Connesso',
+    syncing: '🔄 Sincronizzazione...',
+    synced: '✅ Sincronizzato',
+    offline: '⚫ Offline (solo locale)',
+    error: '🔴 Errore connessione',
+  };
+  el.textContent = states[status] || status;
+}
+
+function updateLastSyncTime() {
+  const el = $('lastSyncTime');
+  if (!el) return;
+  const now = new Date();
+  el.textContent = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) +
+    ' — ' + now.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' });
+  localStorage.setItem('bizcard_last_sync', now.toISOString());
+}
+
+// Debounced sync — waits 2s after last change before syncing
+function debouncedCloudSync() {
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => syncWithCloud(), 2000);
+}
+
+async function syncWithCloud(force = false) {
+  if (!supabaseReady || !supabase || syncInProgress) return;
+  syncInProgress = true;
+  updateCloudStatus('syncing');
+
+  try {
+    // ── PULL: Get cloud contacts for this device ──
+    const { data: cloudContacts, error: pullErr } = await supabase
+      .from('contacts')
+      .select('*')
+      .eq('device_id', deviceId)
+      .order('created_at', { ascending: false });
+
+    if (pullErr) throw pullErr;
+
+    // ── MERGE: Cloud → Local (add contacts we don't have locally) ──
+    if (cloudContacts && cloudContacts.length) {
+      const localIds = new Set(contacts.map(c => c.id));
+      let added = 0;
+      cloudContacts.forEach(cc => {
+        if (!localIds.has(cc.id)) {
+          // Cloud has a contact we don't — add to local
+          contacts.push(cloudContactToLocal(cc));
+          added++;
+        }
+      });
+      if (added > 0) {
+        // Save to localStorage without triggering another sync
+        try {
+          localStorage.setItem('bizcard_contacts', JSON.stringify(contacts));
+        } catch (e) {}
+        renderContacts();
+        updateStats();
+        updateExportState();
+        console.log(`[Supabase] Pulled ${added} new contacts from cloud`);
+      }
+    }
+
+    // ── PUSH: Local → Cloud (upsert all local contacts) ──
+    if (contacts.length) {
+      const cloudIds = new Set((cloudContacts || []).map(c => c.id));
+      const toUpsert = contacts
+        .filter(c => force || !cloudIds.has(c.id))
+        .map(c => localContactToCloud(c));
+
+      if (toUpsert.length) {
+        const { error: pushErr } = await supabase
+          .from('contacts')
+          .upsert(toUpsert, { onConflict: 'id' });
+        if (pushErr) throw pushErr;
+        console.log(`[Supabase] Pushed ${toUpsert.length} contacts to cloud`);
+      }
+    }
+
+    // ── PUSH: Delete from cloud contacts that were deleted locally ──
+    if (cloudContacts && cloudContacts.length) {
+      const localIds = new Set(contacts.map(c => c.id));
+      const toDelete = cloudContacts.filter(cc => !localIds.has(cc.id)).map(cc => cc.id);
+      if (toDelete.length) {
+        await supabase.from('contacts').delete().in('id', toDelete);
+        console.log(`[Supabase] Deleted ${toDelete.length} contacts from cloud`);
+      }
+    }
+
+    // ── SYNC EXPORT HISTORY ──
+    await syncExportHistory();
+
+    updateCloudStatus('synced');
+    updateLastSyncTime();
+
+  } catch (e) {
+    console.error('[Supabase] Sync error:', e);
+    updateCloudStatus('error');
+    // Don't show toast for background sync failures — silent fallback to local
+    if (force) toast('Errore sync: ' + (e.message || e), 'error');
+  } finally {
+    syncInProgress = false;
+  }
+}
+
+async function syncExportHistory() {
+  if (!supabaseReady || !supabase) return;
+  try {
+    const localExports = JSON.parse(localStorage.getItem('bizcard_exports') || '[]');
+    if (!localExports.length) return;
+
+    // Get existing cloud exports for this device
+    const { data: cloudExports } = await supabase
+      .from('exports')
+      .select('id, created_at')
+      .eq('device_id', deviceId);
+
+    const cloudIds = new Set((cloudExports || []).map(e => String(e.id)));
+
+    // Push new exports that aren't in cloud
+    const toInsert = localExports
+      .filter(e => !cloudIds.has(String(e.id)))
+      .map(e => ({
+        id: e.id,
+        device_id: deviceId,
+        format: e.format,
+        filename: e.filename,
+        contact_count: e.count,
+        created_at: e.date,
+      }));
+
+    if (toInsert.length) {
+      await supabase.from('exports').insert(toInsert);
+    }
+  } catch (e) {
+    console.warn('[Supabase] Export sync error:', e);
+  }
+}
+
+// ── Data conversion helpers ──
+function localContactToCloud(c) {
+  return {
+    id: c.id,
+    device_id: deviceId,
+    name: c.name || null,
+    company: c.company || null,
+    role: c.role || null,
+    email: c.email || null,
+    mobile: c.mobile || null,
+    phone: c.phone || null,
+    fax: c.fax || null,
+    web: c.web || null,
+    linkedin: c.linkedin || null,
+    address: c.address || null,
+    city: c.city || null,
+    country: c.country || null,
+    piva: c.piva || null,
+    cf: c.cf || null,
+    notes: c.notes || null,
+    logo_description: c.logo_description || null,
+    photo: c.photo || null,
+    source: c.source || null,
+    created_at: c.createdAt || new Date().toISOString(),
+  };
+}
+
+function cloudContactToLocal(cc) {
+  return {
+    id: cc.id,
+    name: cc.name || '',
+    company: cc.company || '',
+    role: cc.role || '',
+    email: cc.email || '',
+    mobile: cc.mobile || '',
+    phone: cc.phone || '',
+    fax: cc.fax || '',
+    web: cc.web || '',
+    linkedin: cc.linkedin || '',
+    address: cc.address || '',
+    city: cc.city || '',
+    country: cc.country || '',
+    piva: cc.piva || '',
+    cf: cc.cf || '',
+    notes: cc.notes || '',
+    logo_description: cc.logo_description || '',
+    photo: cc.photo || '',
+    source: cc.source || '',
+    createdAt: cc.created_at,
+  };
 }
 
 // ─── CHECK SERVER OCR API ─────────────────────────────────────

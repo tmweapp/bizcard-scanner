@@ -3,7 +3,7 @@
 //  Handles: offline caching, PWA install, background sync
 // ═══════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'bizcard-v4.1';
+const CACHE_NAME = 'bizcard-v4.2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -13,6 +13,7 @@ const STATIC_ASSETS = [
   'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',
   'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js',
   'https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
 ];
 
 // Install: cache static assets
@@ -45,6 +46,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (url.pathname.startsWith('/api/')) return;
   if (url.hostname.includes('api.openai.com')) return;
+  if (url.hostname.includes('supabase.co')) return;
   if (url.hostname.includes('peerjs')) return;
 
   // For external CDN scripts: cache-first
