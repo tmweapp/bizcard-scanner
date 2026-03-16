@@ -6,43 +6,118 @@
 <title>BizCard — Scanner Remoto</title>
 <meta name="theme-color" content="#0f172a">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--fg:#f8fafc;--fg2:#94a3b8;--green:#22c55e;--red:#ef4444;--accent:#3b82f6;--orange:#f59e0b}
-html{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--fg)}
-body{min-height:100dvh;display:flex;flex-direction:column}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-.top-bar{background:var(--bg2);padding:12px 16px;text-align:center;border-bottom:1px solid var(--bg3)}
-.top-bar h1{font-size:1rem;font-weight:600}
-.top-bar .sub{font-size:.75rem;color:var(--fg2);margin-top:2px}
+:root {
+  --bg: #0f172a; --bg2: #1e293b; --bg3: #334155;
+  --fg: #f8fafc; --fg2: #94a3b8; --fg3: #64748b;
+  --green: #22c55e; --red: #ef4444; --accent: #3b82f6; --orange: #f59e0b;
+}
 
-.status-bar{padding:10px 16px;display:flex;align-items:center;gap:8px;font-size:.85rem;background:var(--bg2);border-bottom:1px solid var(--bg3)}
-.status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.status-dot.connected{background:var(--green);box-shadow:0 0 8px rgba(34,197,94,.5)}
-.status-dot.connecting{background:var(--orange);animation:pulse 1s infinite}
-.status-dot.error{background:var(--red)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--fg);
+  -webkit-tap-highlight-color: transparent;
+}
+body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 
-.camera-area{flex:1;position:relative;background:#000;overflow:hidden}
-.camera-area video{width:100%;height:100%;object-fit:cover}
-.camera-area .frame-guide{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:88%;height:65%;border:2px solid rgba(255,255,255,.3);border-radius:12px;pointer-events:none}
-.camera-area .frame-guide.flash{border-color:var(--green);box-shadow:0 0 30px rgba(34,197,94,.4);transition:all .2s}
+/* ─── Top Bar ─── */
+.top-bar {
+  background: var(--bg2); padding: 12px 16px; text-align: center;
+  border-bottom: 1px solid var(--bg3); flex-shrink: 0;
+}
+.top-bar h1 { font-size: 1rem; font-weight: 600; }
+.top-bar .sub { font-size: .75rem; color: var(--fg2); margin-top: 2px; }
 
-.bottom-bar{background:var(--bg2);padding:16px;display:flex;align-items:center;justify-content:center;gap:16px;border-top:1px solid var(--bg3)}
-.btn-capture{width:72px;height:72px;border-radius:50%;border:4px solid var(--fg);background:transparent;cursor:pointer;position:relative;transition:all .15s}
-.btn-capture:active{transform:scale(.9)}
-.btn-capture::after{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--fg);transition:all .15s}
-.btn-capture:disabled{opacity:.3;cursor:not-allowed}
-.btn-capture.sending::after{background:var(--orange);animation:pulse .5s infinite}
+/* ─── Status Bar ─── */
+.status-bar {
+  padding: 10px 16px; display: flex; align-items: center; gap: 8px;
+  font-size: .85rem; background: var(--bg2); border-bottom: 1px solid var(--bg3); flex-shrink: 0;
+}
+.status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.status-dot.connected { background: var(--green); box-shadow: 0 0 8px rgba(34,197,94,.5); }
+.status-dot.connecting { background: var(--orange); animation: pulse 1s infinite; }
+.status-dot.error { background: var(--red); }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
 
-.btn-flip{background:var(--bg3);border:none;color:var(--fg);width:44px;height:44px;border-radius:50%;font-size:1.2rem;cursor:pointer}
+/* ─── Camera ─── */
+.camera-area {
+  flex: 1; position: relative; background: #000; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.camera-area video { width: 100%; height: 100%; object-fit: cover; }
+.frame-guide {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 88%; height: 65%; border: 2px solid rgba(255,255,255,.25); border-radius: 12px;
+  pointer-events: none; transition: all .3s;
+}
+.frame-guide.flash { border-color: var(--green); box-shadow: 0 0 40px rgba(34,197,94,.4); }
+.photo-count {
+  position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,.7);
+  backdrop-filter: blur(8px); border-radius: 20px; padding: 6px 14px;
+  font-size: .8rem; z-index: 10; color: var(--fg);
+}
 
-.photo-count{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);border-radius:20px;padding:6px 14px;font-size:.8rem;z-index:10;color:var(--fg)}
+/* ─── Preview Overlay ─── */
+.preview-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,.85); z-index: 20;
+  display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+}
+.preview-overlay.visible { display: flex; }
+.preview-overlay img {
+  max-width: 90%; max-height: 60%; border-radius: 8px; object-fit: contain;
+}
+.preview-actions { display: flex; gap: 12px; }
+.preview-actions button {
+  padding: 12px 24px; border: none; border-radius: 8px;
+  font-size: .95rem; font-weight: 600; cursor: pointer;
+}
+.preview-actions .btn-send { background: var(--green); color: #fff; }
+.preview-actions .btn-retake { background: var(--bg3); color: var(--fg); }
 
-.sent-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:var(--green);color:#fff;padding:16px 28px;border-radius:12px;font-size:1.1rem;font-weight:600;z-index:100;transition:transform .2s ease;pointer-events:none}
-.sent-toast.show{transform:translate(-50%,-50%) scale(1)}
+/* ─── Bottom Bar ─── */
+.bottom-bar {
+  background: var(--bg2); padding: 16px; display: flex; align-items: center;
+  justify-content: center; gap: 16px; border-top: 1px solid var(--bg3); flex-shrink: 0;
+}
+.btn-capture {
+  width: 72px; height: 72px; border-radius: 50%; border: 4px solid var(--fg);
+  background: transparent; cursor: pointer; position: relative; transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-capture:active { transform: scale(.9); }
+.btn-capture::after {
+  content: ''; position: absolute; inset: 6px; border-radius: 50%;
+  background: var(--fg); transition: all .15s;
+}
+.btn-capture:disabled { opacity: .3; cursor: not-allowed; }
+.btn-capture.sending::after { background: var(--orange); animation: pulse .5s infinite; }
+.btn-flip, .btn-torch {
+  background: var(--bg3); border: none; color: var(--fg);
+  width: 44px; height: 44px; border-radius: 50%; font-size: 1.2rem;
+  cursor: pointer; transition: all .15s;
+}
+.btn-flip:active, .btn-torch:active { transform: scale(.9); }
 
-.error-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;flex:1;color:var(--fg2);gap:12px}
-.error-screen h2{color:var(--red);font-size:1.1rem}
+/* ─── Toast ─── */
+.sent-toast {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
+  background: var(--green); color: #fff; padding: 16px 28px; border-radius: 12px;
+  font-size: 1.1rem; font-weight: 600; z-index: 100; transition: transform .2s ease;
+  pointer-events: none;
+}
+.sent-toast.show { transform: translate(-50%,-50%) scale(1); }
+
+/* ─── Error Screen ─── */
+.error-screen {
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 40px 20px; flex: 1; color: var(--fg2); gap: 12px;
+}
+.error-screen h2 { color: var(--red); font-size: 1.1rem; }
+.error-screen .retry-btn {
+  margin-top: 12px; padding: 10px 20px; background: var(--accent); color: #fff;
+  border: none; border-radius: 8px; font-size: .9rem; cursor: pointer;
+}
 </style>
 </head>
 <body>
@@ -61,182 +136,255 @@ body{min-height:100dvh;display:flex;flex-direction:column}
   <video id="video" autoplay playsinline muted></video>
   <div class="frame-guide" id="frameGuide"></div>
   <div class="photo-count" id="photoCount" style="display:none">0 foto inviate</div>
+
+  <!-- Preview before send -->
+  <div class="preview-overlay" id="previewOverlay">
+    <img id="previewImg" alt="Anteprima foto">
+    <div class="preview-actions">
+      <button class="btn-retake" id="btnPreviewRetake">🔄 Rifai</button>
+      <button class="btn-send" id="btnPreviewSend">📤 Invia al desktop</button>
+    </div>
+  </div>
 </div>
 
 <div class="bottom-bar">
-  <button class="btn-flip" id="btnFlip">🔄</button>
-  <button class="btn-capture" id="btnCapture" disabled></button>
-  <div style="width:44px"></div><!-- spacer -->
+  <button class="btn-torch" id="btnTorch" style="display:none" aria-label="Flash">🔦</button>
+  <button class="btn-flip" id="btnFlip" aria-label="Inverti fotocamera">🔄</button>
+  <button class="btn-capture" id="btnCapture" disabled aria-label="Scatta foto"></button>
+  <div style="width:44px"></div><!-- spacer for centering -->
 </div>
 
 <div class="sent-toast" id="sentToast">✅ Foto inviata!</div>
 
-<div class="error-screen" id="errorScreen" style="display:none">
+<div class="error-screen" id="errorScreen">
   <h2 id="errorTitle">Errore</h2>
   <p id="errorMsg">Sessione non trovata</p>
+  <button class="retry-btn" id="btnRetry" style="display:none">🔄 Riprova</button>
 </div>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
-(function(){
-  // --- Get session from URL ---
-  var params = new URLSearchParams(location.search);
-  var sessionId = params.get('s') || params.get('session');
+'use strict';
 
-  if(!sessionId){
+(function() {
+  // ─── Session from URL ───
+  const params = new URLSearchParams(location.search);
+  const sessionId = params.get('s') || params.get('session');
+
+  if (!sessionId) {
     showError('Sessione non trovata', 'Scansiona il QR code dal desktop per collegarti.');
     return;
   }
 
-  var peer = null;
-  var conn = null;
-  var facingMode = 'environment';
-  var currentStream = null;
-  var photosSent = 0;
-  var captureCanvas = document.createElement('canvas');
-  var captureCtx = captureCanvas.getContext('2d');
+  // ─── State ───
+  let peer = null;
+  let conn = null;
+  let facingMode = 'environment';
+  let torchEnabled = false;
+  let currentStream = null;
+  let photosSent = 0;
+  let retries = 0;
+  const MAX_RETRIES = 15;
+  const captureCanvas = document.createElement('canvas');
+  const captureCtx = captureCanvas.getContext('2d');
+  let pendingBase64 = null;
 
-  // --- Camera ---
-  async function startCamera(){
-    var video = document.getElementById('video');
-    try{
-      if(currentStream) currentStream.getTracks().forEach(function(t){t.stop();});
-      var s = await navigator.mediaDevices.getUserMedia({
-        video:{facingMode:facingMode, width:{ideal:1920}, height:{ideal:1440}},
-        audio:false
+  // ─── Camera ───
+  async function startCamera() {
+    const video = document.getElementById('video');
+    try {
+      if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1440 } },
+        audio: false,
       });
-      video.srcObject = s;
-      currentStream = s;
-    }catch(e){
-      showError('Camera non disponibile', e.message);
+      video.srcObject = stream;
+      currentStream = stream;
+
+      // Check torch
+      const track = stream.getVideoTracks()[0];
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      document.getElementById('btnTorch').style.display = caps.torch ? 'inline-flex' : 'none';
+    } catch (e) {
+      showError('Camera non disponibile', e.message || 'Concedi il permesso alla fotocamera nelle impostazioni del browser.');
     }
   }
 
-  document.getElementById('btnFlip').addEventListener('click', function(){
-    facingMode = facingMode==='environment' ? 'user' : 'environment';
+  document.getElementById('btnFlip').addEventListener('click', () => {
+    facingMode = facingMode === 'environment' ? 'user' : 'environment';
     startCamera();
   });
 
-  // --- PeerJS Connection ---
-  function connectToDesktop(){
-    setStatus('connecting', 'Connessione al desktop...');
+  document.getElementById('btnTorch').addEventListener('click', async () => {
+    if (!currentStream) return;
+    const track = currentStream.getVideoTracks()[0];
+    torchEnabled = !torchEnabled;
+    try {
+      await track.applyConstraints({ advanced: [{ torch: torchEnabled }] });
+      document.getElementById('btnTorch').textContent = torchEnabled ? '💡' : '🔦';
+    } catch (e) { torchEnabled = false; }
+  });
 
+  // ─── PeerJS Connection ───
+  function connectToDesktop() {
+    if (retries >= MAX_RETRIES) {
+      showError('Connessione fallita', 'Non riesco a raggiungere il desktop. Ricarica la pagina e riprova.');
+      document.getElementById('btnRetry').style.display = 'inline-block';
+      return;
+    }
+
+    setStatus('connecting', retries > 0 ? `Riconnessione (${retries}/${MAX_RETRIES})...` : 'Connessione al desktop...');
+
+    if (peer) { try { peer.destroy(); } catch (e) {} }
     peer = new Peer();
 
-    peer.on('open', function(myId){
-      // Connect to the desktop peer
-      conn = peer.connect('bizcard-' + sessionId, {reliable:true});
+    peer.on('open', () => {
+      conn = peer.connect('bizcard-' + sessionId, { reliable: true });
 
-      conn.on('open', function(){
-        setStatus('connected', 'Connesso al desktop ✓');
+      conn.on('open', () => {
+        setStatus('connected', '✅ Connesso al desktop');
         document.getElementById('btnCapture').disabled = false;
+        retries = 0;
       });
 
-      conn.on('close', function(){
-        setStatus('error', 'Desktop disconnesso');
+      conn.on('close', () => {
+        setStatus('connecting', 'Desktop disconnesso — riconnessione...');
         document.getElementById('btnCapture').disabled = true;
-        // Try to reconnect after 3 seconds
-        setTimeout(function(){ connectToDesktop(); }, 3000);
+        conn = null;
+        retries++;
+        setTimeout(connectToDesktop, Math.min(2000 * retries, 10000));
       });
 
-      conn.on('error', function(e){
+      conn.on('error', (e) => {
+        console.warn('[Phone] Connection error:', e);
+        setStatus('error', 'Errore connessione: ' + (e.type || e.message));
+      });
+
+      conn.on('data', (data) => {
+        if (data && data.type === 'ack') showSentToast();
+      });
+    });
+
+    peer.on('error', (e) => {
+      console.warn('[Phone] Peer error:', e.type);
+      if (e.type === 'peer-unavailable') {
+        setStatus('error', 'Desktop non trovato — assicurati che sia aperto.');
+      } else {
         setStatus('error', 'Errore: ' + e.type);
-      });
-
-      // Listen for messages from desktop
-      conn.on('data', function(data){
-        if(data && data.type === 'ack'){
-          showSentToast();
-        }
-      });
-    });
-
-    peer.on('error', function(e){
-      if(e.type === 'peer-unavailable'){
-        setStatus('error', 'Desktop non trovato. Assicurati che sia aperto.');
-        setTimeout(function(){ connectToDesktop(); }, 5000);
-      }else{
-        setStatus('error', 'Errore PeerJS: ' + e.type);
-        setTimeout(function(){ connectToDesktop(); }, 5000);
       }
+      retries++;
+      setTimeout(connectToDesktop, Math.min(3000 * retries, 15000));
     });
 
-    peer.on('disconnected', function(){
+    peer.on('disconnected', () => {
       setStatus('connecting', 'Riconnessione...');
-      try{ peer.reconnect(); }catch(e){}
+      try { peer.reconnect(); } catch (e) {
+        retries++;
+        setTimeout(connectToDesktop, 3000);
+      }
     });
   }
 
-  // --- Capture Photo ---
-  document.getElementById('btnCapture').addEventListener('click', function(){
-    if(!conn || !conn.open) return;
+  // ─── Capture Photo ───
+  document.getElementById('btnCapture').addEventListener('click', () => {
+    const video = document.getElementById('video');
+    if (!video.srcObject || video.videoWidth === 0) return;
 
-    var video = document.getElementById('video');
-    if(!video.srcObject || video.videoWidth === 0) return;
-
-    var btn = document.getElementById('btnCapture');
-    btn.classList.add('sending');
-    btn.disabled = true;
+    // Haptic
+    if (navigator.vibrate) navigator.vibrate(50);
 
     // Flash effect
-    var guide = document.getElementById('frameGuide');
+    const guide = document.getElementById('frameGuide');
     guide.classList.add('flash');
-    setTimeout(function(){guide.classList.remove('flash');}, 300);
+    setTimeout(() => guide.classList.remove('flash'), 400);
 
     // Capture at good resolution (max 1600px wide)
-    var scale = Math.min(1600 / video.videoWidth, 1);
+    const scale = Math.min(1600 / video.videoWidth, 1);
     captureCanvas.width = Math.round(video.videoWidth * scale);
     captureCanvas.height = Math.round(video.videoHeight * scale);
     captureCtx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
 
-    // Convert to JPEG base64
-    var dataUrl = captureCanvas.toDataURL('image/jpeg', 0.85);
-    var base64 = dataUrl.split(',')[1];
+    const dataUrl = captureCanvas.toDataURL('image/jpeg', 0.85);
+    pendingBase64 = dataUrl.split(',')[1];
 
-    // Send to desktop via WebRTC
-    try{
+    // Show preview
+    document.getElementById('previewImg').src = dataUrl;
+    document.getElementById('previewOverlay').classList.add('visible');
+  });
+
+  // Preview: retake
+  document.getElementById('btnPreviewRetake').addEventListener('click', () => {
+    document.getElementById('previewOverlay').classList.remove('visible');
+    pendingBase64 = null;
+  });
+
+  // Preview: send
+  document.getElementById('btnPreviewSend').addEventListener('click', () => {
+    document.getElementById('previewOverlay').classList.remove('visible');
+    if (!pendingBase64) return;
+
+    if (!conn || !conn.open) {
+      setStatus('error', 'Non connesso al desktop');
+      return;
+    }
+
+    const btn = document.getElementById('btnCapture');
+    btn.classList.add('sending');
+
+    try {
       conn.send({
         type: 'photo',
-        image: base64,
+        image: pendingBase64,
         width: captureCanvas.width,
         height: captureCanvas.height,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       photosSent++;
       document.getElementById('photoCount').style.display = 'block';
-      document.getElementById('photoCount').textContent = photosSent + ' foto inviat' + (photosSent===1?'a':'e');
+      document.getElementById('photoCount').textContent = photosSent + ' foto inviat' + (photosSent === 1 ? 'a' : 'e');
       showSentToast();
-    }catch(e){
+    } catch (e) {
       setStatus('error', 'Invio fallito: ' + e.message);
     }
 
+    pendingBase64 = null;
     btn.classList.remove('sending');
-    btn.disabled = false;
   });
 
-  // --- Helpers ---
-  function setStatus(state, text){
+  // ─── Retry button ───
+  document.getElementById('btnRetry').addEventListener('click', () => {
+    document.getElementById('errorScreen').style.display = 'none';
+    document.getElementById('cameraArea').style.display = 'flex';
+    document.querySelector('.bottom-bar').style.display = 'flex';
+    retries = 0;
+    startCamera();
+    connectToDesktop();
+  });
+
+  // ─── Helpers ───
+  function setStatus(state, text) {
     document.getElementById('statusDot').className = 'status-dot ' + state;
     document.getElementById('statusText').textContent = text;
   }
 
-  function showSentToast(){
-    var t = document.getElementById('sentToast');
+  function showSentToast() {
+    const t = document.getElementById('sentToast');
     t.classList.add('show');
-    setTimeout(function(){t.classList.remove('show');}, 1200);
+    if (navigator.vibrate) navigator.vibrate(100);
+    setTimeout(() => t.classList.remove('show'), 1200);
   }
 
-  function showError(title, msg){
+  function showError(title, msg) {
     document.getElementById('cameraArea').style.display = 'none';
     document.querySelector('.bottom-bar').style.display = 'none';
-    var es = document.getElementById('errorScreen');
+    const es = document.getElementById('errorScreen');
     es.style.display = 'flex';
     document.getElementById('errorTitle').textContent = title;
     document.getElementById('errorMsg').textContent = msg;
   }
 
-  // --- Start ---
+  // ─── Start ───
   startCamera();
   connectToDesktop();
 

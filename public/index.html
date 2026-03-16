@@ -4,519 +4,1577 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>BizCard Scanner</title>
-<meta name="description" content="Scansiona biglietti da visita con OCR professionale">
+<meta name="description" content="Scansiona biglietti da visita con OCR professionale — Google Vision, multi-lingua, export vCard/CSV">
 <meta name="theme-color" content="#0f172a">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📇</text></svg>">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--fg:#f8fafc;--fg2:#94a3b8;--fg3:#64748b;--accent:#3b82f6;--accent2:#60a5fa;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;--purple:#a855f7;--radius:12px;--shadow:0 4px 24px rgba(0,0,0,.3)}
-html{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--fg);overflow-x:hidden}
-body{min-height:100dvh;display:flex;flex-direction:column}
-header{background:var(--bg2);border-bottom:1px solid var(--bg3);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-header h1{font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:8px}
-header h1 span{font-size:1.4rem}
-nav{display:flex;background:var(--bg2);border-bottom:1px solid var(--bg3);overflow-x:auto}
-nav button{flex:1;background:none;border:none;color:var(--fg3);padding:12px 16px;font-size:.9rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
-nav button.active{color:var(--accent2);border-bottom-color:var(--accent)}
-nav button:hover{color:var(--fg)}
-main{flex:1;padding:16px;max-width:900px;margin:0 auto;width:100%}
-.panel{display:none}.panel.active{display:block}
+/* ══════════════════════════════════════════════════════
+   BIZCARD SCANNER v4 — DESIGN SYSTEM
+   ══════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Mode selector */
-.mode-selector{display:flex;gap:8px;margin-bottom:16px}
-.mode-btn{flex:1;padding:14px;border:2px solid var(--bg3);border-radius:var(--radius);background:var(--bg2);color:var(--fg2);cursor:pointer;text-align:center;transition:all .2s;font-size:.9rem}
-.mode-btn:hover{border-color:var(--accent);color:var(--fg)}
-.mode-btn.active{border-color:var(--accent);background:rgba(59,130,246,.1);color:var(--accent2)}
-.mode-btn .mode-icon{font-size:1.6rem;display:block;margin-bottom:6px}
-.mode-btn .mode-label{font-weight:600}
-.mode-btn .mode-desc{font-size:.75rem;color:var(--fg3);margin-top:2px}
+:root {
+  --bg:      #0f172a;
+  --bg2:     #1e293b;
+  --bg3:     #334155;
+  --bg4:     #475569;
+  --fg:      #f8fafc;
+  --fg2:     #cbd5e1;
+  --fg3:     #94a3b8;
+  --fg4:     #64748b;
+  --accent:  #3b82f6;
+  --accent2: #60a5fa;
+  --accent3: #93c5fd;
+  --green:   #22c55e;
+  --green2:  #4ade80;
+  --red:     #ef4444;
+  --orange:  #f59e0b;
+  --purple:  #a855f7;
+  --radius:  12px;
+  --radius2: 8px;
+  --shadow:  0 4px 24px rgba(0,0,0,.4);
+  --transition: .2s cubic-bezier(.4,0,.2,1);
+}
 
-/* Camera area */
-.camera-area{position:relative;width:100%;border-radius:var(--radius);overflow:hidden;background:#000;aspect-ratio:4/3;margin-bottom:16px}
-.camera-area video{width:100%;height:100%;object-fit:cover}
-.camera-area .guide{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:85%;height:60%;border:2px dashed rgba(255,255,255,.3);border-radius:8px;pointer-events:none}
-.scanner-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--fg3);gap:12px;padding:20px;text-align:center}
+html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
 
-/* QR area */
-.qr-section{background:var(--bg2);border-radius:var(--radius);padding:24px;text-align:center;margin-bottom:16px;border:1px solid var(--bg3)}
-.qr-section h3{font-size:1rem;margin-bottom:4px;color:var(--fg)}
-.qr-section .qr-sub{font-size:.8rem;color:var(--fg3);margin-bottom:16px}
-.qr-section canvas{border-radius:8px;margin:0 auto 12px;display:block;background:#fff;padding:12px}
-.qr-section .session-code{font-family:monospace;font-size:1.1rem;color:var(--accent2);margin-bottom:8px}
-.qr-section .qr-url{font-size:.7rem;color:var(--fg3);word-break:break-all}
-.qr-status{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:12px;font-size:.85rem}
-.qr-status .dot{width:10px;height:10px;border-radius:50%}
-.qr-status .dot.waiting{background:var(--orange);animation:pulse 1.5s infinite}
-.qr-status .dot.connected{background:var(--green);box-shadow:0 0 8px rgba(34,197,94,.5)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+body { min-height: 100dvh; display: flex; flex-direction: column; }
 
-/* Buttons */
-.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border:none;border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s}
-.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent2)}.btn-primary:disabled{opacity:.5;cursor:not-allowed}
-.btn-secondary{background:var(--bg3);color:var(--fg)}.btn-secondary:hover{background:#475569}
-.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#dc2626}
-.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#16a34a}
-.btn-small{padding:6px 12px;font-size:.8rem}
+/* ─── Focus & Accessibility ─── */
+:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 
-/* OCR status */
-.ocr-status{background:var(--bg2);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:.9rem}
-.ocr-status .spinner{width:20px;height:20px;border:2px solid var(--bg3);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.ocr-status.ready{border-left:3px solid var(--green)}
-.ocr-status.processing{border-left:3px solid var(--orange)}
-.ocr-status.error{border-left:3px solid var(--red)}
+/* ─── Header ─── */
+header {
+  background: var(--bg2); border-bottom: 1px solid var(--bg3);
+  padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100; backdrop-filter: blur(12px);
+}
+header h1 { font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+header h1 span { font-size: 1.3rem; }
+.version-badge { font-size: .6rem; background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
 
-/* Results */
-.result-section{background:var(--bg2);border-radius:var(--radius);padding:16px;margin-bottom:16px;border:1px solid var(--bg3)}
-.result-section h3{font-size:.95rem;color:var(--fg2);margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.photo-preview{width:100%;border-radius:8px;margin-bottom:12px;max-height:250px;object-fit:contain;background:#000}
+/* ─── Navigation ─── */
+nav { display: flex; background: var(--bg2); border-bottom: 1px solid var(--bg3); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+nav button {
+  flex: 1; background: none; border: none; color: var(--fg4); padding: 12px 16px;
+  font-size: .85rem; cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all var(--transition); white-space: nowrap; font-weight: 500;
+}
+nav button.active { color: var(--accent2); border-bottom-color: var(--accent); }
+nav button:hover { color: var(--fg2); }
 
-/* Text blocks */
-.text-block{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;margin-bottom:6px;background:var(--bg);border:1px solid var(--bg3);transition:all .2s;min-height:42px}
-.text-block:hover{border-color:var(--accent)}
-.text-block .tb-text{flex:1;font-size:.9rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.text-block .tb-type{font-size:.75rem;padding:3px 10px;border-radius:6px;background:var(--bg3);color:var(--fg2);cursor:pointer;white-space:nowrap;transition:all .2s;border:1px solid transparent}
-.text-block .tb-type:hover{border-color:var(--accent);color:var(--fg)}
-.text-block .tb-type.assigned{background:rgba(59,130,246,.15);color:var(--accent2)}
-.text-block .tb-type.required{background:rgba(34,197,94,.15);color:var(--green)}
-.text-block .tb-icon{font-size:.9rem;width:22px;text-align:center;flex-shrink:0}
-.text-block.ignored{opacity:.4}
+/* ─── Main ─── */
+main { flex: 1; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
+.panel { display: none; } .panel.active { display: block; }
 
-/* Field summary */
-.field-summary{background:var(--bg);border-radius:8px;padding:12px;margin-top:12px}
-.field-summary h4{font-size:.8rem;color:var(--fg3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-.fs-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bg3);font-size:.85rem}
-.fs-row:last-child{border:none}
-.fs-label{width:70px;color:var(--fg3);font-size:.75rem;text-transform:uppercase;flex-shrink:0}
-.fs-value{flex:1;color:var(--fg)}
-.fs-value.empty{color:var(--fg3);font-style:italic}
+/* ─── Mode Selector ─── */
+.mode-selector { display: flex; gap: 8px; margin-bottom: 16px; }
+.mode-btn {
+  flex: 1; padding: 14px 8px; border: 2px solid var(--bg3); border-radius: var(--radius);
+  background: var(--bg2); color: var(--fg3); cursor: pointer; text-align: center;
+  transition: all var(--transition); font-size: .9rem;
+}
+.mode-btn:hover { border-color: var(--accent); color: var(--fg); transform: translateY(-1px); }
+.mode-btn.active { border-color: var(--accent); background: rgba(59,130,246,.08); color: var(--accent2); }
+.mode-btn .mode-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+.mode-btn .mode-label { font-weight: 600; font-size: .85rem; }
+.mode-btn .mode-desc { font-size: .7rem; color: var(--fg4); margin-top: 2px; }
 
-/* Type selector dropdown */
-.type-dropdown{position:fixed;background:var(--bg2);border:1px solid var(--bg3);border-radius:8px;padding:4px;z-index:50;box-shadow:var(--shadow);min-width:150px}
-.type-dropdown button{display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;color:var(--fg2);font-size:.85rem;cursor:pointer;border-radius:6px;transition:background .1s}
-.type-dropdown button:hover{background:var(--bg3);color:var(--fg)}
+/* ─── Camera ─── */
+.camera-area {
+  position: relative; width: 100%; border-radius: var(--radius); overflow: hidden;
+  background: #000; aspect-ratio: 4/3; margin-bottom: 12px;
+}
+.camera-area video { width: 100%; height: 100%; object-fit: cover; }
+.camera-area .guide {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 88%; height: 62%; border: 2px dashed rgba(255,255,255,.25); border-radius: 10px;
+  pointer-events: none; transition: all .3s;
+}
+.camera-area .guide.flash { border-color: var(--green); box-shadow: 0 0 40px rgba(34,197,94,.3); }
+.scanner-placeholder {
+  width: 100%; height: 100%; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; color: var(--fg4); gap: 12px; padding: 20px; text-align: center;
+}
+.scanner-placeholder svg { width: 48px; height: 48px; opacity: .4; }
 
-/* Contacts, export, settings */
-.contact-list{display:flex;flex-direction:column;gap:8px}
-.contact-item{background:var(--bg2);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s}
-.contact-item:hover{background:var(--bg3)}
-.contact-avatar{width:44px;height:44px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0}
-.contact-info{flex:1;min-width:0}
-.contact-info .name{font-weight:600;font-size:.95rem}
-.contact-info .detail{color:var(--fg3);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.contact-actions{display:flex;gap:4px}
-.contact-actions button{background:none;border:none;color:var(--fg3);cursor:pointer;padding:6px;border-radius:6px;transition:all .2s}
-.contact-actions button:hover{background:var(--bg);color:var(--fg)}
-.search-bar{position:relative;margin-bottom:16px}
-.search-bar input{width:100%;background:var(--bg2);border:1px solid var(--bg3);border-radius:8px;padding:10px 12px 10px 38px;color:var(--fg);font-size:.9rem}
-.search-bar input:focus{outline:none;border-color:var(--accent)}
-.search-bar svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--fg3)}
-.export-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.export-card{background:var(--bg2);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .2s;border:1px solid transparent}
-.export-card:hover{border-color:var(--accent);background:var(--bg3)}
-.export-card svg{width:40px;height:40px;color:var(--accent);margin-bottom:8px}
-.export-card h4{font-size:.95rem;margin-bottom:4px}.export-card p{font-size:.8rem;color:var(--fg3)}
-.empty-state{text-align:center;padding:48px 20px;color:var(--fg3)}
-.empty-state svg{width:80px;height:80px;opacity:.3;margin-bottom:16px}
-.empty-state h3{color:var(--fg2);margin-bottom:8px}
-.toast-container{position:fixed;bottom:20px;right:20px;z-index:1000;display:flex;flex-direction:column;gap:8px}
-.toast{background:var(--bg2);border:1px solid var(--bg3);border-radius:8px;padding:12px 16px;font-size:.9rem;box-shadow:var(--shadow);animation:slideIn .3s ease;display:flex;align-items:center;gap:8px;max-width:350px}
-.toast.success{border-left:3px solid var(--green)}.toast.error{border-left:3px solid var(--red)}
-@keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.settings-section{background:var(--bg2);border-radius:var(--radius);padding:20px;margin-bottom:16px}
-.settings-section h3{font-size:.95rem;margin-bottom:12px;color:var(--fg2)}
-.setting-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg3)}
-.setting-row:last-child{border:none}.setting-row label{font-size:.9rem}
-select,input[type="url"],input[type="text"]{background:var(--bg);border:1px solid var(--bg3);border-radius:6px;padding:6px 10px;color:var(--fg);font-size:.85rem}
-.progress-bar{width:100%;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:8px}
-.progress-bar .fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
-@media(max-width:600px){main{padding:12px}.mode-selector{flex-direction:column}.export-options{grid-template-columns:1fr 1fr}}
+/* ─── QR Section ─── */
+.qr-section {
+  background: var(--bg2); border-radius: var(--radius); padding: 28px; text-align: center;
+  margin-bottom: 16px; border: 1px solid var(--bg3);
+}
+.qr-section h3 { font-size: 1rem; margin-bottom: 4px; color: var(--fg); }
+.qr-section .qr-sub { font-size: .8rem; color: var(--fg4); margin-bottom: 20px; }
+.qr-section canvas, .qr-section img.qr-img {
+  border-radius: var(--radius2); margin: 0 auto 16px; display: block;
+  background: #fff; padding: 12px; width: 224px; height: 224px;
+}
+.session-code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 1.4rem; color: var(--accent2); letter-spacing: 3px; font-weight: 700; margin-bottom: 8px; }
+.qr-url { font-size: .7rem; color: var(--fg4); word-break: break-all; user-select: all; cursor: text; }
+.qr-status { display: flex; align-items: center; gap: 8px; justify-content: center; margin-top: 16px; font-size: .85rem; }
+.qr-status .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.qr-status .dot.waiting { background: var(--orange); animation: pulse 1.5s infinite; }
+.qr-status .dot.connected { background: var(--green); box-shadow: 0 0 10px rgba(34,197,94,.5); }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+/* ─── Buttons ─── */
+.controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px;
+  border: none; border-radius: var(--radius2); font-size: .9rem; font-weight: 600;
+  cursor: pointer; transition: all var(--transition); user-select: none;
+}
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+.btn-secondary { background: var(--bg3); color: var(--fg2); }
+.btn-secondary:hover { background: var(--bg4); }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-success { background: var(--green); color: #fff; }
+.btn-success:hover { background: var(--green2); }
+.btn-small { padding: 6px 12px; font-size: .8rem; }
+.btn-icon { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 50%; }
+
+/* ─── OCR Status ─── */
+.ocr-status {
+  background: var(--bg2); border-radius: var(--radius); padding: 14px 16px;
+  margin-bottom: 16px; display: flex; align-items: center; gap: 10px; font-size: .9rem;
+  border-left: 3px solid var(--bg3); transition: border-color .3s;
+}
+.ocr-status .spinner {
+  width: 20px; height: 20px; border: 2px solid var(--bg3); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.ocr-status.ready { border-left-color: var(--green); }
+.ocr-status.processing { border-left-color: var(--orange); }
+.ocr-status.error { border-left-color: var(--red); }
+.progress-bar { flex: 1; height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; min-width: 60px; }
+.progress-bar .fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }
+
+/* ─── Results ─── */
+.result-section {
+  background: var(--bg2); border-radius: var(--radius); padding: 16px;
+  margin-bottom: 16px; border: 1px solid var(--bg3);
+}
+.result-section h3 { font-size: .95rem; color: var(--fg3); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.photo-preview {
+  width: 100%; border-radius: var(--radius2); margin-bottom: 12px;
+  max-height: 220px; object-fit: contain; background: #000; cursor: zoom-in;
+}
+.photo-preview.zoomed { max-height: none; cursor: zoom-out; }
+
+/* ─── Text Blocks ─── */
+.text-block {
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: var(--radius2);
+  margin-bottom: 6px; background: var(--bg); border: 1px solid var(--bg3);
+  transition: all var(--transition); min-height: 44px;
+}
+.text-block:hover { border-color: var(--accent); }
+.text-block .tb-icon { font-size: .9rem; width: 22px; text-align: center; flex-shrink: 0; }
+.text-block .tb-text {
+  flex: 1; font-size: .9rem; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; cursor: text;
+}
+.text-block .tb-text:focus { white-space: normal; outline: none; background: var(--bg3); border-radius: 4px; padding: 2px 4px; }
+.text-block .tb-conf {
+  font-size: .65rem; color: var(--fg4); min-width: 28px; text-align: right; flex-shrink: 0;
+}
+.text-block .tb-type {
+  font-size: .75rem; padding: 3px 10px; border-radius: 6px; background: var(--bg3);
+  color: var(--fg3); cursor: pointer; white-space: nowrap; transition: all var(--transition);
+  border: 1px solid transparent;
+}
+.text-block .tb-type:hover { border-color: var(--accent); color: var(--fg); }
+.text-block .tb-type.assigned { background: rgba(59,130,246,.12); color: var(--accent2); }
+.text-block .tb-type.required { background: rgba(34,197,94,.12); color: var(--green2); }
+.text-block.ignored { opacity: .35; }
+
+/* ─── Field Summary ─── */
+.field-summary { background: var(--bg); border-radius: var(--radius2); padding: 14px; margin-top: 14px; }
+.field-summary h4 { font-size: .75rem; color: var(--fg4); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+.fs-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--bg3); font-size: .85rem; }
+.fs-row:last-child { border: none; }
+.fs-label { width: 80px; color: var(--fg4); font-size: .75rem; text-transform: uppercase; flex-shrink: 0; font-weight: 500; }
+.fs-value { flex: 1; color: var(--fg); }
+.fs-value.empty { color: var(--fg4); font-style: italic; }
+.fs-required { color: var(--red); font-size: .6rem; vertical-align: super; }
+
+/* ─── Type Dropdown ─── */
+.type-dropdown {
+  position: fixed; background: var(--bg2); border: 1px solid var(--bg3); border-radius: var(--radius2);
+  padding: 4px; z-index: 200; box-shadow: var(--shadow); min-width: 160px;
+  animation: dropIn .15s ease;
+}
+@keyframes dropIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.type-dropdown button {
+  display: block; width: 100%; text-align: left; padding: 8px 12px; background: none;
+  border: none; color: var(--fg3); font-size: .85rem; cursor: pointer; border-radius: 6px; transition: background .1s;
+}
+.type-dropdown button:hover { background: var(--bg3); color: var(--fg); }
+.type-dropdown button.active-type { color: var(--accent2); background: rgba(59,130,246,.1); }
+
+/* ─── Contacts ─── */
+.contact-list { display: flex; flex-direction: column; gap: 8px; }
+.contact-item {
+  background: var(--bg2); border-radius: var(--radius); padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px; transition: all var(--transition);
+  border: 1px solid transparent;
+}
+.contact-item:hover { border-color: var(--bg3); background: var(--bg3); }
+.contact-avatar {
+  width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0; color: #fff;
+}
+.contact-info { flex: 1; min-width: 0; }
+.contact-info .name { font-weight: 600; font-size: .95rem; }
+.contact-info .detail { color: var(--fg4); font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.contact-actions { display: flex; gap: 2px; }
+.contact-actions button {
+  background: none; border: none; color: var(--fg4); cursor: pointer; padding: 6px 8px;
+  border-radius: 6px; transition: all var(--transition); font-size: .85rem;
+}
+.contact-actions button:hover { background: var(--bg); color: var(--fg); }
+.search-bar { position: relative; margin-bottom: 16px; }
+.search-bar input {
+  width: 100%; background: var(--bg2); border: 1px solid var(--bg3); border-radius: var(--radius2);
+  padding: 10px 12px 10px 38px; color: var(--fg); font-size: .9rem; transition: border-color var(--transition);
+}
+.search-bar input:focus { outline: none; border-color: var(--accent); }
+.search-bar svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--fg4); }
+
+/* ─── Export ─── */
+.export-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.export-card {
+  background: var(--bg2); border-radius: var(--radius); padding: 20px; text-align: center;
+  cursor: pointer; transition: all var(--transition); border: 1px solid transparent;
+}
+.export-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+.export-card .export-icon { font-size: 2rem; margin-bottom: 8px; }
+.export-card h4 { font-size: .95rem; margin-bottom: 4px; }
+.export-card p { font-size: .78rem; color: var(--fg4); }
+
+/* ─── Settings ─── */
+.settings-section { background: var(--bg2); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+.settings-section h3 { font-size: .95rem; margin-bottom: 14px; color: var(--fg2); display: flex; align-items: center; gap: 8px; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--bg3); }
+.setting-row:last-child { border: none; }
+.setting-row label { font-size: .9rem; color: var(--fg3); }
+select, input[type="url"], input[type="text"] {
+  background: var(--bg); border: 1px solid var(--bg3); border-radius: 6px; padding: 8px 12px;
+  color: var(--fg); font-size: .85rem; transition: border-color var(--transition);
+}
+select:focus, input[type="url"]:focus, input[type="text"]:focus { outline: none; border-color: var(--accent); }
+
+/* ─── Empty State ─── */
+.empty-state { text-align: center; padding: 48px 20px; color: var(--fg4); }
+.empty-state .empty-icon { font-size: 3rem; opacity: .3; margin-bottom: 12px; }
+.empty-state h3 { color: var(--fg3); margin-bottom: 8px; font-size: 1rem; }
+.empty-state p { font-size: .85rem; }
+
+/* ─── Toast ─── */
+.toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast {
+  background: var(--bg2); border: 1px solid var(--bg3); border-radius: var(--radius2);
+  padding: 12px 16px; font-size: .9rem; box-shadow: var(--shadow);
+  animation: toastIn .3s ease; display: flex; align-items: center; gap: 8px; max-width: 350px;
+  pointer-events: auto;
+}
+.toast.success { border-left: 3px solid var(--green); }
+.toast.error { border-left: 3px solid var(--red); }
+.toast.info { border-left: 3px solid var(--accent); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* ─── Upload Drop Zone ─── */
+.drop-zone {
+  background: var(--bg2); border-radius: var(--radius); padding: 40px 24px; text-align: center;
+  border: 2px dashed var(--bg3); cursor: pointer; transition: all var(--transition);
+}
+.drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: rgba(59,130,246,.05); }
+.drop-zone .drop-icon { font-size: 3rem; margin-bottom: 8px; }
+
+/* ─── Responsive ─── */
+@media (max-width: 600px) {
+  main { padding: 12px; }
+  .mode-selector { flex-direction: column; }
+  .export-options { grid-template-columns: 1fr 1fr; }
+  .controls { flex-direction: column; }
+  .controls .btn { justify-content: center; }
+}
 </style>
 </head>
 <body>
-<header><h1><span>📇</span> BizCard Scanner</h1></header>
-<nav>
-  <button class="active" data-tab="scanner">📷 Scansiona</button>
-  <button data-tab="contacts">👥 Contatti</button>
-  <button data-tab="export">📤 Esporta</button>
-  <button data-tab="settings">⚙️ Impostazioni</button>
+<header>
+  <h1><span>📇</span> BizCard Scanner <span class="version-badge">v4</span></h1>
+</header>
+
+<nav role="tablist" aria-label="Sezioni principali">
+  <button class="active" data-tab="scanner" role="tab" aria-selected="true" aria-controls="panel-scanner">📷 Scansiona</button>
+  <button data-tab="contacts" role="tab" aria-selected="false" aria-controls="panel-contacts">👥 Contatti</button>
+  <button data-tab="export" role="tab" aria-selected="false" aria-controls="panel-export">📤 Esporta</button>
+  <button data-tab="settings" role="tab" aria-selected="false" aria-controls="panel-settings">⚙️ Impostazioni</button>
 </nav>
+
 <main>
-  <div class="panel active" id="panel-scanner">
-    <div class="mode-selector">
-      <div class="mode-btn active" data-mode="local"><span class="mode-icon">📷</span><span class="mode-label">Camera locale</span><span class="mode-desc">Usa questa fotocamera</span></div>
-      <div class="mode-btn" data-mode="remote"><span class="mode-icon">📱</span><span class="mode-label">Telefono remoto</span><span class="mode-desc">Scansiona via QR code</span></div>
-      <div class="mode-btn" data-mode="upload"><span class="mode-icon">📁</span><span class="mode-label">Carica immagine</span><span class="mode-desc">Da file</span></div>
+  <!-- ═══ SCANNER TAB ═══ -->
+  <div class="panel active" id="panel-scanner" role="tabpanel">
+    <div class="mode-selector" role="radiogroup" aria-label="Modalità acquisizione">
+      <div class="mode-btn active" data-mode="local" role="radio" aria-checked="true" tabindex="0">
+        <span class="mode-icon">📷</span><span class="mode-label">Camera locale</span><span class="mode-desc">Usa questa fotocamera</span>
+      </div>
+      <div class="mode-btn" data-mode="remote" role="radio" aria-checked="false" tabindex="0">
+        <span class="mode-icon">📱</span><span class="mode-label">Telefono remoto</span><span class="mode-desc">Scansiona via QR code</span>
+      </div>
+      <div class="mode-btn" data-mode="upload" role="radio" aria-checked="false" tabindex="0">
+        <span class="mode-icon">📁</span><span class="mode-label">Carica immagine</span><span class="mode-desc">Da file</span>
+      </div>
     </div>
+
+    <!-- Local Camera View -->
     <div id="viewLocal">
-      <div class="camera-area"><video id="video" autoplay playsinline muted></video><div class="guide"></div><div class="scanner-placeholder" id="placeholder" style="display:none"><p>Camera non disponibile.<br>Prova il modo "Telefono remoto".</p></div></div>
-      <div class="controls"><button class="btn btn-primary" id="btnCapture" disabled>📸 Scatta foto</button><button class="btn btn-secondary" id="btnFlip" style="display:none">🔄 Inverti</button></div>
+      <div class="camera-area" role="img" aria-label="Anteprima fotocamera">
+        <video id="video" autoplay playsinline muted></video>
+        <div class="guide" id="cameraGuide"></div>
+        <div class="scanner-placeholder" id="placeholder" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <p>Camera non disponibile.<br>Prova "Telefono remoto" o "Carica immagine".</p>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="btn btn-primary" id="btnCapture" disabled aria-label="Scatta foto">📸 Scatta foto</button>
+        <button class="btn btn-secondary" id="btnFlip" style="display:none" aria-label="Inverti fotocamera">🔄 Inverti</button>
+        <button class="btn btn-secondary" id="btnTorch" style="display:none" aria-label="Flash">🔦 Flash</button>
+      </div>
     </div>
+
+    <!-- Remote Phone View -->
     <div id="viewRemote" style="display:none">
-      <div class="qr-section" id="qrSection"><h3>📱 Collega il telefono</h3><div class="qr-sub">Scansiona questo QR code con la fotocamera del telefono</div><canvas id="qrCanvas" width="200" height="200"></canvas><div class="session-code" id="sessionCode">---</div><div class="qr-url" id="qrUrl">---</div><div class="qr-status"><div class="dot waiting" id="qrDot"></div><span id="qrStatusText">In attesa del telefono...</span></div></div>
+      <div class="qr-section" id="qrSection">
+        <h3>📱 Collega il telefono</h3>
+        <div class="qr-sub">Scansiona questo QR code con la fotocamera del telefono</div>
+        <canvas id="qrCanvas" width="200" height="200" aria-label="QR Code per connessione telefono"></canvas>
+        <div class="session-code" id="sessionCode" aria-label="Codice sessione">---</div>
+        <div class="qr-url" id="qrUrl" aria-label="URL connessione">---</div>
+        <div class="qr-status">
+          <div class="dot waiting" id="qrDot" role="status"></div>
+          <span id="qrStatusText">In attesa del telefono...</span>
+        </div>
+      </div>
     </div>
+
+    <!-- Upload View -->
     <div id="viewUpload" style="display:none">
-      <div class="qr-section" style="cursor:pointer" id="dropZone"><span class="mode-icon" style="font-size:3rem">📁</span><h3>Trascina un'immagine qui</h3><div class="qr-sub">oppure clicca per selezionare un file</div><input type="file" id="fileInputUpload" accept="image/*" style="display:none"></div>
+      <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="Trascina o seleziona un'immagine">
+        <div class="drop-icon">📁</div>
+        <h3>Trascina un'immagine qui</h3>
+        <div class="qr-sub">oppure clicca per selezionare un file</div>
+        <input type="file" id="fileInputUpload" accept="image/*" style="display:none" aria-hidden="true">
+      </div>
     </div>
-    <div class="ocr-status" id="ocrStatus" style="display:none"><div class="spinner"></div><span id="ocrStatusText">Analisi in corso...</span><div class="progress-bar"><div class="fill" id="ocrProgress" style="width:0"></div></div></div>
+
+    <!-- OCR Status -->
+    <div class="ocr-status" id="ocrStatus" style="display:none" role="status" aria-live="polite">
+      <div class="spinner"></div>
+      <span id="ocrStatusText">Analisi in corso...</span>
+      <div class="progress-bar"><div class="fill" id="ocrProgress" style="width:0"></div></div>
+    </div>
+
+    <!-- Results -->
     <div class="result-section" id="resultSection" style="display:none">
       <h3>📋 Testo rilevato</h3>
-      <img class="photo-preview" id="photoPreview">
-      <div id="ocrEngineLabel" style="font-size:.7rem;color:var(--fg3);margin-bottom:12px"></div>
-      <div id="textBlocksContainer"></div>
-      <div class="field-summary" id="fieldSummary"><h4>Campi assegnati</h4><div id="fieldRows"></div></div>
-      <div class="controls" style="margin-top:16px;margin-bottom:0"><button class="btn btn-success" id="btnSaveContact">💾 Salva contatto</button><button class="btn btn-secondary" id="btnRetake">🔄 Nuova scansione</button></div>
+      <img class="photo-preview" id="photoPreview" alt="Foto acquisita" loading="lazy">
+      <div id="ocrEngineLabel" style="font-size:.7rem;color:var(--fg4);margin-bottom:12px"></div>
+      <div id="textBlocksContainer" role="list" aria-label="Blocchi di testo rilevati"></div>
+      <div class="field-summary" id="fieldSummary">
+        <h4>Campi assegnati</h4>
+        <div id="fieldRows"></div>
+      </div>
+      <div class="controls" style="margin-top:16px;margin-bottom:0">
+        <button class="btn btn-success" id="btnSaveContact">💾 Salva contatto</button>
+        <button class="btn btn-secondary" id="btnRetake">🔄 Nuova scansione</button>
+      </div>
     </div>
   </div>
-  <div class="panel" id="panel-contacts">
-    <div class="search-bar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" id="searchInput" placeholder="Cerca contatti..."></div>
-    <div id="contactList" class="contact-list"></div>
-    <div class="empty-state" id="emptyContacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><h3>Nessun contatto</h3><p>Scansiona un biglietto per iniziare</p></div>
+
+  <!-- ═══ CONTACTS TAB ═══ -->
+  <div class="panel" id="panel-contacts" role="tabpanel">
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Cerca contatti..." aria-label="Cerca contatti">
+    </div>
+    <div id="contactList" class="contact-list" role="list"></div>
+    <div class="empty-state" id="emptyContacts">
+      <div class="empty-icon">👥</div>
+      <h3>Nessun contatto</h3>
+      <p>Scansiona un biglietto da visita per iniziare</p>
+    </div>
   </div>
-  <div class="panel" id="panel-export">
+
+  <!-- ═══ EXPORT TAB ═══ -->
+  <div class="panel" id="panel-export" role="tabpanel">
     <div class="export-options">
-      <div class="export-card" id="exportVcard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M8 7v10M16 7v10M2 12h20"/></svg><h4>vCard (.vcf)</h4><p>Per rubrica e CRM</p></div>
-      <div class="export-card" id="exportCsv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><h4>CSV</h4><p>Per Excel, Sheets</p></div>
-      <div class="export-card" id="exportJson"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg><h4>JSON</h4><p>Per API</p></div>
-      <div class="export-card" id="exportWebhook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><h4>Webhook CRM</h4><p>Invio diretto</p></div>
+      <div class="export-card" id="exportVcard" role="button" tabindex="0">
+        <div class="export-icon">📇</div><h4>vCard (.vcf)</h4><p>Per rubrica e CRM</p>
+      </div>
+      <div class="export-card" id="exportCsv" role="button" tabindex="0">
+        <div class="export-icon">📊</div><h4>CSV</h4><p>Per Excel, Google Sheets</p>
+      </div>
+      <div class="export-card" id="exportJson" role="button" tabindex="0">
+        <div class="export-icon">🔧</div><h4>JSON</h4><p>Per sviluppatori e API</p>
+      </div>
+      <div class="export-card" id="exportWebhook" role="button" tabindex="0">
+        <div class="export-icon">🔗</div><h4>Webhook CRM</h4><p>Invio diretto al tuo CRM</p>
+      </div>
     </div>
-    <div class="empty-state" id="emptyExport" style="display:none"><p>Nessun contatto da esportare.</p></div>
+    <div class="empty-state" id="emptyExport" style="display:none">
+      <div class="empty-icon">📤</div><p>Nessun contatto da esportare.</p>
+    </div>
   </div>
-  <div class="panel" id="panel-settings">
-    <div class="settings-section"><h3>🤖 Motore OCR</h3><div class="setting-row"><label>Stato API</label><span id="ocrApiStatus">Verifico...</span></div><div class="setting-row"><label>Motore attivo</label><span id="ocrEngineActive">—</span></div></div>
-    <div class="settings-section"><h3>🔗 Webhook CRM</h3><div style="margin-bottom:8px"><label style="font-size:.75rem;color:var(--fg3);display:block;margin-bottom:4px">URL Webhook</label><input type="url" id="webhookUrl" placeholder="https://api.tuocrm.com/webhook" style="width:100%"></div><div style="margin-bottom:8px"><label style="font-size:.75rem;color:var(--fg3);display:block;margin-bottom:4px">Authorization</label><input type="text" id="webhookAuth" placeholder="Bearer xxx..." style="width:100%"></div><button class="btn btn-primary btn-small" id="btnSaveSettings">💾 Salva</button></div>
-    <div class="settings-section"><h3>📊 Statistiche</h3><div class="setting-row"><label>Contatti</label><span id="statContacts">0</span></div><div class="setting-row"><label>Scansioni</label><span id="statScans">0</span></div></div>
-    <div class="settings-section"><h3>🗑️ Dati</h3><button class="btn btn-danger btn-small" id="btnClearAll">Cancella tutti i contatti</button></div>
+
+  <!-- ═══ SETTINGS TAB ═══ -->
+  <div class="panel" id="panel-settings" role="tabpanel">
+    <div class="settings-section">
+      <h3>🤖 Motore OCR</h3>
+      <div class="setting-row"><label>Stato API</label><span id="ocrApiStatus">Verifico...</span></div>
+      <div class="setting-row"><label>Motore attivo</label><span id="ocrEngineActive">—</span></div>
+    </div>
+    <div class="settings-section">
+      <h3>🔗 Webhook CRM</h3>
+      <div style="margin-bottom:10px">
+        <label style="font-size:.75rem;color:var(--fg4);display:block;margin-bottom:4px">URL Webhook</label>
+        <input type="url" id="webhookUrl" placeholder="https://api.tuocrm.com/webhook" style="width:100%">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:.75rem;color:var(--fg4);display:block;margin-bottom:4px">Authorization Header</label>
+        <input type="text" id="webhookAuth" placeholder="Bearer xxx..." style="width:100%">
+      </div>
+      <button class="btn btn-primary btn-small" id="btnSaveSettings">💾 Salva impostazioni</button>
+    </div>
+    <div class="settings-section">
+      <h3>📊 Statistiche</h3>
+      <div class="setting-row"><label>Contatti salvati</label><span id="statContacts">0</span></div>
+      <div class="setting-row"><label>Scansioni effettuate</label><span id="statScans">0</span></div>
+    </div>
+    <div class="settings-section">
+      <h3>🗑️ Gestione dati</h3>
+      <button class="btn btn-danger btn-small" id="btnClearAll">Cancella tutti i contatti</button>
+    </div>
   </div>
 </main>
-<div class="toast-container" id="toasts"></div>
+
+<div class="toast-container" id="toasts" aria-live="polite"></div>
+
+<!-- External Libraries (preloaded) -->
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script>
-// ============================================================
-//  BIZCARD SCANNER v3 — PHOTO → OCR API → FLEXIBLE BLOCKS
-// ============================================================
-var contacts=[], scanCount=0, settings={webhookUrl:'',webhookAuth:''};
-var currentMode='local', currentStream=null, facingMode='environment';
-var tesseractWorker=null, tesseractReady=false, useServerOCR=false;
-var peer=null, peerConn=null, sessionId='';
-var detectedBlocks=[]; // [{text, autoType, assignedType}]
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 
-var FIELD_TYPES=[
-  {key:'name',icon:'👤',label:'Nome',req:true},{key:'company',icon:'🏢',label:'Azienda',req:true},
-  {key:'email',icon:'📧',label:'Email',req:true},{key:'phone',icon:'📱',label:'Telefono',req:true},
-  {key:'role',icon:'💼',label:'Ruolo'},{key:'web',icon:'🌐',label:'Web'},
-  {key:'address',icon:'📍',label:'Indirizzo'},{key:'piva',icon:'🏛️',label:'P.IVA'},
-  {key:'cf',icon:'🆔',label:'C.F.'},{key:'other',icon:'📝',label:'Altro'},
-  {key:'ignore',icon:'🚫',label:'Ignora'}
+<script>
+// ════════════════════════════════════════════════════════════════
+//  BIZCARD SCANNER v4 — PROFESSIONAL OCR BUSINESS CARD SCANNER
+//  Architecture: Photo → Preprocess → OCR API → Classify → Edit
+// ════════════════════════════════════════════════════════════════
+
+'use strict';
+
+// ─── CONFIGURATION ────────────────────────────────────────────
+const FIELD_TYPES = [
+  { key: 'name',    icon: '👤', label: 'Nome',      req: true  },
+  { key: 'company', icon: '🏢', label: 'Azienda',   req: true  },
+  { key: 'email',   icon: '📧', label: 'Email',     req: true  },
+  { key: 'phone',   icon: '📱', label: 'Telefono',  req: true  },
+  { key: 'role',    icon: '💼', label: 'Ruolo',     req: false },
+  { key: 'web',     icon: '🌐', label: 'Web',       req: false },
+  { key: 'address', icon: '📍', label: 'Indirizzo', req: false },
+  { key: 'piva',    icon: '🏛️', label: 'P.IVA',     req: false },
+  { key: 'cf',      icon: '🆔', label: 'C.F.',      req: false },
+  { key: 'fax',     icon: '📠', label: 'Fax',       req: false },
+  { key: 'other',   icon: '📝', label: 'Altro',     req: false },
+  { key: 'ignore',  icon: '🚫', label: 'Ignora',    req: false },
 ];
 
-var RE_EMAIL=/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/;
-var RE_PHONE=/(?:\+?\d{1,3}[\s.\-]?)?(?:\(?\d{2,4}\)?[\s.\-]?)?\d{2,4}[\s.\-]?\d{3,4}[\s.\-]?\d{0,4}/;
-var RE_WEB=/(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9\-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?/i;
-var RE_PIVA=/(?:P\.?\s*I\.?V\.?A\.?|IT)\s*[:.;]?\s*(\d{11})/i;
-var RE_CF=/\b[A-Z]{6}\d{2}[A-EHLMPRST]\d{2}[A-Z]\d{3}[A-Z]\b/i;
-var RE_ADDRESS=/(?:via|viale|v\.le|corso|c\.so|piazza|p\.za|p\.zza|largo|vicolo|strada)\s+[^\n]{3,60}/i;
-var ROLES=['ceo','cto','cfo','coo','cio','direttore','director','manager','responsabile','presidente','founder','ingegnere','engineer','architetto','avvocato','dottore','dott','consulente','analyst','designer','developer','sales','marketing','hr','amministratore','delegato','socio','partner','legale','tecnico','commerciale','operativo','account'];
-var COMPANY_KW=['srl','s.r.l','spa','s.p.a','snc','s.n.c','sas','s.a.s','ltd','llc','inc','gmbh','corp','group','gruppo','studio','associati','consulting','solutions','services','servizi','technology','technologies','soc','coop','scarl','onlus','fondazione','agenzia','agency'];
+// Classification patterns — ordered by reliability
+const RE = {
+  email:   /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/,
+  cf:      /\b[A-Z]{6}\d{2}[A-EHLMPRST]\d{2}[A-Z]\d{3}[A-Z]\b/i,
+  piva:    /(?:P\.?\s*I\.?V\.?A\.?\s*[:.;]?\s*|IT\s*)(\d{11})/i,
+  address: /(?:via|viale|v\.le|corso|c\.so|piazza|p\.za|p\.zza|largo|vicolo|strada|contrada|loc\.|localit[àa])\s+[^\n]{3,60}/i,
+  web:     /(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:\/[^\s]*)?/i,
+  phone:   /(?:(?:tel|cell|mob|fax|phone|whatsapp)[.:\s]*)?(?:\+?\d{1,3}[\s.\-]?)?(?:\(?\d{2,4}\)?[\s.\-]?)\d{2,4}[\s.\-]?\d{3,4}[\s.\-]?\d{0,4}/i,
+  fax:     /(?:fax|facsimile)[.:\s]*(?:\+?\d{1,3}[\s.\-]?)?(?:\(?\d{2,4}\)?[\s.\-]?)\d{2,4}[\s.\-]?\d{3,4}/i,
+};
 
-// ==================== INIT ====================
-document.addEventListener('DOMContentLoaded',function(){
-  loadState(); initTabs(); initModes(); initScanner(); initContacts(); initExport(); initSettings();
-  checkOcrApi(); initTesseractFallback();
+const ROLES = [
+  'ceo','cto','cfo','coo','cio','cmo','cpo',
+  'direttore','director','manager','responsabile','presidente','vicepresidente',
+  'founder','co-founder','cofondatore','fondatore',
+  'ingegnere','engineer','architetto','avvocato','dottore','dott\\.?ssa','dott',
+  'consulente','consultant','analyst','analista','designer',
+  'developer','sviluppatore','programmatore',
+  'sales','marketing','hr','account',
+  'amministratore','delegato','socio','partner',
+  'legale','tecnico','commerciale','operativo',
+  'segretari[oa]','coordinat(?:ore|rice)','referente',
+];
+
+const COMPANY_KW = [
+  'srl','s\\.r\\.l','spa','s\\.p\\.a','snc','s\\.n\\.c','sas','s\\.a\\.s',
+  'ltd','llc','inc','gmbh','corp','ag','plc','sa',
+  'group','gruppo','studio','associati','consulting','solutions','services','servizi',
+  'technology','technologies','digital','media','creative',
+  'soc\\.?\\s*coop','scarl','onlus','fondazione','agenzia','agency',
+  'impresa','ditta','laboratorio','officina','bottega',
+];
+
+const TITLE_PREFIX = /^(?:dott\.?(?:ssa)?|ing\.?|arch\.?|avv\.?|rag\.?|geom\.?|prof\.?(?:ssa)?|sig\.?(?:ra)?|mr\.?|mrs\.?|ms\.?|dr\.?)\s+/i;
+
+const AVATAR_COLORS = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#22c55e','#06b6d4','#f43f5e','#a855f7'];
+
+// ─── STATE ────────────────────────────────────────────────────
+let contacts = [];
+let scanCount = 0;
+let settings = { webhookUrl: '', webhookAuth: '' };
+let currentMode = 'local';
+let currentStream = null;
+let facingMode = 'environment';
+let torchEnabled = false;
+let tesseractWorker = null;
+let tesseractReady = false;
+let useServerOCR = false;
+let serverEngine = '';
+let peer = null;
+let peerConn = null;
+let sessionId = '';
+let peerRetries = 0;
+const MAX_PEER_RETRIES = 10;
+let detectedBlocks = []; // [{ text, type, confidence }]
+
+// ─── DOM HELPERS ──────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+// ─── INITIALIZATION ───────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadState();
+  initTabs();
+  initModes();
+  initScanner();
+  initContacts();
+  initExport();
+  initSettings();
+  checkOcrApi();
+  initTesseractFallback();
 });
 
-function loadState(){try{var c=localStorage.getItem('bizcard_contacts');if(c)contacts=JSON.parse(c);var s=localStorage.getItem('bizcard_settings');if(s)settings=Object.assign({},settings,JSON.parse(s));scanCount=parseInt(localStorage.getItem('bizcard_scans')||'0');}catch(e){}}
-function saveState(){try{localStorage.setItem('bizcard_contacts',JSON.stringify(contacts));localStorage.setItem('bizcard_settings',JSON.stringify(settings));localStorage.setItem('bizcard_scans',String(scanCount));}catch(e){}}
-
-// ==================== CHECK SERVER OCR ====================
-async function checkOcrApi(){
-  try{
-    var r=await fetch('/api/ocr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:''})});
-    var d=await r.json();
-    if(d.fallback){useServerOCR=false;document.getElementById('ocrApiStatus').textContent='⚠️ Nessuna API key — Tesseract.js locale';document.getElementById('ocrEngineActive').textContent='Tesseract.js';}
-    else{useServerOCR=true;document.getElementById('ocrApiStatus').textContent='✅ API configurata';document.getElementById('ocrEngineActive').textContent=d.engine||'Server OCR';}
-  }catch(e){useServerOCR=false;document.getElementById('ocrApiStatus').textContent='⚠️ API non disponibile';document.getElementById('ocrEngineActive').textContent='Tesseract.js';}
+function loadState() {
+  try {
+    const c = localStorage.getItem('bizcard_contacts');
+    if (c) contacts = JSON.parse(c);
+    const s = localStorage.getItem('bizcard_settings');
+    if (s) settings = { ...settings, ...JSON.parse(s) };
+    scanCount = parseInt(localStorage.getItem('bizcard_scans') || '0');
+  } catch (e) { /* corrupt data, start fresh */ }
 }
 
-async function initTesseractFallback(){
-  try{
-    tesseractWorker=await Tesseract.createWorker('ita',1,{logger:function(m){if(m.status==='recognizing text'){var p=document.getElementById('ocrProgress');if(p)p.style.width=Math.round(m.progress*100)+'%';}}});
-    tesseractReady=true;document.getElementById('btnCapture').disabled=false;
-  }catch(e){console.warn('Tesseract init failed:',e);}
+function saveState() {
+  try {
+    localStorage.setItem('bizcard_contacts', JSON.stringify(contacts));
+    localStorage.setItem('bizcard_settings', JSON.stringify(settings));
+    localStorage.setItem('bizcard_scans', String(scanCount));
+  } catch (e) { /* storage full or blocked */ }
 }
 
-// ==================== TABS ====================
-function initTabs(){document.querySelectorAll('nav button').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('active')});document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active')});btn.classList.add('active');document.getElementById('panel-'+btn.dataset.tab).classList.add('active');if(btn.dataset.tab==='contacts')renderContacts();if(btn.dataset.tab==='export')updateExportState();if(btn.dataset.tab==='settings')updateStats();});});}
-
-// ==================== MODES ====================
-function initModes(){document.querySelectorAll('.mode-btn').forEach(function(btn){btn.addEventListener('click',function(){switchMode(btn.dataset.mode);});});}
-function switchMode(mode){
-  currentMode=mode;
-  document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('active')});
-  document.querySelector('[data-mode="'+mode+'"]').classList.add('active');
-  document.getElementById('viewLocal').style.display=mode==='local'?'block':'none';
-  document.getElementById('viewRemote').style.display=mode==='remote'?'block':'none';
-  document.getElementById('viewUpload').style.display=mode==='upload'?'block':'none';
-  if(mode==='local')startCamera();
-  if(mode==='remote')initRemoteMode();
+// ─── CHECK SERVER OCR API ─────────────────────────────────────
+async function checkOcrApi() {
+  try {
+    // Send minimal probe request
+    const r = await fetch('/api/ocr', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ probe: true }),
+    });
+    const d = await r.json();
+    if (d.fallback) {
+      useServerOCR = false;
+      $('ocrApiStatus').textContent = '⚠️ Nessuna API key — Tesseract.js locale';
+      $('ocrEngineActive').textContent = 'Tesseract.js (browser)';
+    } else {
+      useServerOCR = true;
+      serverEngine = d.engine || 'server';
+      $('ocrApiStatus').textContent = '✅ API configurata';
+      $('ocrEngineActive').textContent = serverEngine;
+    }
+  } catch (e) {
+    useServerOCR = false;
+    $('ocrApiStatus').textContent = '⚠️ API non raggiungibile';
+    $('ocrEngineActive').textContent = 'Tesseract.js (browser)';
+  }
 }
 
-// ==================== LOCAL CAMERA ====================
-function initScanner(){
+async function initTesseractFallback() {
+  try {
+    tesseractWorker = await Tesseract.createWorker('ita+eng', 1, {
+      logger: (m) => {
+        if (m.status === 'recognizing text') {
+          const p = $('ocrProgress');
+          if (p) p.style.width = Math.round(m.progress * 100) + '%';
+        }
+      }
+    });
+    tesseractReady = true;
+    $('btnCapture').disabled = false;
+  } catch (e) {
+    console.warn('[BizCard] Tesseract init failed:', e);
+  }
+}
+
+// ─── TAB NAVIGATION ───────────────────────────────────────────
+function initTabs() {
+  $$('nav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('nav button').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+      $$('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      $('panel-' + btn.dataset.tab).classList.add('active');
+
+      if (btn.dataset.tab === 'contacts') renderContacts();
+      if (btn.dataset.tab === 'export') updateExportState();
+      if (btn.dataset.tab === 'settings') updateStats();
+    });
+  });
+}
+
+// ─── MODE SWITCHING ───────────────────────────────────────────
+function initModes() {
+  $$('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+    btn.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); switchMode(btn.dataset.mode); } });
+  });
+}
+
+function switchMode(mode) {
+  // Cleanup previous mode
+  if (currentMode === 'remote' && mode !== 'remote') cleanupPeer();
+  if (currentMode === 'local' && mode !== 'local') stopCamera();
+
+  currentMode = mode;
+  $$('.mode-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-checked', 'false'); });
+  document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+  document.querySelector(`[data-mode="${mode}"]`).setAttribute('aria-checked', 'true');
+
+  $('viewLocal').style.display = mode === 'local' ? 'block' : 'none';
+  $('viewRemote').style.display = mode === 'remote' ? 'block' : 'none';
+  $('viewUpload').style.display = mode === 'upload' ? 'block' : 'none';
+
+  if (mode === 'local') startCamera();
+  if (mode === 'remote') initRemoteMode();
+}
+
+// ─── LOCAL CAMERA ─────────────────────────────────────────────
+function initScanner() {
   startCamera();
-  document.getElementById('btnCapture').addEventListener('click',captureLocalPhoto);
-  document.getElementById('btnFlip').addEventListener('click',function(){facingMode=facingMode==='environment'?'user':'environment';startCamera();});
-  var dz=document.getElementById('dropZone'),fi=document.getElementById('fileInputUpload');
-  dz.addEventListener('click',function(){fi.click();});
-  dz.addEventListener('dragover',function(e){e.preventDefault();dz.style.opacity='.7';});
-  dz.addEventListener('dragleave',function(){dz.style.opacity='1';});
-  dz.addEventListener('drop',function(e){e.preventDefault();dz.style.opacity='1';var f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))processFile(f);});
-  fi.addEventListener('change',function(e){var f=e.target.files[0];if(f)processFile(f);});
-  document.getElementById('btnSaveContact').addEventListener('click',saveContact);
-  document.getElementById('btnRetake').addEventListener('click',resetScan);
+  $('btnCapture').addEventListener('click', captureLocalPhoto);
+  $('btnFlip').addEventListener('click', () => { facingMode = facingMode === 'environment' ? 'user' : 'environment'; startCamera(); });
+  $('btnTorch').addEventListener('click', toggleTorch);
+
+  // Upload handlers
+  const dz = $('dropZone');
+  const fi = $('fileInputUpload');
+  dz.addEventListener('click', () => fi.click());
+  dz.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); } });
+  dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('dragover'); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('image/')) processFile(f); });
+  fi.addEventListener('change', (e) => { const f = e.target.files[0]; if (f) processFile(f); fi.value = ''; });
+
+  $('btnSaveContact').addEventListener('click', saveContact);
+  $('btnRetake').addEventListener('click', resetScan);
+
+  // Photo preview zoom toggle
+  $('photoPreview').addEventListener('click', function() { this.classList.toggle('zoomed'); });
 }
 
-async function startCamera(){
-  var v=document.getElementById('video'),ph=document.getElementById('placeholder'),bf=document.getElementById('btnFlip');
-  try{if(currentStream)currentStream.getTracks().forEach(function(t){t.stop()});
-    var s=await navigator.mediaDevices.getUserMedia({video:{facingMode:facingMode,width:{ideal:1920},height:{ideal:1440}},audio:false});
-    v.srcObject=s;currentStream=s;v.style.display='block';ph.style.display='none';bf.style.display='inline-flex';document.getElementById('btnCapture').disabled=false;
-  }catch(e){v.style.display='none';ph.style.display='flex';bf.style.display='none';}
+async function startCamera() {
+  const v = $('video'), ph = $('placeholder'), bf = $('btnFlip'), bt = $('btnTorch');
+  try {
+    if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+    const constraints = {
+      video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1440 } },
+      audio: false,
+    };
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    v.srcObject = stream;
+    currentStream = stream;
+    v.style.display = 'block';
+    ph.style.display = 'none';
+    bf.style.display = 'inline-flex';
+    $('btnCapture').disabled = false;
+
+    // Check torch support
+    const track = stream.getVideoTracks()[0];
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    bt.style.display = caps.torch ? 'inline-flex' : 'none';
+  } catch (e) {
+    v.style.display = 'none';
+    ph.style.display = 'flex';
+    bf.style.display = 'none';
+    bt.style.display = 'none';
+  }
 }
 
-function captureLocalPhoto(){
-  var video=document.getElementById('video');
-  if(!video.srcObject||video.videoWidth===0)return;
-  var canvas=document.createElement('canvas');
-  var scale=Math.min(1920/video.videoWidth,1);
-  canvas.width=Math.round(video.videoWidth*scale);canvas.height=Math.round(video.videoHeight*scale);
-  canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
-  var dataUrl=canvas.toDataURL('image/jpeg',0.85);
-  processOCR(dataUrl.split(',')[1],dataUrl);
+function stopCamera() {
+  if (currentStream) {
+    currentStream.getTracks().forEach(t => t.stop());
+    currentStream = null;
+  }
 }
 
-function processFile(file){var reader=new FileReader();reader.onload=function(e){var du=e.target.result;processOCR(du.split(',')[1],du);};reader.readAsDataURL(file);}
+async function toggleTorch() {
+  if (!currentStream) return;
+  const track = currentStream.getVideoTracks()[0];
+  torchEnabled = !torchEnabled;
+  try {
+    await track.applyConstraints({ advanced: [{ torch: torchEnabled }] });
+    $('btnTorch').textContent = torchEnabled ? '🔦 On' : '🔦 Flash';
+  } catch (e) { torchEnabled = false; }
+}
 
-// ==================== REMOTE PHONE ====================
-function initRemoteMode(){
-  sessionId=Math.random().toString(36).substr(2,6).toUpperCase();
-  document.getElementById('sessionCode').textContent=sessionId;
-  var baseUrl=location.origin+'/phone?s='+sessionId;
-  document.getElementById('qrUrl').textContent=baseUrl;
+function captureLocalPhoto() {
+  const video = $('video');
+  if (!video.srcObject || video.videoWidth === 0) return;
+
+  // Flash animation
+  const guide = $('cameraGuide');
+  guide.classList.add('flash');
+  setTimeout(() => guide.classList.remove('flash'), 400);
+
+  // Haptic feedback
+  if (navigator.vibrate) navigator.vibrate(50);
+
+  const canvas = document.createElement('canvas');
+  const scale = Math.min(1920 / video.videoWidth, 1);
+  canvas.width = Math.round(video.videoWidth * scale);
+  canvas.height = Math.round(video.videoHeight * scale);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  // Preprocess for better OCR
+  if (!useServerOCR) preprocessImage(ctx, canvas.width, canvas.height);
+
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+  processOCR(dataUrl.split(',')[1], dataUrl);
+}
+
+function processFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    processOCR(dataUrl.split(',')[1], dataUrl);
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── IMAGE PREPROCESSING (for Tesseract) ──────────────────────
+function preprocessImage(ctx, w, h) {
+  const imageData = ctx.getImageData(0, 0, w, h);
+  const data = imageData.data;
+
+  // 1. Auto-contrast (histogram stretch)
+  let min = 255, max = 0;
+  for (let i = 0; i < data.length; i += 16) { // sample every 4th pixel for speed
+    const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    if (gray < min) min = gray;
+    if (gray > max) max = gray;
+  }
+  const range = (max - min) || 1;
+  if (range < 200) { // only if low contrast
+    const factor = 255 / range;
+    for (let i = 0; i < data.length; i += 4) {
+      data[i]     = Math.min(255, Math.max(0, (data[i] - min) * factor));
+      data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - min) * factor));
+      data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - min) * factor));
+    }
+  }
+
+  // 2. Slight sharpen via unsharp mask approximation
+  // We use a simple contrast boost instead of full convolution for performance
+  const sharpenAmount = 0.3;
+  for (let i = 0; i < data.length; i += 4) {
+    const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    const midDiff = gray - 128;
+    data[i]     = Math.min(255, Math.max(0, data[i] + midDiff * sharpenAmount));
+    data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + midDiff * sharpenAmount));
+    data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + midDiff * sharpenAmount));
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+}
+
+// ─── REMOTE PHONE (QR + PeerJS) ──────────────────────────────
+function initRemoteMode() {
+  // Generate fresh session ID
+  sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
+  $('sessionCode').textContent = sessionId;
+  const baseUrl = location.origin + '/phone?s=' + sessionId;
+  $('qrUrl').textContent = baseUrl;
+
   generateQR(baseUrl);
   setupPeer();
 }
-function generateQR(url){
-  var canvas=document.getElementById('qrCanvas');
-  function doGenerate(){
-    try{
-      QRCode.toCanvas(canvas,url,{width:200,margin:2,color:{dark:'#000000',light:'#ffffff'}},function(err){
-        if(err){console.error('QR toCanvas error:',err);generateQRFallback(url);}
-      });
-    }catch(e){console.error('QR generation error:',e);generateQRFallback(url);}
-  }
-  if(window.QRCode&&typeof QRCode.toCanvas==='function'){doGenerate();}
-  else{
-    var sc=document.createElement('script');
-    sc.src='https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js';
-    sc.onload=function(){
-      if(window.QRCode&&typeof QRCode.toCanvas==='function'){doGenerate();}
-      else{generateQRFallback(url);}
-    };
-    sc.onerror=function(){generateQRFallback(url);};
-    document.head.appendChild(sc);
-  }
-}
-function generateQRFallback(url){
-  // Fallback: use Google Charts QR API as image
-  var canvas=document.getElementById('qrCanvas');
-  var img=new Image();
-  img.crossOrigin='anonymous';
-  img.onload=function(){canvas.width=200;canvas.height=200;canvas.getContext('2d').drawImage(img,0,0,200,200);};
-  img.onerror=function(){var ctx=canvas.getContext('2d');canvas.width=200;canvas.height=200;ctx.fillStyle='#fff';ctx.fillRect(0,0,200,200);ctx.fillStyle='#333';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('QR non disponibile',100,90);ctx.fillText('Usa il link sotto',100,110);};
-  img.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(url);
-}
 
-function setupPeer(){
-  if(peer)try{peer.destroy();}catch(e){}
-  document.getElementById('qrDot').className='dot waiting';
-  document.getElementById('qrStatusText').textContent='In attesa del telefono...';
-  peer=new Peer('bizcard-'+sessionId);
-  peer.on('open',function(){document.getElementById('qrStatusText').textContent='Pronto — scansiona il QR dal telefono';});
-  peer.on('connection',function(conn){
-    peerConn=conn;
-    document.getElementById('qrDot').className='dot connected';
-    document.getElementById('qrStatusText').textContent='✅ Telefono connesso!';
-    toast('📱 Telefono connesso!','success');
-    conn.on('data',function(data){
-      if(data&&data.type==='photo'){
-        try{conn.send({type:'ack'});}catch(e){}
-        processOCR(data.image,'data:image/jpeg;base64,'+data.image);
-        toast('📸 Foto ricevuta','success');
+function generateQR(url) {
+  const canvas = $('qrCanvas');
+  const opts = { width: 200, margin: 2, color: { dark: '#000000', light: '#ffffff' }, errorCorrectionLevel: 'M' };
+
+  // Primary: use preloaded QRCode library
+  if (window.QRCode && typeof QRCode.toCanvas === 'function') {
+    QRCode.toCanvas(canvas, url, opts, (err) => {
+      if (err) {
+        console.warn('[BizCard] QRCode.toCanvas failed:', err);
+        generateQRFallback(url);
       }
     });
-    conn.on('close',function(){document.getElementById('qrDot').className='dot waiting';document.getElementById('qrStatusText').textContent='Telefono disconnesso';});
-  });
-  peer.on('error',function(e){document.getElementById('qrStatusText').textContent='Errore: '+e.type;setTimeout(function(){setupPeer();},5000);});
-}
-
-// ==================== OCR ====================
-async function processOCR(base64,dataUrl){
-  var os=document.getElementById('ocrStatus');
-  os.style.display='flex';os.className='ocr-status processing';
-  document.getElementById('ocrStatusText').textContent='Analisi OCR in corso...';
-  document.getElementById('ocrProgress').style.width='0';
-  document.getElementById('photoPreview').src=dataUrl;
-  document.getElementById('resultSection').style.display='block';
-  document.getElementById('textBlocksContainer').innerHTML='<div style="color:var(--fg3);text-align:center;padding:20px">Elaborazione...</div>';
-
-  var ocrResult=null;
-  try{
-    if(useServerOCR){
-      document.getElementById('ocrStatusText').textContent='Invio a server OCR...';
-      var resp=await fetch('/api/ocr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:base64})});
-      ocrResult=await resp.json();
-      if(ocrResult.fallback){useServerOCR=false;ocrResult=await runTesseract(dataUrl);}
-    }else{ocrResult=await runTesseract(dataUrl);}
-  }catch(e){
-    try{ocrResult=await runTesseract(dataUrl);}catch(e2){os.className='ocr-status error';document.getElementById('ocrStatusText').textContent='❌ Errore: '+e2.message;return;}
+    return;
   }
 
-  scanCount++;saveState();
-  if(!ocrResult||!ocrResult.text||!ocrResult.text.trim()){os.className='ocr-status error';document.getElementById('ocrStatusText').textContent='⚠️ Nessun testo. Riprova con foto più nitida.';return;}
+  // Fallback: external QR API
+  generateQRFallback(url);
+}
 
-  os.className='ocr-status ready';
-  var lineCount=ocrResult.text.split('\n').filter(function(l){return l.trim();}).length;
-  document.getElementById('ocrStatusText').textContent='✅ '+lineCount+' righe rilevate ('+( ocrResult.engine||'tesseract')+')';
-  document.getElementById('ocrEngineLabel').textContent='Motore: '+(ocrResult.engine||'tesseract');
-  setTimeout(function(){os.style.display='none';},3000);
+function generateQRFallback(url) {
+  const canvas = $('qrCanvas');
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    canvas.width = 200;
+    canvas.height = 200;
+    canvas.getContext('2d').drawImage(img, 0, 0, 200, 200);
+  };
+  img.onerror = () => {
+    // Last resort: draw text on canvas
+    const ctx = canvas.getContext('2d');
+    canvas.width = 200; canvas.height = 200;
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 200, 200);
+    ctx.fillStyle = '#333'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('QR non disponibile', 100, 85);
+    ctx.fillText('Usa il link sotto:', 100, 105);
+    ctx.font = '9px monospace';
+    ctx.fillStyle = '#0066cc';
+    // Word wrap the URL
+    const words = url.split('/');
+    let y = 125;
+    words.forEach(w => { if (w) { ctx.fillText(w, 100, y); y += 14; } });
+  };
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+}
 
-  classifyText(ocrResult.text);
-  renderTextBlocks();
+function setupPeer() {
+  if (peer) {
+    try { peer.destroy(); } catch (e) {}
+    peer = null;
+  }
+  peerRetries = 0;
+
+  $('qrDot').className = 'dot waiting';
+  $('qrStatusText').textContent = 'Connessione al server PeerJS...';
+
+  peer = new Peer('bizcard-' + sessionId);
+
+  peer.on('open', () => {
+    $('qrStatusText').textContent = 'Pronto — scansiona il QR dal telefono';
+    peerRetries = 0;
+  });
+
+  peer.on('connection', (conn) => {
+    peerConn = conn;
+    $('qrDot').className = 'dot connected';
+    $('qrStatusText').textContent = '✅ Telefono connesso!';
+    toast('📱 Telefono connesso!', 'success');
+
+    conn.on('data', (data) => {
+      if (data && data.type === 'photo') {
+        try { conn.send({ type: 'ack' }); } catch (e) {}
+        processOCR(data.image, 'data:image/jpeg;base64,' + data.image);
+        toast('📸 Foto ricevuta dal telefono', 'success');
+      }
+    });
+
+    conn.on('close', () => {
+      $('qrDot').className = 'dot waiting';
+      $('qrStatusText').textContent = '📱 Telefono disconnesso — in attesa...';
+      peerConn = null;
+    });
+  });
+
+  peer.on('error', (err) => {
+    console.warn('[BizCard] Peer error:', err.type);
+    $('qrStatusText').textContent = 'Errore: ' + err.type;
+
+    peerRetries++;
+    if (peerRetries < MAX_PEER_RETRIES) {
+      setTimeout(() => setupPeer(), Math.min(3000 * peerRetries, 15000));
+    } else {
+      $('qrStatusText').textContent = '❌ Connessione fallita. Ricarica la pagina.';
+    }
+  });
+}
+
+function cleanupPeer() {
+  if (peerConn) { try { peerConn.close(); } catch (e) {} peerConn = null; }
+  if (peer) { try { peer.destroy(); } catch (e) {} peer = null; }
+}
+
+// ─── OCR PROCESSING ───────────────────────────────────────────
+async function processOCR(base64, dataUrl) {
+  const os = $('ocrStatus');
+  os.style.display = 'flex';
+  os.className = 'ocr-status processing';
+  $('ocrStatusText').textContent = 'Analisi OCR in corso...';
+  $('ocrProgress').style.width = '0';
+  $('photoPreview').src = dataUrl;
+  $('photoPreview').classList.remove('zoomed');
+  $('resultSection').style.display = 'block';
+  $('textBlocksContainer').innerHTML = '<div style="color:var(--fg4);text-align:center;padding:24px">⏳ Elaborazione in corso...</div>';
+
+  let ocrResult = null;
+
+  try {
+    if (useServerOCR) {
+      $('ocrStatusText').textContent = `Invio a ${serverEngine}...`;
+      $('ocrProgress').style.width = '30%';
+
+      const resp = await fetch('/api/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64 }),
+      });
+      ocrResult = await resp.json();
+      $('ocrProgress').style.width = '80%';
+
+      if (ocrResult.fallback) {
+        useServerOCR = false;
+        ocrResult = await runTesseract(dataUrl);
+      }
+    } else {
+      ocrResult = await runTesseract(dataUrl);
+    }
+  } catch (e) {
+    console.warn('[BizCard] Server OCR failed, falling back to Tesseract:', e);
+    try {
+      ocrResult = await runTesseract(dataUrl);
+    } catch (e2) {
+      os.className = 'ocr-status error';
+      $('ocrStatusText').textContent = '❌ Errore OCR: ' + e2.message;
+      return;
+    }
+  }
+
+  scanCount++;
+  saveState();
+
+  if (!ocrResult || !ocrResult.text || !ocrResult.text.trim()) {
+    os.className = 'ocr-status error';
+    $('ocrStatusText').textContent = '⚠️ Nessun testo rilevato. Prova con una foto più nitida e con buona illuminazione.';
+    return;
+  }
+
+  $('ocrProgress').style.width = '100%';
+  os.className = 'ocr-status ready';
+
+  const lines = ocrResult.text.split('\n').filter(l => l.trim());
+  $('ocrStatusText').textContent = `✅ ${lines.length} righe rilevate — ${ocrResult.engine || 'tesseract'}`;
+  $('ocrEngineLabel').textContent = `Motore: ${ocrResult.engine || 'tesseract'} | ${lines.length} righe`;
+  setTimeout(() => { os.style.display = 'none'; }, 4000);
+
+  classifyBlocks(ocrResult.text);
+  renderBlocks();
   renderFieldSummary();
 }
 
-async function runTesseract(dataUrl){
-  if(!tesseractReady){document.getElementById('ocrStatusText').textContent='Caricamento Tesseract...';await initTesseractFallback();}
-  if(!tesseractWorker)throw new Error('Tesseract non disponibile');
-  document.getElementById('ocrStatusText').textContent='Analisi con Tesseract.js...';
-  var r=await tesseractWorker.recognize(dataUrl);
-  return{engine:'tesseract-local',text:r.data.text||'',words:[],blocks:[]};
+async function runTesseract(dataUrl) {
+  if (!tesseractReady) {
+    $('ocrStatusText').textContent = 'Caricamento Tesseract.js...';
+    await initTesseractFallback();
+  }
+  if (!tesseractWorker) throw new Error('Tesseract non disponibile');
+
+  $('ocrStatusText').textContent = 'Analisi con Tesseract.js (locale)...';
+  const result = await tesseractWorker.recognize(dataUrl);
+  return {
+    engine: 'tesseract-local',
+    text: result.data.text || '',
+    words: (result.data.words || []).map(w => ({
+      text: w.text,
+      confidence: w.confidence / 100,
+    })),
+    blocks: [],
+  };
 }
 
-// ==================== CLASSIFY ====================
-function classifyText(rawText){
-  detectedBlocks=[];
-  rawText.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>1;}).forEach(function(line){
-    var type=autoClassify(line);
-    detectedBlocks.push({text:line,autoType:type,assignedType:type});
+// ─── TEXT CLASSIFICATION ENGINE ───────────────────────────────
+function classifyBlocks(rawText) {
+  detectedBlocks = [];
+
+  const lines = rawText.split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 1);
+
+  // First pass: classify each line with confidence scoring
+  const classified = lines.map((line, idx) => {
+    const result = classifyLine(line, idx, lines.length);
+    return { text: line, type: result.type, confidence: result.confidence };
+  });
+
+  // Second pass: resolve conflicts (e.g., multiple names)
+  const typeCounts = {};
+  classified.forEach(b => { typeCounts[b.type] = (typeCounts[b.type] || 0) + 1; });
+
+  // If we have too many "name" detections, keep only the highest confidence one
+  if (typeCounts.name > 2) {
+    let bestNameIdx = -1;
+    let bestNameConf = 0;
+    classified.forEach((b, i) => {
+      if (b.type === 'name' && b.confidence > bestNameConf) {
+        bestNameConf = b.confidence;
+        bestNameIdx = i;
+      }
+    });
+    classified.forEach((b, i) => {
+      if (b.type === 'name' && i !== bestNameIdx) {
+        // Downgrade to company or role based on position
+        b.type = i < lines.length / 2 ? 'role' : 'company';
+        b.confidence *= 0.6;
+      }
+    });
+  }
+
+  // If no name was detected, check if the first line looks like one
+  if (!typeCounts.name && classified.length > 0) {
+    const first = classified[0];
+    if (first.type === 'other' || first.type === 'company') {
+      const words = first.text.split(/\s+/);
+      if (words.length >= 2 && words.length <= 4 && !/\d/.test(first.text)) {
+        first.type = 'name';
+        first.confidence = 0.5;
+      }
+    }
+  }
+
+  detectedBlocks = classified;
+}
+
+function classifyLine(text, lineIndex, totalLines) {
+  const t = text.trim();
+  if (t.length < 2) return { type: 'ignore', confidence: 0.9 };
+
+  // ── High confidence patterns ──
+
+  // Email (very reliable)
+  if (RE.email.test(t)) return { type: 'email', confidence: 0.98 };
+
+  // Codice Fiscale (very reliable pattern)
+  if (RE.cf.test(t)) return { type: 'cf', confidence: 0.97 };
+
+  // P.IVA (very reliable with keyword)
+  if (RE.piva.test(t)) return { type: 'piva', confidence: 0.96 };
+
+  const low = t.toLowerCase();
+
+  // Fax (check before generic phone)
+  if (RE.fax.test(t)) return { type: 'fax', confidence: 0.85 };
+
+  // ── Medium confidence patterns ──
+
+  // Address (keyword-based, reliable)
+  if (RE.address.test(t)) return { type: 'address', confidence: 0.88 };
+
+  // Role (keyword matching)
+  const roleRegex = new RegExp('\\b(' + ROLES.join('|') + ')\\b', 'i');
+  if (roleRegex.test(t)) return { type: 'role', confidence: 0.82 };
+
+  // Phone (must have enough digits and not be too long)
+  const phoneMatch = t.match(RE.phone);
+  if (phoneMatch) {
+    const digits = phoneMatch[0].replace(/\D/g, '');
+    if (digits.length >= 7 && digits.length <= 15 && t.length < 40) {
+      return { type: 'phone', confidence: 0.80 };
+    }
+  }
+
+  // Website (must have TLD, not be email)
+  if (RE.web.test(t) && !t.includes('@') && t.includes('.') && t.length < 80) {
+    return { type: 'web', confidence: 0.78 };
+  }
+
+  // ── Heuristic patterns ──
+
+  // Company (keyword-based)
+  const companyRegex = new RegExp('\\b(' + COMPANY_KW.join('|') + ')\\b', 'i');
+  if (companyRegex.test(t)) return { type: 'company', confidence: 0.82 };
+  if (/[&]/.test(t) && t.length < 50 && t.length > 3) return { type: 'company', confidence: 0.55 };
+
+  // Name heuristics
+  const cleaned = t.replace(TITLE_PREFIX, '');
+  const letters = (cleaned.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙáóúÁÓÚüñ]/g) || []).length;
+  const letterRatio = letters / Math.max(cleaned.length, 1);
+  const words = cleaned.split(/\s+/).filter(w => w.length > 0);
+  const hasDigits = /\d/.test(cleaned);
+  const allCapStart = words.filter(w => /^[A-ZÀÈÉÌÒÙÁÓÚ]/.test(w)).length;
+
+  // Strong name signal: 2-4 capitalized words, no digits, mostly letters, near top
+  if (letterRatio > 0.8 && words.length >= 2 && words.length <= 4 && !hasDigits && cleaned.length < 45) {
+    const positionBoost = lineIndex < 3 ? 0.15 : 0;
+    if (allCapStart >= 2) return { type: 'name', confidence: 0.75 + positionBoost };
+    if (TITLE_PREFIX.test(t)) return { type: 'name', confidence: 0.80 };
+    return { type: 'name', confidence: 0.55 + positionBoost };
+  }
+
+  // Weaker name signal
+  if (letterRatio > 0.7 && words.length >= 2 && words.length <= 3 && !hasDigits && allCapStart >= 2) {
+    return { type: 'name', confidence: 0.50 };
+  }
+
+  // Generic text → likely company
+  if (letterRatio > 0.5 && t.length > 3 && t.length < 60 && !hasDigits) {
+    return { type: 'company', confidence: 0.35 };
+  }
+
+  // Short numbers or garbage
+  if (t.length < 3 || /^\d+$/.test(t)) return { type: 'ignore', confidence: 0.7 };
+
+  return { type: 'other', confidence: 0.2 };
+}
+
+// ─── RENDER TEXT BLOCKS ───────────────────────────────────────
+function renderBlocks() {
+  const container = $('textBlocksContainer');
+  let html = '';
+
+  detectedBlocks.forEach((block, i) => {
+    const ft = FIELD_TYPES.find(f => f.key === block.type) || FIELD_TYPES[10]; // 'other'
+    const typeClass = block.type === 'ignore' ? '' : (ft.req ? 'required' : 'assigned');
+    const confPercent = Math.round(block.confidence * 100);
+    const confColor = confPercent >= 80 ? 'var(--green)' : confPercent >= 50 ? 'var(--orange)' : 'var(--fg4)';
+
+    html += `<div class="text-block${block.type === 'ignore' ? ' ignored' : ''}" data-i="${i}" role="listitem">
+      <span class="tb-icon">${ft.icon}</span>
+      <span class="tb-text" contenteditable="false" data-i="${i}" title="Doppio click per modificare">${esc(block.text)}</span>
+      <span class="tb-conf" style="color:${confColor}" title="Confidenza">${confPercent}%</span>
+      <span class="tb-type ${typeClass}" data-i="${i}" title="Clicca per cambiare tipo">${ft.label} ▾</span>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+
+  // Event: change type
+  container.querySelectorAll('.tb-type').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showTypeDropdown(parseInt(el.dataset.i), el);
+    });
+  });
+
+  // Event: double-click to edit text
+  container.querySelectorAll('.tb-text').forEach(el => {
+    el.addEventListener('dblclick', () => {
+      el.contentEditable = 'true';
+      el.focus();
+      // Select all text
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    });
+
+    el.addEventListener('blur', () => {
+      el.contentEditable = 'false';
+      const idx = parseInt(el.dataset.i);
+      const newText = el.textContent.trim();
+      if (newText && detectedBlocks[idx]) {
+        detectedBlocks[idx].text = newText;
+        // Re-classify with new text
+        const result = classifyLine(newText, idx, detectedBlocks.length);
+        if (detectedBlocks[idx].type === detectedBlocks[idx].type) {
+          // Only auto-reclassify if user hasn't manually changed it
+        }
+        renderFieldSummary();
+      }
+    });
+
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+      if (e.key === 'Escape') { el.contentEditable = 'false'; }
+    });
   });
 }
 
-function autoClassify(t){
-  t=t.trim();if(t.length<2)return'ignore';
-  if(RE_EMAIL.test(t))return'email';
-  if(RE_CF.test(t))return'cf';
-  if(RE_PIVA.test(t))return'piva';
-  if(RE_ADDRESS.test(t))return'address';
-  var low=t.toLowerCase();
-  if(ROLES.some(function(r){return low.includes(r);}))return'role';
-  var pm=t.match(RE_PHONE);if(pm&&pm[0].replace(/\D/g,'').length>=7)return'phone';
-  if(RE_WEB.test(t)&&!t.includes('@')&&t.includes('.'))return'web';
-  if(COMPANY_KW.some(function(kw){return low.includes(kw);}))return'company';
-  if(/[&]/.test(t)&&t.length<60)return'company';
-  var letters=(t.match(/[a-zA-ZàèéìòùÀÈÉÌÒÙáóúÁÓÚ]/g)||[]).length;
-  var lr=letters/Math.max(t.length,1);
-  var words=t.split(/\s+/);
-  if(lr>.7&&words.length>=2&&words.length<=4&&!/\d/.test(t)&&t.length<50)return'name';
-  if(lr>.6&&words.length>=2&&words.length<=3&&!/\d/.test(t)){var up=words.filter(function(w){return/^[A-ZÀÈÉÌÒÙÁÓÚ]/.test(w);}).length;if(up>=2)return'name';}
-  if(lr>.4&&t.length>3&&t.length<60&&!/^\d+$/.test(t))return'company';
-  if(t.length<3||/^\d+$/.test(t))return'ignore';
-  return'other';
-}
+function showTypeDropdown(idx, anchor) {
+  // Remove existing dropdown
+  const existing = document.querySelector('.type-dropdown');
+  if (existing) existing.remove();
 
-// ==================== RENDER BLOCKS ====================
-function renderTextBlocks(){
-  var c=document.getElementById('textBlocksContainer');var html='';
-  detectedBlocks.forEach(function(b,i){
-    var ft=FIELD_TYPES.find(function(f){return f.key===b.assignedType;})||FIELD_TYPES[9];
-    var cls=b.assignedType==='ignore'?'':ft.req?'required':'assigned';
-    html+='<div class="text-block'+(b.assignedType==='ignore'?' ignored':'')+'" data-i="'+i+'"><span class="tb-icon">'+ft.icon+'</span><span class="tb-text">'+esc(b.text)+'</span><span class="tb-type '+cls+'" data-i="'+i+'">'+ft.label+' ▾</span></div>';
-  });
-  c.innerHTML=html;
-  c.querySelectorAll('.tb-type').forEach(function(el){el.addEventListener('click',function(e){e.stopPropagation();showTypeDropdown(parseInt(el.dataset.i),el);});});
-}
+  const dd = document.createElement('div');
+  dd.className = 'type-dropdown';
+  dd.setAttribute('role', 'listbox');
 
-function showTypeDropdown(idx,anchor){
-  var ex=document.querySelector('.type-dropdown');if(ex)ex.remove();
-  var dd=document.createElement('div');dd.className='type-dropdown';
-  FIELD_TYPES.forEach(function(ft){
-    var btn=document.createElement('button');btn.textContent=ft.icon+' '+ft.label+(ft.req?' *':'');
-    btn.addEventListener('click',function(){detectedBlocks[idx].assignedType=ft.key;dd.remove();renderTextBlocks();renderFieldSummary();});
+  FIELD_TYPES.forEach(ft => {
+    const btn = document.createElement('button');
+    btn.textContent = ft.icon + ' ' + ft.label + (ft.req ? ' *' : '');
+    btn.setAttribute('role', 'option');
+    if (detectedBlocks[idx] && detectedBlocks[idx].type === ft.key) {
+      btn.classList.add('active-type');
+    }
+    btn.addEventListener('click', () => {
+      detectedBlocks[idx].type = ft.key;
+      detectedBlocks[idx].confidence = 1.0; // Manual assignment = 100%
+      dd.remove();
+      renderBlocks();
+      renderFieldSummary();
+    });
     dd.appendChild(btn);
   });
-  var rect=anchor.getBoundingClientRect();
-  dd.style.top=rect.bottom+4+'px';dd.style.right=(window.innerWidth-rect.right)+'px';
+
+  const rect = anchor.getBoundingClientRect();
+  dd.style.top = (rect.bottom + 4) + 'px';
+  dd.style.right = (window.innerWidth - rect.right) + 'px';
+
+  // Ensure dropdown stays within viewport
   document.body.appendChild(dd);
-  setTimeout(function(){document.addEventListener('click',function cl(){dd.remove();document.removeEventListener('click',cl);});},10);
+  const ddRect = dd.getBoundingClientRect();
+  if (ddRect.bottom > window.innerHeight) {
+    dd.style.top = (rect.top - ddRect.height - 4) + 'px';
+  }
+
+  // Close on outside click
+  setTimeout(() => {
+    const closer = (e) => {
+      if (!dd.contains(e.target)) { dd.remove(); document.removeEventListener('click', closer); }
+    };
+    document.addEventListener('click', closer);
+  }, 10);
 }
 
-function renderFieldSummary(){
-  var c=document.getElementById('fieldRows');var html='';
-  FIELD_TYPES.filter(function(f){return f.key!=='other'&&f.key!=='ignore';}).forEach(function(ft){
-    var vals=detectedBlocks.filter(function(b){return b.assignedType===ft.key;}).map(function(b){return b.text;}).join(', ');
-    html+='<div class="fs-row"><span class="fs-label">'+ft.icon+' '+ft.label+(ft.req?' *':'')+'</span><span class="fs-value'+(vals?'':' empty')+'">'+(vals?esc(vals):'—')+'</span></div>';
+function renderFieldSummary() {
+  const container = $('fieldRows');
+  let html = '';
+
+  FIELD_TYPES.filter(f => f.key !== 'other' && f.key !== 'ignore').forEach(ft => {
+    const values = detectedBlocks
+      .filter(b => b.type === ft.key)
+      .map(b => b.text)
+      .join(', ');
+
+    html += `<div class="fs-row">
+      <span class="fs-label">${ft.icon} ${ft.label}${ft.req ? '<span class="fs-required"> *</span>' : ''}</span>
+      <span class="fs-value${values ? '' : ' empty'}">${values ? esc(values) : '—'}</span>
+    </div>`;
   });
-  c.innerHTML=html;
+
+  container.innerHTML = html;
 }
 
-// ==================== SAVE ====================
-function saveContact(){
-  var contact={id:Date.now().toString(36)+Math.random().toString(36).substr(2,5),createdAt:new Date().toISOString()};
-  FIELD_TYPES.forEach(function(ft){if(ft.key==='other'||ft.key==='ignore')return;var v=detectedBlocks.filter(function(b){return b.assignedType===ft.key;}).map(function(b){return b.text;}).join(', ');contact[ft.key]=v;});
-  var others=detectedBlocks.filter(function(b){return b.assignedType==='other';});if(others.length)contact.notes=others.map(function(b){return b.text;}).join('; ');
-  if(!contact.name&&!contact.email&&!contact.phone){toast('Assegna almeno nome, email o telefono','error');return;}
-  contacts.push(contact);saveState();toast('✅ Salvato: '+(contact.name||contact.email||contact.phone),'success');if(navigator.vibrate)navigator.vibrate(200);resetScan();
-}
-function resetScan(){detectedBlocks=[];document.getElementById('resultSection').style.display='none';document.getElementById('ocrStatus').style.display='none';}
+// ─── SAVE CONTACT ─────────────────────────────────────────────
+function saveContact() {
+  const contact = {
+    id: Date.now().toString(36) + Math.random().toString(36).substring(2, 7),
+    createdAt: new Date().toISOString(),
+  };
 
-// ==================== CONTACTS ====================
-function initContacts(){document.getElementById('searchInput').addEventListener('input',renderContacts);}
-function renderContacts(){
-  var q=document.getElementById('searchInput').value.toLowerCase(),l=document.getElementById('contactList'),e=document.getElementById('emptyContacts');
-  var f=contacts.filter(function(c){return!q||[c.name,c.company,c.email,c.phone,c.role].some(function(v){return v&&v.toLowerCase().includes(q);});});
-  if(!f.length){l.innerHTML='';e.style.display='block';return;}e.style.display='none';
-  l.innerHTML=f.map(function(c){var ini=(c.name||c.email||'?').substring(0,2).toUpperCase();var cols=['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#22c55e','#06b6d4'];var col=cols[Math.abs(hashCode(c.id))%cols.length];return'<div class="contact-item"><div class="contact-avatar" style="background:'+col+'">'+esc(ini)+'</div><div class="contact-info"><div class="name">'+esc(c.name||'Senza nome')+'</div><div class="detail">'+esc([c.role,c.company].filter(Boolean).join(' — ')||c.email||c.phone||'')+'</div></div><div class="contact-actions"><button onclick="exportSingleVcard(\''+c.id+'\')">📋</button><button onclick="deleteContact(\''+c.id+'\')">🗑️</button></div></div>';}).join('');
-}
-function deleteContact(id){if(!confirm('Eliminare?'))return;contacts=contacts.filter(function(c){return c.id!==id;});saveState();renderContacts();toast('Eliminato','success');}
-function exportSingleVcard(id){var c=contacts.find(function(x){return x.id===id;});if(!c)return;downloadFile(contactToVcard(c),(c.name||'contatto')+'.vcf','text/vcard');toast('vCard scaricata','success');}
+  FIELD_TYPES.forEach(ft => {
+    if (ft.key === 'other' || ft.key === 'ignore') return;
+    const values = detectedBlocks
+      .filter(b => b.type === ft.key)
+      .map(b => b.text)
+      .join(', ');
+    contact[ft.key] = values;
+  });
 
-// ==================== EXPORT ====================
-function initExport(){
-  document.getElementById('exportVcard').addEventListener('click',function(){if(!contacts.length){toast('Nessun contatto','error');return;}downloadFile(contacts.map(contactToVcard).join('\n'),'contatti.vcf','text/vcard');toast(contacts.length+' esportati','success');});
-  document.getElementById('exportCsv').addEventListener('click',function(){if(!contacts.length){toast('Nessun contatto','error');return;}var h=['Nome','Azienda','Ruolo','Email','Telefono','Web','P.IVA','C.F.','Indirizzo','Data'];var rows=contacts.map(function(c){return[c.name,c.company,c.role,c.email,c.phone,c.web,c.piva,c.cf,c.address,c.createdAt].map(csvEsc);});downloadFile('\ufeff'+[h.join(',')].concat(rows.map(function(r){return r.join(',');})).join('\n'),'contatti.csv','text/csv');toast(contacts.length+' esportati','success');});
-  document.getElementById('exportJson').addEventListener('click',function(){if(!contacts.length){toast('Nessun contatto','error');return;}downloadFile(JSON.stringify(contacts,null,2),'contatti.json','application/json');toast(contacts.length+' esportati','success');});
-  document.getElementById('exportWebhook').addEventListener('click',async function(){if(!contacts.length){toast('Nessun contatto','error');return;}if(!settings.webhookUrl){toast('Configura Webhook','error');return;}try{var h={'Content-Type':'application/json'};if(settings.webhookAuth)h['Authorization']=settings.webhookAuth;var r=await fetch(settings.webhookUrl,{method:'POST',headers:h,body:JSON.stringify({contacts:contacts})});toast(r.ok?'Inviati!':'Errore: '+r.status,r.ok?'success':'error');}catch(e){toast('Errore: '+e.message,'error');}});
-}
-function updateExportState(){document.getElementById('emptyExport').style.display=contacts.length===0?'block':'none';}
+  // Collect "other" as notes
+  const others = detectedBlocks.filter(b => b.type === 'other');
+  if (others.length) contact.notes = others.map(b => b.text).join('; ');
 
-// ==================== SETTINGS ====================
-function initSettings(){
-  document.getElementById('webhookUrl').value=settings.webhookUrl||'';document.getElementById('webhookAuth').value=settings.webhookAuth||'';
-  document.getElementById('btnSaveSettings').addEventListener('click',function(){settings.webhookUrl=document.getElementById('webhookUrl').value.trim();settings.webhookAuth=document.getElementById('webhookAuth').value.trim();saveState();toast('Salvate','success');});
-  document.getElementById('btnClearAll').addEventListener('click',function(){if(!confirm('Eliminare TUTTI?'))return;contacts=[];saveState();toast('Eliminati','success');});
-}
-function updateStats(){document.getElementById('statContacts').textContent=contacts.length;document.getElementById('statScans').textContent=scanCount;}
+  // Validation
+  if (!contact.name && !contact.email && !contact.phone) {
+    toast('Assegna almeno un nome, email o telefono', 'error');
+    return;
+  }
 
-// ==================== UTILS ====================
-function esc(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
-function csvEsc(v){if(!v)return'';return(v.includes(',')||v.includes('"')||v.includes('\n'))?'"'+v.replace(/"/g,'""')+'"':v;}
-function contactToVcard(c){var l=['BEGIN:VCARD','VERSION:3.0'];if(c.name){var p=c.name.split(/\s+/);var last=p.pop()||'';l.push('N:'+last+';'+p.join(' ')+';;;','FN:'+c.name);}if(c.company)l.push('ORG:'+c.company);if(c.role)l.push('TITLE:'+c.role);if(c.email)l.push('EMAIL;TYPE=WORK:'+c.email);if(c.phone)l.push('TEL;TYPE=WORK,VOICE:'+c.phone);if(c.web)l.push('URL:'+c.web);if(c.address)l.push('ADR;TYPE=WORK:;;'+c.address+';;;;');if(c.piva)l.push('NOTE:P.IVA: '+c.piva+(c.cf?' | C.F.: '+c.cf:''));else if(c.cf)l.push('NOTE:C.F.: '+c.cf);l.push('END:VCARD');return l.join('\r\n');}
-function downloadFile(content,filename,mime){var blob=new Blob([content],{type:mime+';charset=utf-8'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
-function hashCode(s){var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
-function toast(msg,type){type=type||'success';var c=document.getElementById('toasts');var el=document.createElement('div');el.className='toast '+type;el.textContent=msg;c.appendChild(el);setTimeout(function(){el.style.opacity='0';setTimeout(function(){el.remove();},300);},3500);}
+  // Duplicate check
+  const duplicate = findDuplicate(contact);
+  if (duplicate) {
+    if (!confirm(`Contatto simile trovato: "${duplicate.name || duplicate.email}"\n\nVuoi salvare comunque?`)) return;
+  }
+
+  contacts.push(contact);
+  saveState();
+  toast('✅ Salvato: ' + (contact.name || contact.email || contact.phone), 'success');
+  if (navigator.vibrate) navigator.vibrate(200);
+  resetScan();
+}
+
+function findDuplicate(contact) {
+  return contacts.find(c => {
+    if (contact.email && c.email && contact.email.toLowerCase() === c.email.toLowerCase()) return true;
+    if (contact.phone && c.phone) {
+      const d1 = contact.phone.replace(/\D/g, '');
+      const d2 = c.phone.replace(/\D/g, '');
+      if (d1.length >= 7 && d2.length >= 7 && (d1.endsWith(d2.slice(-7)) || d2.endsWith(d1.slice(-7)))) return true;
+    }
+    if (contact.name && c.name && contact.name.toLowerCase() === c.name.toLowerCase()) return true;
+    return false;
+  });
+}
+
+function resetScan() {
+  detectedBlocks = [];
+  $('resultSection').style.display = 'none';
+  $('ocrStatus').style.display = 'none';
+}
+
+// ─── CONTACTS ─────────────────────────────────────────────────
+function initContacts() {
+  $('searchInput').addEventListener('input', renderContacts);
+}
+
+function renderContacts() {
+  const query = $('searchInput').value.toLowerCase();
+  const list = $('contactList');
+  const empty = $('emptyContacts');
+
+  const filtered = contacts.filter(c => {
+    if (!query) return true;
+    return [c.name, c.company, c.email, c.phone, c.role]
+      .some(v => v && v.toLowerCase().includes(query));
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = filtered.map(c => {
+    const initials = (c.name || c.email || '?').substring(0, 2).toUpperCase();
+    const color = AVATAR_COLORS[Math.abs(hashCode(c.id)) % AVATAR_COLORS.length];
+    const detail = [c.role, c.company].filter(Boolean).join(' — ') || c.email || c.phone || '';
+
+    return `<div class="contact-item" role="listitem">
+      <div class="contact-avatar" style="background:${color}">${esc(initials)}</div>
+      <div class="contact-info">
+        <div class="name">${esc(c.name || 'Senza nome')}</div>
+        <div class="detail">${esc(detail)}</div>
+      </div>
+      <div class="contact-actions">
+        <button title="Scarica vCard" data-action="vcard" data-id="${c.id}">📇</button>
+        <button title="Copia info" data-action="copy" data-id="${c.id}">📋</button>
+        <button title="Elimina" data-action="delete" data-id="${c.id}">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Event delegation for contact actions
+  list.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+      if (action === 'vcard') exportSingleVcard(id);
+      if (action === 'copy') copyContactToClipboard(id);
+      if (action === 'delete') deleteContact(id);
+    });
+  });
+}
+
+function deleteContact(id) {
+  if (!confirm('Eliminare questo contatto?')) return;
+  contacts = contacts.filter(c => c.id !== id);
+  saveState();
+  renderContacts();
+  toast('Contatto eliminato', 'info');
+}
+
+function exportSingleVcard(id) {
+  const c = contacts.find(x => x.id === id);
+  if (!c) return;
+  downloadFile(contactToVcard(c), (c.name || 'contatto') + '.vcf', 'text/vcard');
+  toast('vCard scaricata', 'success');
+}
+
+function copyContactToClipboard(id) {
+  const c = contacts.find(x => x.id === id);
+  if (!c) return;
+  const lines = [];
+  if (c.name) lines.push(c.name);
+  if (c.role) lines.push(c.role);
+  if (c.company) lines.push(c.company);
+  if (c.email) lines.push('Email: ' + c.email);
+  if (c.phone) lines.push('Tel: ' + c.phone);
+  if (c.web) lines.push('Web: ' + c.web);
+  if (c.address) lines.push('Ind: ' + c.address);
+  navigator.clipboard.writeText(lines.join('\n')).then(
+    () => toast('Copiato negli appunti', 'success'),
+    () => toast('Copia non riuscita', 'error')
+  );
+}
+
+// ─── EXPORT ───────────────────────────────────────────────────
+function initExport() {
+  $('exportVcard').addEventListener('click', () => {
+    if (!contacts.length) { toast('Nessun contatto da esportare', 'error'); return; }
+    downloadFile(contacts.map(contactToVcard).join('\r\n'), 'contatti.vcf', 'text/vcard');
+    toast(contacts.length + ' contatti esportati come vCard', 'success');
+  });
+
+  $('exportCsv').addEventListener('click', () => {
+    if (!contacts.length) { toast('Nessun contatto da esportare', 'error'); return; }
+    const headers = ['Nome', 'Azienda', 'Ruolo', 'Email', 'Telefono', 'Fax', 'Web', 'P.IVA', 'C.F.', 'Indirizzo', 'Note', 'Data'];
+    const rows = contacts.map(c =>
+      [c.name, c.company, c.role, c.email, c.phone, c.fax, c.web, c.piva, c.cf, c.address, c.notes, c.createdAt].map(csvEsc)
+    );
+    const csv = '\ufeff' + [headers.join(',')].concat(rows.map(r => r.join(','))).join('\n');
+    downloadFile(csv, 'contatti.csv', 'text/csv');
+    toast(contacts.length + ' contatti esportati come CSV', 'success');
+  });
+
+  $('exportJson').addEventListener('click', () => {
+    if (!contacts.length) { toast('Nessun contatto da esportare', 'error'); return; }
+    downloadFile(JSON.stringify(contacts, null, 2), 'contatti.json', 'application/json');
+    toast(contacts.length + ' contatti esportati come JSON', 'success');
+  });
+
+  $('exportWebhook').addEventListener('click', async () => {
+    if (!contacts.length) { toast('Nessun contatto da esportare', 'error'); return; }
+    if (!settings.webhookUrl) { toast('Configura prima il Webhook CRM nelle Impostazioni', 'error'); return; }
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (settings.webhookAuth) headers['Authorization'] = settings.webhookAuth;
+      const resp = await fetch(settings.webhookUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ contacts, timestamp: new Date().toISOString() }),
+      });
+      toast(resp.ok ? `✅ ${contacts.length} contatti inviati al CRM` : 'Errore: HTTP ' + resp.status, resp.ok ? 'success' : 'error');
+    } catch (e) {
+      toast('Errore di rete: ' + e.message, 'error');
+    }
+  });
+}
+
+function updateExportState() {
+  $('emptyExport').style.display = contacts.length === 0 ? 'block' : 'none';
+}
+
+// ─── SETTINGS ─────────────────────────────────────────────────
+function initSettings() {
+  $('webhookUrl').value = settings.webhookUrl || '';
+  $('webhookAuth').value = settings.webhookAuth || '';
+
+  $('btnSaveSettings').addEventListener('click', () => {
+    settings.webhookUrl = $('webhookUrl').value.trim();
+    settings.webhookAuth = $('webhookAuth').value.trim();
+    saveState();
+    toast('Impostazioni salvate', 'success');
+  });
+
+  $('btnClearAll').addEventListener('click', () => {
+    if (!confirm('Eliminare TUTTI i contatti? Questa azione non è reversibile.')) return;
+    contacts = [];
+    scanCount = 0;
+    saveState();
+    toast('Tutti i dati sono stati eliminati', 'info');
+    updateStats();
+  });
+}
+
+function updateStats() {
+  $('statContacts').textContent = contacts.length;
+  $('statScans').textContent = scanCount;
+}
+
+// ─── UTILITIES ────────────────────────────────────────────────
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+function csvEsc(v) {
+  if (!v) return '';
+  return (v.includes(',') || v.includes('"') || v.includes('\n'))
+    ? '"' + v.replace(/"/g, '""') + '"'
+    : v;
+}
+
+function contactToVcard(c) {
+  const lines = ['BEGIN:VCARD', 'VERSION:3.0'];
+  if (c.name) {
+    const parts = c.name.split(/\s+/);
+    const last = parts.pop() || '';
+    const first = parts.join(' ');
+    lines.push('N:' + last + ';' + first + ';;;', 'FN:' + c.name);
+  }
+  if (c.company) lines.push('ORG:' + c.company);
+  if (c.role) lines.push('TITLE:' + c.role);
+  if (c.email) c.email.split(',').map(e => e.trim()).forEach(e => lines.push('EMAIL;TYPE=WORK:' + e));
+  if (c.phone) c.phone.split(',').map(p => p.trim()).forEach(p => lines.push('TEL;TYPE=WORK,VOICE:' + p));
+  if (c.fax) lines.push('TEL;TYPE=WORK,FAX:' + c.fax);
+  if (c.web) lines.push('URL:' + c.web);
+  if (c.address) lines.push('ADR;TYPE=WORK:;;' + c.address + ';;;;');
+  const notes = [];
+  if (c.piva) notes.push('P.IVA: ' + c.piva);
+  if (c.cf) notes.push('C.F.: ' + c.cf);
+  if (c.notes) notes.push(c.notes);
+  if (notes.length) lines.push('NOTE:' + notes.join(' | '));
+  lines.push('END:VCARD');
+  return lines.join('\r\n');
+}
+
+function downloadFile(content, filename, mime) {
+  const blob = new Blob([content], { type: mime + ';charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function hashCode(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) - h) + s.charCodeAt(i);
+    h |= 0;
+  }
+  return h;
+}
+
+function toast(msg, type = 'success') {
+  const container = $('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  el.setAttribute('role', 'alert');
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(8px)';
+    el.style.transition = 'all .3s';
+    setTimeout(() => el.remove(), 300);
+  }, 3500);
+}
 </script>
 </body>
 </html>
