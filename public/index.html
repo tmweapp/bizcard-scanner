@@ -188,6 +188,90 @@ main { flex: 1; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
 .progress-bar { flex: 1; height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; min-width: 60px; }
 .progress-bar .fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }
 
+/* ─── AR Scan ─── */
+.ar-canvas {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 5;
+}
+.btn-ar {
+  background: linear-gradient(135deg, #22c55e, #06b6d4); color: #fff;
+  position: relative; overflow: hidden;
+}
+.btn-ar::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+  transform: translateX(-100%); animation: none;
+}
+.btn-ar.scanning::after { animation: ar-shimmer 1.5s infinite; }
+@keyframes ar-shimmer { to { transform: translateX(100%); } }
+.btn-ar:hover { filter: brightness(1.1); }
+.btn-ar:disabled { opacity: .4; filter: none; }
+
+.ar-hud {
+  position: absolute; top: 10px; left: 10px; right: 10px; z-index: 10;
+  background: rgba(0,0,0,.7); backdrop-filter: blur(8px);
+  border-radius: 10px; padding: 10px 14px;
+  border: 1px solid rgba(34,197,94,.3);
+}
+.ar-hud-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.ar-hud-label { font-size: .75rem; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: 1px; }
+.ar-hud-pct { font-size: 1rem; font-weight: 800; color: #fff; }
+.ar-hud-bar { height: 3px; background: rgba(255,255,255,.15); border-radius: 2px; overflow: hidden; }
+.ar-hud-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--accent)); border-radius: 2px; transition: width .3s; width: 0; }
+.ar-hud-fields {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;
+}
+.ar-hud-fields .ar-field {
+  font-size: .65rem; padding: 2px 8px; border-radius: 4px;
+  background: rgba(255,255,255,.08); color: var(--fg4);
+  transition: all .3s;
+}
+.ar-hud-fields .ar-field.found {
+  background: rgba(34,197,94,.2); color: var(--green); font-weight: 600;
+}
+
+/* AR 3D Card Completion Animation */
+.ar-complete-card {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 80%; max-width: 400px; aspect-ratio: 1.8/1;
+  perspective: 800px; z-index: 15; display: none;
+}
+.ar-complete-card.visible { display: block; animation: ar-card-enter .6s ease-out; }
+@keyframes ar-card-enter { from { opacity: 0; transform: translate(-50%,-50%) scale(.7); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+.ar-card-inner {
+  width: 100%; height: 100%; position: relative;
+  transform-style: preserve-3d; transition: transform .8s cubic-bezier(.4,0,.2,1);
+}
+.ar-complete-card.flip .ar-card-inner { transform: rotateY(180deg); }
+.ar-card-front, .ar-card-back {
+  position: absolute; inset: 0; backface-visibility: hidden;
+  border-radius: 12px; padding: 20px; overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,.5), 0 0 30px rgba(34,197,94,.2);
+}
+.ar-card-front {
+  background: rgba(30,41,59,.95); border: 2px solid rgba(34,197,94,.4);
+  backdrop-filter: blur(12px);
+  font-size: .75rem; color: var(--fg); line-height: 1.6;
+}
+.ar-card-front .ar-cf-name { font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 2px; }
+.ar-card-front .ar-cf-role { font-size: .8rem; color: var(--accent2); margin-bottom: 6px; }
+.ar-card-front .ar-cf-company { font-size: .85rem; font-weight: 600; color: var(--fg2); margin-bottom: 10px; }
+.ar-card-front .ar-cf-line { color: var(--fg3); font-size: .72rem; display: flex; gap: 6px; align-items: center; }
+.ar-card-front .ar-cf-line .ar-cf-icon { width: 16px; text-align: center; flex-shrink: 0; }
+.ar-card-front .ar-cf-logo {
+  position: absolute; top: 14px; right: 14px; font-size: .55rem;
+  color: var(--fg4); text-align: right; max-width: 100px;
+  background: rgba(0,0,0,.3); padding: 4px 8px; border-radius: 6px;
+}
+.ar-card-back {
+  background: linear-gradient(135deg, #22c55e, #06b6d4);
+  transform: rotateY(180deg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+}
+.ar-card-check { font-size: 3rem; margin-bottom: 8px; }
+.ar-card-msg { font-size: 1.1rem; font-weight: 700; color: #fff; }
+
 /* ─── Smart Scan ─── */
 .btn-accent { background: linear-gradient(135deg, var(--purple), var(--accent)); color: #fff; }
 .btn-accent:hover { filter: brightness(1.1); }
@@ -295,6 +379,13 @@ main { flex: 1; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
 .contact-info { flex: 1; min-width: 0; }
 .contact-info .name { font-weight: 600; font-size: .95rem; }
 .contact-info .detail { color: var(--fg4); font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.contact-fields {
+  display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px;
+}
+.contact-fields span {
+  font-size: .72rem; color: var(--fg3); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 250px;
+}
 .contact-actions { display: flex; gap: 2px; }
 .contact-actions button {
   background: none; border: none; color: var(--fg4); cursor: pointer; padding: 6px 8px;
@@ -464,6 +555,27 @@ body {
       <div class="camera-area" role="img" aria-label="Anteprima fotocamera">
         <video id="video" autoplay playsinline muted></video>
         <div class="guide" id="cameraGuide"></div>
+        <!-- AR Overlay Canvas — sits on top of video -->
+        <canvas id="arCanvas" class="ar-canvas"></canvas>
+        <!-- AR Completion 3D Card -->
+        <div class="ar-complete-card" id="arCompleteCard">
+          <div class="ar-card-inner" id="arCardInner">
+            <div class="ar-card-front" id="arCardFront"></div>
+            <div class="ar-card-back">
+              <div class="ar-card-check">✅</div>
+              <div class="ar-card-msg">Acquisizione completa!</div>
+            </div>
+          </div>
+        </div>
+        <!-- AR Status HUD -->
+        <div class="ar-hud" id="arHud" style="display:none">
+          <div class="ar-hud-top">
+            <span class="ar-hud-label">🔍 AR SCAN</span>
+            <span class="ar-hud-pct" id="arHudPct">0%</span>
+          </div>
+          <div class="ar-hud-bar"><div class="ar-hud-fill" id="arHudFill"></div></div>
+          <div class="ar-hud-fields" id="arHudFields"></div>
+        </div>
         <div class="scanner-placeholder" id="placeholder" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           <p>Camera non disponibile.<br>Prova "Telefono remoto" o "Carica immagine".</p>
@@ -472,6 +584,7 @@ body {
       <div class="controls">
         <button class="btn btn-primary" id="btnCapture" disabled aria-label="Scatta foto">📸 Scatta foto</button>
         <button class="btn btn-accent" id="btnSmartScan" disabled aria-label="Smart Scan AI">🧠 Smart Scan</button>
+        <button class="btn btn-ar" id="btnARScan" disabled aria-label="AR Scan">✨ AR Scan</button>
         <button class="btn btn-secondary" id="btnFlip" style="display:none" aria-label="Inverti fotocamera">🔄 Inverti</button>
         <button class="btn btn-secondary" id="btnTorch" style="display:none" aria-label="Flash">🔦 Flash</button>
       </div>
@@ -630,29 +743,36 @@ body {
 
 // ─── CONFIGURATION ────────────────────────────────────────────
 const FIELD_TYPES = [
-  { key: 'name',    icon: '👤', label: 'Nome',      req: true  },
-  { key: 'company', icon: '🏢', label: 'Azienda',   req: true  },
-  { key: 'email',   icon: '📧', label: 'Email',     req: true  },
-  { key: 'phone',   icon: '📱', label: 'Telefono',  req: true  },
-  { key: 'role',    icon: '💼', label: 'Ruolo',     req: false },
-  { key: 'web',     icon: '🌐', label: 'Web',       req: false },
-  { key: 'address', icon: '📍', label: 'Indirizzo', req: false },
-  { key: 'piva',    icon: '🏛️', label: 'P.IVA',     req: false },
-  { key: 'cf',      icon: '🆔', label: 'C.F.',      req: false },
-  { key: 'fax',     icon: '📠', label: 'Fax',       req: false },
-  { key: 'other',   icon: '📝', label: 'Altro',     req: false },
-  { key: 'ignore',  icon: '🚫', label: 'Ignora',    req: false },
+  { key: 'name',    icon: '👤', label: 'Nome',        req: true  },
+  { key: 'company', icon: '🏢', label: 'Azienda',     req: true  },
+  { key: 'email',   icon: '📧', label: 'Email',       req: true  },
+  { key: 'mobile',  icon: '📱', label: 'Cellulare',   req: true  },
+  { key: 'phone',   icon: '📞', label: 'Tel. fisso',  req: false },
+  { key: 'role',    icon: '💼', label: 'Ruolo',       req: false },
+  { key: 'web',     icon: '🌐', label: 'Web',         req: false },
+  { key: 'address', icon: '📍', label: 'Indirizzo',   req: false },
+  { key: 'city',    icon: '🏙️', label: 'Città',       req: false },
+  { key: 'country', icon: '🌍', label: 'Paese/Stato', req: false },
+  { key: 'piva',    icon: '🏛️', label: 'P.IVA',       req: false },
+  { key: 'cf',      icon: '🆔', label: 'C.F.',        req: false },
+  { key: 'fax',     icon: '📠', label: 'Fax',         req: false },
+  { key: 'linkedin',icon: '💼', label: 'LinkedIn',    req: false },
+  { key: 'other',   icon: '📝', label: 'Altro',       req: false },
+  { key: 'ignore',  icon: '🚫', label: 'Ignora',      req: false },
 ];
 
 // Classification patterns — ordered by reliability
 const RE = {
-  email:   /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/,
-  cf:      /\b[A-Z]{6}\d{2}[A-EHLMPRST]\d{2}[A-Z]\d{3}[A-Z]\b/i,
-  piva:    /(?:P\.?\s*I\.?V\.?A\.?\s*[:.;]?\s*|IT\s*)(\d{11})/i,
-  address: /(?:via|viale|v\.le|corso|c\.so|piazza|p\.za|p\.zza|largo|vicolo|strada|contrada|loc\.|localit[àa])\s+[^\n]{3,60}/i,
-  web:     /(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:\/[^\s]*)?/i,
-  phone:   /(?:(?:tel|cell|mob|fax|phone|whatsapp)[.:\s]*)?(?:\+?\d{1,3}[\s.\-]?)?(?:\(?\d{2,4}\)?[\s.\-]?)\d{2,4}[\s.\-]?\d{3,4}[\s.\-]?\d{0,4}/i,
-  fax:     /(?:fax|facsimile)[.:\s]*(?:\+?\d{1,3}[\s.\-]?)?(?:\(?\d{2,4}\)?[\s.\-]?)\d{2,4}[\s.\-]?\d{3,4}/i,
+  email:    /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/,
+  cf:       /\b[A-Z]{6}\d{2}[A-EHLMPRST]\d{2}[A-Z]\d{3}[A-Z]\b/i,
+  piva:     /(?:P\.?\s*I\.?V\.?A\.?\s*[:.;]?\s*|IT\s*)(\d{11})/i,
+  address:  /(?:via|viale|v\.le|corso|c\.so|piazza|p\.za|p\.zza|largo|vicolo|strada|contrada|loc\.|localit[àa]|street|st\.|avenue|ave\.|boulevard|blvd|road|rd\.|straße|str\.|rue|calle)\s+[^\n]{3,60}/i,
+  web:      /(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:\/[^\s]*)?/i,
+  linkedin: /(?:linkedin\.com\/in\/|linkedin\.com\/company\/)[^\s]+/i,
+  // Mobile: keyword-based (cell, mob, whatsapp) or Italian mobile prefix 3XX
+  mobile:   /(?:(?:cell|mob(?:ile)?|whatsapp|wa)[.:\s]*(?:\+?\d[\d\s.\-()]{7,18}))|(?:(?:\+?39\s*)?3\d{2}[\s.\-]?\d{3,4}[\s.\-]?\d{3,4})/i,
+  phone:    /(?:(?:tel|phone|ufficio|office|sede|fisso)[.:\s]*)?(?:\+?\d{1,3}[\s.\-]?)?(?:\(?\d{2,4}\)?[\s.\-]?)\d{2,4}[\s.\-]?\d{3,4}[\s.\-]?\d{0,4}/i,
+  fax:      /(?:fax|facsimile)[.:\s]*(?:\+?\d{1,3}[\s.\-]?)?(?:\(?\d{2,4}\)?[\s.\-]?)\d{2,4}[\s.\-]?\d{3,4}/i,
 };
 
 const ROLES = [
@@ -811,8 +931,8 @@ function initModes() {
 }
 
 function switchMode(mode) {
-  // Cleanup previous mode
-  if (currentMode === 'remote' && mode !== 'remote') cleanupPeer();
+  // Cleanup previous mode — but DON'T destroy peer (keep phone connected!)
+  // if (currentMode === 'remote' && mode !== 'remote') cleanupPeer();
   if (currentMode === 'local' && mode !== 'local') stopCamera();
 
   currentMode = mode;
@@ -851,6 +971,7 @@ function initScanner() {
   $('btnSaveContact').addEventListener('click', saveContact);
   $('btnRetake').addEventListener('click', resetScan);
   $('btnRemoteSmartScan').addEventListener('click', startRemoteSmartScan);
+  $('btnARScan').addEventListener('click', startARScan);
 
   // Photo preview zoom toggle
   $('photoPreview').addEventListener('click', function() { this.classList.toggle('zoomed'); });
@@ -872,6 +993,7 @@ async function startCamera() {
     bf.style.display = 'inline-flex';
     $('btnCapture').disabled = false;
     $('btnSmartScan').disabled = false;
+    $('btnARScan').disabled = false;
 
     // Check torch support
     const track = stream.getVideoTracks()[0];
@@ -1316,10 +1438,533 @@ function mergeOcrResults(ocrResults) {
   return finalLines.join('\n');
 }
 
+// ─── AR SCAN ENGINE ──────────────────────────────────────────
+// Overlay that reconstructs the business card in real-time on top of the video feed.
+// Detects card edges, tracks position, progressively reveals text as AI reads it,
+// shows 3D card flip animation on completion.
+
+let arActive = false;
+let arAnimFrame = null;
+let arDetectedFields = {};  // { name: 'Mario Rossi', email: 'mario@...', ... }
+let arFieldProgress = {};   // { name: 1.0, email: 0.5, ... } — 0 to 1 for typewriter
+let arCardRect = null;      // { x, y, w, h } in canvas coords
+let arPhase = 'detecting';  // 'detecting' | 'reading' | 'normalizing' | 'complete'
+let arOcrRuns = 0;
+let arBestFrame = null;
+
+const AR_CONFIG = {
+  scanIntervalMs: 800,      // How often to grab frames for OCR
+  maxOcrPasses: 5,           // Max OCR passes before moving to AI
+  minFieldsForComplete: 3,   // Minimum fields to consider "complete"
+  typewriterSpeed: 0.05,     // How fast letters appear (per frame)
+};
+
+async function startARScan() {
+  const video = $('video');
+  if (!video.srcObject || video.videoWidth === 0) {
+    toast('Camera non pronta', 'error');
+    return;
+  }
+  if (!openaiApiKey) {
+    toast('Inserisci la API Key OpenAI per AR Scan', 'error');
+    $('openaiKeyInput').focus();
+    return;
+  }
+
+  arActive = true;
+  arDetectedFields = {};
+  arFieldProgress = {};
+  arCardRect = null;
+  arPhase = 'detecting';
+  arOcrRuns = 0;
+  arBestFrame = null;
+
+  // Setup canvas
+  const canvas = $('arCanvas');
+  const cameraArea = canvas.parentElement;
+  canvas.width = cameraArea.offsetWidth * (window.devicePixelRatio || 1);
+  canvas.height = cameraArea.offsetHeight * (window.devicePixelRatio || 1);
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+
+  // UI
+  $('btnARScan').classList.add('scanning');
+  $('btnARScan').disabled = true;
+  $('btnCapture').disabled = true;
+  $('btnSmartScan').disabled = true;
+  $('arHud').style.display = 'block';
+  $('arCompleteCard').classList.remove('visible', 'flip');
+  $('cameraGuide').style.display = 'none';
+
+  // Show field HUD
+  updateARHudFields();
+
+  if (navigator.vibrate) navigator.vibrate(50);
+  toast('✨ AR Scan avviato — inquadra il biglietto', 'info');
+
+  // Start render loop
+  arRenderLoop();
+
+  // Start OCR scanning loop
+  arScanLoop(video);
+}
+
+function stopARScan() {
+  arActive = false;
+  if (arAnimFrame) cancelAnimationFrame(arAnimFrame);
+  arAnimFrame = null;
+
+  $('btnARScan').classList.remove('scanning');
+  $('btnARScan').disabled = false;
+  $('btnCapture').disabled = false;
+  $('btnSmartScan').disabled = false;
+  $('cameraGuide').style.display = '';
+  $('arHud').style.display = 'none';
+
+  // Clear canvas
+  const canvas = $('arCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// ── AR Render Loop — draws the overlay every frame ──
+function arRenderLoop() {
+  if (!arActive) return;
+
+  const canvas = $('arCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const dpr = window.devicePixelRatio || 1;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Detect card region (center-biased rectangle)
+  if (!arCardRect) {
+    arCardRect = {
+      x: W * 0.06,
+      y: H * 0.19,
+      w: W * 0.88,
+      h: H * 0.62,
+    };
+  }
+  const r = arCardRect;
+
+  if (arPhase === 'detecting') {
+    // Scanning animation — pulsing corners
+    drawScanningCorners(ctx, r, Date.now());
+  } else if (arPhase === 'reading' || arPhase === 'normalizing') {
+    // Semi-transparent card overlay
+    drawCardOverlay(ctx, r, dpr);
+    // Progressive typewriter text
+    drawProgressiveText(ctx, r, dpr);
+  }
+
+  // Update progress
+  updateARProgress();
+
+  arAnimFrame = requestAnimationFrame(arRenderLoop);
+}
+
+function drawScanningCorners(ctx, r, time) {
+  const pulse = Math.sin(time / 300) * 0.3 + 0.7;
+  const cornerLen = Math.min(r.w, r.h) * 0.1;
+  const lineW = 3;
+
+  ctx.strokeStyle = `rgba(34, 197, 94, ${pulse})`;
+  ctx.lineWidth = lineW;
+  ctx.lineCap = 'round';
+
+  // Scan line sweeping
+  const scanY = r.y + (r.h * ((time % 2000) / 2000));
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  const scanGrad = ctx.createLinearGradient(r.x, scanY - 2, r.x, scanY + 2);
+  scanGrad.addColorStop(0, 'transparent');
+  scanGrad.addColorStop(0.5, 'rgba(34,197,94,0.6)');
+  scanGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = scanGrad;
+  ctx.fillRect(r.x, scanY - 8, r.w, 16);
+  ctx.restore();
+
+  // Corner brackets
+  const corners = [
+    [r.x, r.y], [r.x + r.w, r.y],
+    [r.x, r.y + r.h], [r.x + r.w, r.y + r.h],
+  ];
+  corners.forEach(([cx, cy], i) => {
+    const dx = (i % 2 === 0) ? 1 : -1;
+    const dy = (i < 2) ? 1 : -1;
+    ctx.beginPath();
+    ctx.moveTo(cx + dx * cornerLen, cy);
+    ctx.lineTo(cx, cy);
+    ctx.lineTo(cx, cy + dy * cornerLen);
+    ctx.stroke();
+  });
+}
+
+function drawCardOverlay(ctx, r, dpr) {
+  // Semi-transparent card background
+  ctx.save();
+
+  // Card shape with rounded corners
+  const radius = 12 * dpr;
+  ctx.beginPath();
+  ctx.roundRect(r.x, r.y, r.w, r.h, radius);
+
+  // Frosted glass effect
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.55)';
+  ctx.fill();
+
+  // Glowing border
+  const borderAlpha = arPhase === 'normalizing' ? 0.8 : 0.4;
+  const borderColor = arPhase === 'normalizing' ? '59, 130, 246' : '34, 197, 94';
+  ctx.strokeStyle = `rgba(${borderColor}, ${borderAlpha})`;
+  ctx.lineWidth = 2 * dpr;
+  ctx.stroke();
+
+  // Corner accents
+  ctx.strokeStyle = `rgba(${borderColor}, 0.9)`;
+  ctx.lineWidth = 3 * dpr;
+  const cl = Math.min(r.w, r.h) * 0.08;
+  [[r.x, r.y, 1, 1], [r.x + r.w, r.y, -1, 1], [r.x, r.y + r.h, 1, -1], [r.x + r.w, r.y + r.h, -1, -1]].forEach(([cx, cy, dx, dy]) => {
+    ctx.beginPath();
+    ctx.moveTo(cx + dx * cl, cy);
+    ctx.lineTo(cx, cy);
+    ctx.lineTo(cx, cy + dy * cl);
+    ctx.stroke();
+  });
+
+  ctx.restore();
+}
+
+function drawProgressiveText(ctx, r, dpr) {
+  ctx.save();
+
+  const padding = 16 * dpr;
+  const x0 = r.x + padding;
+  let y = r.y + padding;
+  const maxW = r.w - padding * 2;
+
+  // Layout: Name (large), Role, Company, then smaller fields
+  const fieldLayout = [
+    { key: 'name', size: 16 * dpr, weight: '700', color: '#ffffff' },
+    { key: 'role', size: 10 * dpr, weight: '400', color: '#60a5fa' },
+    { key: 'company', size: 11 * dpr, weight: '600', color: '#cbd5e1' },
+    { key: '_spacer', size: 8 * dpr },
+    { key: 'email', size: 9 * dpr, weight: '400', color: '#94a3b8', icon: '📧' },
+    { key: 'mobile', size: 9 * dpr, weight: '400', color: '#94a3b8', icon: '📱' },
+    { key: 'phone', size: 9 * dpr, weight: '400', color: '#94a3b8', icon: '📞' },
+    { key: 'web', size: 9 * dpr, weight: '400', color: '#94a3b8', icon: '🌐' },
+    { key: 'address', size: 8.5 * dpr, weight: '400', color: '#64748b', icon: '📍' },
+    { key: 'city', size: 8.5 * dpr, weight: '400', color: '#64748b', icon: '🏙️' },
+    { key: 'country', size: 8.5 * dpr, weight: '400', color: '#64748b', icon: '🌍' },
+  ];
+
+  fieldLayout.forEach(fl => {
+    if (fl.key === '_spacer') { y += fl.size; return; }
+
+    const text = arDetectedFields[fl.key];
+    if (!text) return;
+
+    // Progress for typewriter effect
+    if (!arFieldProgress[fl.key]) arFieldProgress[fl.key] = 0;
+    arFieldProgress[fl.key] = Math.min(1, arFieldProgress[fl.key] + AR_CONFIG.typewriterSpeed);
+    const progress = arFieldProgress[fl.key];
+    const visibleChars = Math.floor(text.length * progress);
+    const displayText = text.substring(0, visibleChars);
+
+    if (!displayText) return;
+
+    ctx.font = `${fl.weight} ${fl.size}px -apple-system, BlinkMacSystemFont, sans-serif`;
+    ctx.fillStyle = fl.color;
+    ctx.globalAlpha = 0.6 + progress * 0.4;
+
+    const prefix = fl.icon ? fl.icon + ' ' : '';
+    // Emoji rendering needs a slightly different font size
+    if (fl.icon) {
+      ctx.font = `${fl.size}px -apple-system`;
+      ctx.fillText(prefix, x0, y + fl.size);
+      ctx.font = `${fl.weight} ${fl.size}px -apple-system, BlinkMacSystemFont, sans-serif`;
+      ctx.fillText(displayText, x0 + fl.size * 2, y + fl.size);
+    } else {
+      ctx.fillText(displayText, x0, y + fl.size);
+    }
+
+    // Cursor blink at end if still typing
+    if (progress < 1) {
+      const textW = ctx.measureText(prefix + displayText).width;
+      if (Math.floor(Date.now() / 400) % 2 === 0) {
+        ctx.fillStyle = fl.color;
+        ctx.fillRect(x0 + textW + 2, y + 3, 2 * dpr, fl.size);
+      }
+    }
+
+    y += fl.size + 4 * dpr;
+  });
+
+  ctx.restore();
+}
+
+function updateARProgress() {
+  const requiredFields = ['name', 'company', 'email', 'mobile', 'phone', 'role', 'web', 'address', 'city', 'country'];
+  const found = requiredFields.filter(k => arDetectedFields[k]);
+  const pct = Math.min(100, Math.round((found.length / AR_CONFIG.minFieldsForComplete) * 100));
+
+  $('arHudPct').textContent = Math.min(pct, 100) + '%';
+  $('arHudFill').style.width = Math.min(pct, 100) + '%';
+
+  // Update HUD field badges
+  updateARHudFields();
+}
+
+function updateARHudFields() {
+  const fields = [
+    { key: 'name', label: 'Nome' }, { key: 'company', label: 'Azienda' },
+    { key: 'email', label: 'Email' }, { key: 'mobile', label: 'Cell' },
+    { key: 'phone', label: 'Tel' }, { key: 'role', label: 'Ruolo' },
+    { key: 'web', label: 'Web' }, { key: 'address', label: 'Ind.' },
+    { key: 'city', label: 'Città' }, { key: 'country', label: 'Paese' },
+  ];
+  $('arHudFields').innerHTML = fields.map(f =>
+    `<span class="ar-field${arDetectedFields[f.key] ? ' found' : ''}">${f.label}</span>`
+  ).join('');
+}
+
+// ── AR OCR Loop — periodically grabs frames and processes them ──
+async function arScanLoop(video) {
+  if (!arActive) return;
+
+  while (arActive && arPhase !== 'complete') {
+    if (arPhase === 'detecting') {
+      // First pass: grab a frame and run OCR to find text
+      arPhase = 'reading';
+    }
+
+    if (arPhase === 'reading') {
+      const frameData = captureARFrame(video);
+      if (frameData) {
+        arOcrRuns++;
+        try {
+          let ocrResult;
+          if (useServerOCR) {
+            const resp = await fetch('/api/ocr', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ image: frameData.base64 }),
+            });
+            ocrResult = await resp.json();
+            if (ocrResult.fallback) {
+              useServerOCR = false;
+              ocrResult = await runTesseract(frameData.dataUrl);
+            }
+          } else {
+            ocrResult = await runTesseract(frameData.dataUrl);
+          }
+
+          if (ocrResult && ocrResult.text && ocrResult.text.trim()) {
+            // Classify and merge into arDetectedFields
+            mergeARFields(ocrResult.text);
+            // Store best frame
+            if (!arBestFrame) arBestFrame = frameData;
+          }
+        } catch (e) {
+          console.warn('[AR] OCR error:', e);
+        }
+      }
+
+      // Check if we have enough data or maxed out passes
+      const fieldCount = Object.keys(arDetectedFields).filter(k => arDetectedFields[k]).length;
+      if (fieldCount >= AR_CONFIG.minFieldsForComplete || arOcrRuns >= AR_CONFIG.maxOcrPasses) {
+        // Move to AI normalization phase
+        arPhase = 'normalizing';
+        await arNormalizeWithAI();
+        break;
+      }
+
+      // Wait before next scan
+      await new Promise(r => setTimeout(r, AR_CONFIG.scanIntervalMs));
+    }
+  }
+}
+
+function captureARFrame(video) {
+  try {
+    const canvas = document.createElement('canvas');
+    const scale = Math.min(1920 / video.videoWidth, 1);
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    if (!useServerOCR) preprocessImage(ctx, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+    return { dataUrl, base64: dataUrl.split(',')[1] };
+  } catch (e) { return null; }
+}
+
+function mergeARFields(rawText) {
+  // Quick classify and merge
+  const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 1);
+  lines.forEach((line, idx) => {
+    const result = classifyLine(line, idx, lines.length);
+    if (result.type !== 'other' && result.type !== 'ignore' && result.confidence > 0.5) {
+      if (!arDetectedFields[result.type] || result.confidence > 0.8) {
+        arDetectedFields[result.type] = line;
+        // Reset typewriter for new/updated fields
+        arFieldProgress[result.type] = 0;
+      }
+    }
+  });
+}
+
+async function arNormalizeWithAI() {
+  if (!openaiApiKey || !arActive) return;
+
+  // Build data from AR fields
+  const currentData = { ...arDetectedFields };
+
+  try {
+    const userContent = [];
+    const hasImage = arBestFrame && arBestFrame.dataUrl;
+
+    if (hasImage) {
+      userContent.push({
+        type: 'text',
+        text: `ANALIZZA questa immagine di biglietto da visita e normalizza i dati. Leggi direttamente dall'immagine, i dati OCR sono solo riferimento:\n${JSON.stringify(currentData, null, 2)}`,
+      });
+      userContent.push({
+        type: 'image_url',
+        image_url: { url: arBestFrame.dataUrl, detail: 'high' },
+      });
+    } else {
+      userContent.push({ type: 'text', text: 'Normalizza:\n' + JSON.stringify(currentData, null, 2) });
+    }
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + openaiApiKey,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: AI_NORMALIZE_PROMPT + '\n\n⚠️ HAI L\'IMMAGINE. Leggi direttamente, OCR è secondario. Aggiungi "logo_description" se vedi un logo.' },
+          { role: 'user', content: userContent },
+        ],
+        temperature: 0.1,
+        max_tokens: 2000,
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
+      if (content) {
+        const jsonStr = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+        const normalized = JSON.parse(jsonStr);
+
+        // Update AR fields with normalized data — triggers typewriter for new fields
+        Object.keys(normalized).forEach(key => {
+          if (normalized[key] && key !== 'logo_description') {
+            if (arDetectedFields[key] !== normalized[key]) {
+              arFieldProgress[key] = 0; // Reset typewriter
+            }
+            arDetectedFields[key] = normalized[key];
+          }
+        });
+        if (normalized.logo_description) {
+          window._lastLogoDescription = normalized.logo_description;
+        }
+
+        // Also populate the main detectedBlocks for saving
+        lastPhotoDataUrl = arBestFrame ? arBestFrame.dataUrl : null;
+        if (lastPhotoDataUrl) $('photoPreview').src = lastPhotoDataUrl;
+
+        const mergedText = Object.values(arDetectedFields).filter(Boolean).join('\n');
+        classifyBlocks(mergedText);
+        applyNormalizedData(normalized);
+        renderBlocks();
+        renderFieldSummary();
+        $('resultSection').style.display = 'block';
+        $('ocrEngineLabel').textContent = 'AR Scan + GPT-4o-mini vision';
+        scanCount++;
+        saveState();
+      }
+    }
+  } catch (e) {
+    console.error('[AR] AI error:', e);
+  }
+
+  // Trigger completion
+  arPhase = 'complete';
+  await arShowCompletion();
+}
+
+async function arShowCompletion() {
+  if (!arActive) return;
+
+  // Wait for typewriter to finish
+  await new Promise(r => setTimeout(r, 1500));
+
+  // Build the 3D card front
+  const f = arDetectedFields;
+  let cardHtml = '';
+  if (f.name) cardHtml += `<div class="ar-cf-name">${esc(f.name)}</div>`;
+  if (f.role) cardHtml += `<div class="ar-cf-role">${esc(f.role)}</div>`;
+  if (f.company) cardHtml += `<div class="ar-cf-company">${esc(f.company)}</div>`;
+  const lines = [
+    f.email ? ['📧', f.email] : null,
+    f.mobile ? ['📱', f.mobile] : null,
+    f.phone ? ['📞', f.phone] : null,
+    f.web ? ['🌐', f.web] : null,
+    f.address ? ['📍', f.address] : null,
+    (f.city || f.country) ? ['🌍', [f.city, f.country].filter(Boolean).join(', ')] : null,
+  ].filter(Boolean);
+  lines.forEach(([icon, text]) => {
+    cardHtml += `<div class="ar-cf-line"><span class="ar-cf-icon">${icon}</span>${esc(text)}</div>`;
+  });
+  if (window._lastLogoDescription) {
+    cardHtml += `<div class="ar-cf-logo">🏷️ ${esc(window._lastLogoDescription)}</div>`;
+  }
+
+  $('arCardFront').innerHTML = cardHtml;
+
+  // Show card with entrance animation
+  const card = $('arCompleteCard');
+  card.classList.add('visible');
+
+  if (navigator.vibrate) navigator.vibrate([100, 80, 100, 80, 200]);
+  $('arHudPct').textContent = '100%';
+  $('arHudFill').style.width = '100%';
+  $('arHud').querySelector('.ar-hud-label').textContent = '✅ COMPLETO';
+
+  // Flip to green check after 2.5s
+  setTimeout(() => {
+    card.classList.add('flip');
+    toast('✅ Biglietto acquisito al 100%!', 'success');
+  }, 2500);
+
+  // Clean up after 5s
+  setTimeout(() => {
+    $('arHud').style.display = 'none';
+    card.classList.remove('visible', 'flip');
+    stopARScan();
+  }, 5500);
+}
+
 // ─── REMOTE PHONE (QR + PeerJS) ──────────────────────────────
 function initRemoteMode() {
-  // Generate fresh session ID
-  sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
+  // KEEP existing session if peer is alive — don't regenerate!
+  if (peer && !peer.destroyed && sessionId) {
+    $('sessionCode').textContent = sessionId;
+    return; // Peer is already connected, don't regenerate
+  }
+
+  // Generate session ID only if we don't have one
+  if (!sessionId) {
+    sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
   $('sessionCode').textContent = sessionId;
   const baseUrl = location.origin + '/phone?s=' + sessionId;
   $('qrUrl').textContent = baseUrl;
@@ -1787,6 +2432,9 @@ function classifyLine(text, lineIndex, totalLines) {
   // Fax (check before generic phone)
   if (RE.fax.test(t)) return { type: 'fax', confidence: 0.85 };
 
+  // LinkedIn
+  if (RE.linkedin.test(t)) return { type: 'linkedin', confidence: 0.95 };
+
   // ── Medium confidence patterns ──
 
   // Address (keyword-based, reliable)
@@ -1796,11 +2444,28 @@ function classifyLine(text, lineIndex, totalLines) {
   const roleRegex = new RegExp('\\b(' + ROLES.join('|') + ')\\b', 'i');
   if (roleRegex.test(t)) return { type: 'role', confidence: 0.82 };
 
-  // Phone (must have enough digits and not be too long)
+  // Mobile phone (keyword: cell/mob/whatsapp, or IT mobile prefix 3XX)
+  if (RE.mobile.test(t)) {
+    const digits = t.replace(/\D/g, '');
+    if (digits.length >= 7 && digits.length <= 15) {
+      return { type: 'mobile', confidence: 0.85 };
+    }
+  }
+
+  // Phone — check if it's a mobile by prefix even without keyword
   const phoneMatch = t.match(RE.phone);
   if (phoneMatch) {
     const digits = phoneMatch[0].replace(/\D/g, '');
     if (digits.length >= 7 && digits.length <= 15 && t.length < 40) {
+      // Italian mobile: +39 3XX or just 3XX...
+      const isMobile = /(?:^|\+?39\s*)?3\d{2}/.test(phoneMatch[0].replace(/[\s.\-()]/g, ''))
+        || /(?:^|\s)(?:cell|mob|whatsapp|wa)\b/i.test(t);
+      // International mobile hints: +1 with no area keywords, +44 7, +49 1, +33 6/7
+      const intlMobile = /\+44\s*7|\+49\s*1[567]|\+33\s*[67]|\+34\s*[67]|\+86\s*1[3-9]|\+81\s*[789]0/.test(phoneMatch[0].replace(/[\s.\-]/g, ''));
+
+      if (isMobile || intlMobile) {
+        return { type: 'mobile', confidence: 0.82 };
+      }
       return { type: 'phone', confidence: 0.80 };
     }
   }
@@ -1979,39 +2644,64 @@ function renderFieldSummary() {
 }
 
 // ─── AI NORMALIZATION ──────────────────────────────────────────
-const AI_NORMALIZE_PROMPT = `Sei un assistente specializzato nella normalizzazione dei dati estratti da biglietti da visita tramite OCR.
+const AI_NORMALIZE_PROMPT = `Sei un sistema di data enrichment per un CRM/database commerciale. Ricevi dati OCR grezzi da biglietti da visita e devi restituire dati COMPLETI, PULITI e STRUTTURATI per un database professionale.
 
-Riceverai un JSON con i campi estratti da un biglietto da visita. Il tuo compito è:
+═══ CAMPI E REGOLE ═══
 
-1. **Nome**: Formatta in Title Case corretto (es. "MARIO ROSSI" → "Mario Rossi", "mario rossi" → "Mario Rossi"). Rimuovi titoli professionali (Dott., Ing., Avv.) dal nome e spostali nel ruolo se non già presente.
-2. **Azienda**: Formatta correttamente (es. "ACME SRL" → "Acme S.r.l.", mantieni abbreviazioni standard).
-3. **Email**: Minuscolo, rimuovi spazi accidentali.
-4. **Telefono**: Formato internazionale italiano +39 XXX XXX XXXX. Separa più numeri con virgola.
-5. **Ruolo/Titolo**: Capitalizza correttamente. Traduci abbreviazioni (es. "amm. del." → "Amministratore Delegato").
-6. **Sito web**: Aggiungi https:// se mancante. Minuscolo.
-7. **Indirizzo**: Formatta correttamente con maiuscole appropriate (Via, Piazza, ecc.). CAP + Città + Provincia.
-8. **P.IVA**: Formato IT + 11 cifre, rimuovi spazi.
-9. **Codice Fiscale**: Tutto maiuscolo, rimuovi spazi.
-10. **Fax**: Stesso formato del telefono.
+1. **name**: Title Case (es. "MARIO ROSSI" → "Mario Rossi"). Rimuovi titoli (Dott., Ing., Avv.) e spostali nel ruolo.
+2. **company**: Formatta correttamente. Mantieni forma giuridica standard (S.r.l., S.p.A., Ltd., GmbH, Inc.). Se riconosci l'azienda, usa il nome ufficiale.
+3. **email**: Minuscolo, rimuovi spazi. Se ci sono più email, separale con virgola.
+4. **mobile**: Numeri di CELLULARE in formato internazionale (+39 3XX XXX XXXX per Italia). Identifica cellulari da prefissi: IT 3XX, US/CA +1, UK +44 7XXX, DE +49 1XXX, FR +33 6/7, ES +34 6/7, CN +86 1XX, JP +81 70/80/90, ecc. Se il biglietto dice "Cell", "Mob", "Mobile", "WhatsApp" → è cellulare.
+5. **phone**: Numeri di TELEFONO FISSO / sede in formato internazionale. Tutto ciò che NON è cellulare (prefissi fissi: IT 0X, US area codes, UK 01/02/03, ecc.). Se dice "Tel", "Office", "Ufficio", "Sede" → fisso.
+6. **role**: Titolo professionale completo in lingua originale + traduzione italiana tra parentesi se non italiano. Es: "Chief Technology Officer (Direttore Tecnologico)". Espandi abbreviazioni: "amm. del." → "Amministratore Delegato", "CEO" → "CEO (Amministratore Delegato)".
+7. **web**: URL completo con https://. Minuscolo. Se c'è solo dominio nell'email (es. mario@acme.com), deduci "https://www.acme.com".
+8. **address**: Solo via/numero/CAP. Formatta: Via/Piazza/Straße/Street ecc. + numero + CAP.
+9. **city**: Città + eventuale provincia/stato. DEDUCI dal CAP se non esplicita: "20121" → "Milano (MI)", "10001" → "New York, NY", "SW1A" → "London". Per Italia aggiungi sempre sigla provincia.
+10. **country**: Paese completo. DEDUCI SEMPRE se non presente: dal prefisso telefonico (+39→Italia, +1→USA/Canada, +44→UK, +49→Germania, +86→Cina, +81→Giappone), dal dominio email (.it→Italia, .de→Germania, .jp→Giappone, .cn→Cina), dal CAP, dalla lingua del biglietto, dalla forma giuridica (S.r.l.→Italia, GmbH→Germania/Austria, Ltd→UK, Inc→USA). Formato: "Italia", "United States", "Deutschland", ecc.
+11. **piva**: P.IVA/VAT Number. Italia: "IT" + 11 cifre. Altro: prefisso paese + numero (DE + 9 cifre, GB + 9 cifre, ecc.).
+12. **cf**: Codice Fiscale italiano (MAIUSCOLO) o equivalente estero (SSN, NIF, TIN, Steuernummer).
+13. **fax**: Formato internazionale come telefono fisso.
+14. **linkedin**: URL profilo LinkedIn se presente, o deducibile dal nome + azienda (NON inventare, solo se c'è un indizio nel biglietto).
+15. **notes**: Info aggiuntive utili commercialmente: settore attività, specializzazioni, certificazioni, sedi multiple, orari.
 
-REGOLE IMPORTANTI:
-- Se un campo è vuoto o non presente, restituisci stringa vuota "".
-- NON inventare dati. Se un dato sembra corrotto o illeggibile, restituiscilo come era con minime correzioni.
-- Se il testo OCR ha errori evidenti di riconoscimento (es. "0" al posto di "O", "l" al posto di "1"), correggili intelligentemente.
-- Rispondi SOLO con il JSON normalizzato, senza spiegazioni.
+═══ LINGUE E TRADUZIONI ═══
+- Se il biglietto è in caratteri non latini (cinese 中文, giapponese 日本語, coreano 한국어, arabo العربية, ebraico עברית, thai ไทย, russo кириллица, hindi हिन्दी, ecc.):
+  • Trascrivi OGNI campo in caratteri latini (romanizzazione)
+  • Per nomi: usa la romanizzazione standard (Pinyin per cinese, Romaji per giapponese, Revised Romanization per coreano)
+  • Aggiungi la versione originale tra parentesi: es. "Tanaka Yuki (田中 優希)"
+  • Per aziende: nome romanizzato + originale tra parentesi
+  • Traduci il ruolo in italiano
 
-Formato di risposta richiesto (JSON):
+═══ DEDUZIONE INTELLIGENTE ═══
+- DEDUCI città e paese da QUALSIASI indizio: CAP, prefisso telefonico, dominio email, lingua, forma giuridica
+- Se l'indirizzo contiene una città nota (Milano, Roma, New York, London, Tokyo, Shanghai...) estraila nel campo city
+- Se manca il paese ma c'è un prefisso +39 → Italia, +1 → USA, ecc.
+- Se manca il web ma c'è un'email aziendale → deduci il sito
+- Distingui SEMPRE cellulare da fisso basandoti sui prefissi
+- Se c'è un solo numero e non è chiaro, mettilo in "mobile" (più utile commercialmente)
+
+═══ CORREZIONE OCR ═══
+- Correggi errori OCR tipici: 0↔O, 1↔l↔I, 5↔S, 8↔B, rn↔m
+- Se un'email sembra sbagliata (es. "mario@acme,com") correggila
+- Se un numero ha caratteri extra (es. "Tel: +39 02-1234 567") puliscilo
+
+═══ FORMATO RISPOSTA ═══
+Rispondi SOLO con JSON valido, nessun testo aggiuntivo:
 {
   "name": "",
   "company": "",
   "email": "",
+  "mobile": "",
   "phone": "",
   "role": "",
   "web": "",
   "address": "",
+  "city": "",
+  "country": "",
   "piva": "",
   "cf": "",
   "fax": "",
+  "linkedin": "",
   "notes": ""
 }`;
 
@@ -2048,6 +2738,40 @@ async function normalizeWithAI() {
   btn.textContent = '⏳ Normalizzazione AI...';
 
   try {
+    // Build messages — if we have the photo, use GPT-4o with vision for logo detection
+    const userContent = [];
+    const hasImage = lastPhotoDataUrl && lastPhotoDataUrl.startsWith('data:image');
+    let model = 'gpt-4o-mini';
+
+    if (hasImage) {
+      model = 'gpt-4o-mini'; // supports vision, cost-effective
+      userContent.push({
+        type: 'text',
+        text: `ANALIZZA QUESTA IMMAGINE di un biglietto da visita con MASSIMA PRECISIONE.
+
+ISTRUZIONI:
+1. LEGGI direttamente dall'immagine OGNI testo visibile (sei il lettore primario, non fidarti solo dell'OCR)
+2. CONFRONTA con i dati OCR sotto — l'OCR potrebbe avere errori, TU sei più preciso
+3. IDENTIFICA il logo aziendale: descrivi forma, colori, simboli
+4. ESTRAI testo che l'OCR potrebbe aver perso (testo piccolo, colorato, ruotato, in overlay sul logo)
+5. Se il biglietto è in lingua non latina, TRASCRIVI in caratteri latini + originale tra parentesi
+
+Dati OCR di riferimento (potrebbero contenere errori):
+${JSON.stringify(currentData, null, 2)}
+
+Rispondi con il JSON completo. Il campo "logo_description" deve descrivere il logo se visibile.`,
+      });
+      userContent.push({
+        type: 'image_url',
+        image_url: { url: lastPhotoDataUrl, detail: 'high' },
+      });
+    } else {
+      userContent.push({
+        type: 'text',
+        text: 'Normalizza questi dati del biglietto da visita:\n\n' + JSON.stringify(currentData, null, 2),
+      });
+    }
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -2055,13 +2779,13 @@ async function normalizeWithAI() {
         'Authorization': 'Bearer ' + openaiApiKey,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: model,
         messages: [
-          { role: 'system', content: AI_NORMALIZE_PROMPT },
-          { role: 'user', content: 'Normalizza questi dati del biglietto da visita:\n\n' + JSON.stringify(currentData, null, 2) },
+          { role: 'system', content: AI_NORMALIZE_PROMPT + (hasImage ? '\n\n⚠️ HAI L\'IMMAGINE DEL BIGLIETTO. Sei il lettore PRIMARIO — leggi direttamente dall\'immagine con precisione massima. L\'OCR è solo un riferimento secondario. Aggiungi sempre "logo_description" nel JSON se vedi un logo.' : '') },
+          { role: 'user', content: userContent },
         ],
         temperature: 0.1,
-        max_tokens: 1000,
+        max_tokens: 2000,
       }),
     });
 
@@ -2121,47 +2845,68 @@ async function normalizeWithAI() {
 }
 
 function applyNormalizedData(normalized) {
-  // For each field type, update existing blocks or create new ones
   const fieldKeys = FIELD_TYPES.filter(f => f.key !== 'other' && f.key !== 'ignore').map(f => f.key);
+
+  // Handle migration: if AI returns "mobile" but old blocks have "phone" that looks like a mobile
+  // Also handle old "phone" field being split into mobile + phone by AI
+  if (normalized.mobile && !normalized.phone) {
+    // Check if existing phone blocks should become mobile
+    detectedBlocks.forEach(b => {
+      if (b.type === 'phone') {
+        const digits = b.text.replace(/\D/g, '');
+        // Italian mobile: starts with 3, international: various patterns
+        if (/^(?:\+?39\s*)?3/.test(b.text) || /^(?:cell|mob|whatsapp)/i.test(b.text)) {
+          b.type = 'mobile';
+        }
+      }
+    });
+  }
 
   fieldKeys.forEach(key => {
     const newValue = (normalized[key] || '').trim();
     if (!newValue) return;
 
-    // Find existing blocks of this type
     const existingBlocks = detectedBlocks.filter(b => b.type === key);
 
     if (existingBlocks.length > 0) {
-      // If the AI merged multiple values into one, update the first and remove extras
-      if (existingBlocks.length === 1) {
-        existingBlocks[0].text = newValue;
-        existingBlocks[0].confidence = 0.99; // AI-normalized
-      } else {
-        // Multiple blocks → keep first with merged value, mark others as ignore
-        existingBlocks[0].text = newValue;
-        existingBlocks[0].confidence = 0.99;
-        for (let i = 1; i < existingBlocks.length; i++) {
-          existingBlocks[i].type = 'ignore';
-          existingBlocks[i].confidence = 0.5;
-        }
+      existingBlocks[0].text = newValue;
+      existingBlocks[0].confidence = 0.99;
+      for (let i = 1; i < existingBlocks.length; i++) {
+        existingBlocks[i].type = 'ignore';
+        existingBlocks[i].confidence = 0.5;
       }
-    } else if (newValue) {
-      // AI found a field that wasn't detected — check if any 'other' block should be reassigned
-      const otherBlock = detectedBlocks.find(b => b.type === 'other' || b.type === 'ignore');
-      if (otherBlock) {
-        otherBlock.text = newValue;
-        otherBlock.type = key;
-        otherBlock.confidence = 0.95;
+    } else {
+      // AI discovered a new field — create a new block
+      // First try to reassign an 'other' or 'ignore' block
+      const reuseBlock = detectedBlocks.find(b => b.type === 'other' || b.type === 'ignore');
+      if (reuseBlock) {
+        reuseBlock.text = newValue;
+        reuseBlock.type = key;
+        reuseBlock.confidence = 0.95;
+      } else {
+        // Create brand new block (AI-inferred data like city, country)
+        detectedBlocks.push({
+          text: newValue,
+          type: key,
+          confidence: 0.92,
+        });
       }
     }
   });
 
-  // Handle notes from AI
+  // Handle notes
   if (normalized.notes) {
     const existingNotes = detectedBlocks.find(b => b.type === 'other');
     if (existingNotes) {
       existingNotes.text = normalized.notes;
+    } else {
+      detectedBlocks.push({ text: normalized.notes, type: 'other', confidence: 0.90 });
     }
+  }
+
+  // Store logo description in metadata (accessible when saving contact)
+  if (normalized.logo_description) {
+    window._lastLogoDescription = normalized.logo_description;
   }
 }
 
@@ -2199,8 +2944,14 @@ function saveContact() {
   const others = detectedBlocks.filter(b => b.type === 'other');
   if (others.length) contact.notes = others.map(b => b.text).join('; ');
 
+  // Store logo description if available
+  if (window._lastLogoDescription) {
+    contact.logo_description = window._lastLogoDescription;
+    window._lastLogoDescription = null;
+  }
+
   // Validation
-  if (!contact.name && !contact.email && !contact.phone) {
+  if (!contact.name && !contact.email && !contact.phone && !contact.mobile) {
     toast('Assegna almeno un nome, email o telefono', 'error');
     return;
   }
@@ -2232,6 +2983,7 @@ function findDuplicate(contact) {
 }
 
 function resetScan() {
+  if (arActive) stopARScan();
   detectedBlocks = [];
   lastPhotoDataUrl = null;
   $('resultSection').style.display = 'none';
@@ -2264,7 +3016,20 @@ function renderContacts() {
   list.innerHTML = filtered.map(c => {
     const initials = (c.name || c.email || '?').substring(0, 2).toUpperCase();
     const color = AVATAR_COLORS[Math.abs(hashCode(c.id)) % AVATAR_COLORS.length];
-    const detail = [c.role, c.company].filter(Boolean).join(' — ') || c.email || c.phone || '';
+    const detail = [c.role, c.company].filter(Boolean).join(' — ') || '';
+    const contactLines = [
+      c.email ? '📧 ' + c.email : '',
+      c.mobile ? '📱 ' + c.mobile : '',
+      c.phone ? '📞 ' + c.phone : '',
+      c.address ? '📍 ' + c.address : '',
+      c.city ? '🏙️ ' + c.city : '',
+      c.country ? '🌍 ' + c.country : '',
+      c.web ? '🌐 ' + c.web : '',
+      c.linkedin ? '💼 LinkedIn' : '',
+      c.piva ? '🏛️ P.IVA ' + c.piva : '',
+      c.cf ? '🆔 C.F. ' + c.cf : '',
+      c.fax ? '📠 ' + c.fax : '',
+    ].filter(Boolean);
     const sourceIcon = c.source === 'remote' ? '📱' : c.source === 'upload' ? '📁' : '📷';
 
     return `<div class="contact-item" role="listitem">
@@ -2274,7 +3039,8 @@ function renderContacts() {
       }
       <div class="contact-info">
         <div class="name">${esc(c.name || 'Senza nome')} <span style="font-size:.7rem;opacity:.5">${sourceIcon}</span></div>
-        <div class="detail">${esc(detail)}</div>
+        ${detail ? `<div class="detail">${esc(detail)}</div>` : ''}
+        ${contactLines.length ? `<div class="contact-fields">${contactLines.map(l => `<span>${esc(l)}</span>`).join('')}</div>` : ''}
       </div>
       <div class="contact-actions">
         <button title="Scarica vCard" data-action="vcard" data-id="${c.id}">📇</button>
@@ -2320,9 +3086,15 @@ function copyContactToClipboard(id) {
   if (c.role) lines.push(c.role);
   if (c.company) lines.push(c.company);
   if (c.email) lines.push('Email: ' + c.email);
+  if (c.mobile) lines.push('Cell: ' + c.mobile);
   if (c.phone) lines.push('Tel: ' + c.phone);
   if (c.web) lines.push('Web: ' + c.web);
+  if (c.linkedin) lines.push('LinkedIn: ' + c.linkedin);
   if (c.address) lines.push('Ind: ' + c.address);
+  if (c.city) lines.push('Città: ' + c.city);
+  if (c.country) lines.push('Paese: ' + c.country);
+  if (c.piva) lines.push('P.IVA: ' + c.piva);
+  if (c.fax) lines.push('Fax: ' + c.fax);
   navigator.clipboard.writeText(lines.join('\n')).then(
     () => toast('Copiato negli appunti', 'success'),
     () => toast('Copia non riuscita', 'error')
@@ -2339,9 +3111,9 @@ function initExport() {
 
   $('exportCsv').addEventListener('click', () => {
     if (!contacts.length) { toast('Nessun contatto da esportare', 'error'); return; }
-    const headers = ['Nome', 'Azienda', 'Ruolo', 'Email', 'Telefono', 'Fax', 'Web', 'P.IVA', 'C.F.', 'Indirizzo', 'Note', 'Data'];
+    const headers = ['Nome', 'Azienda', 'Ruolo', 'Email', 'Cellulare', 'Tel. Fisso', 'Fax', 'Web', 'LinkedIn', 'Indirizzo', 'Città', 'Paese', 'P.IVA', 'C.F.', 'Logo', 'Note', 'Data'];
     const rows = contacts.map(c =>
-      [c.name, c.company, c.role, c.email, c.phone, c.fax, c.web, c.piva, c.cf, c.address, c.notes, c.createdAt].map(csvEsc)
+      [c.name, c.company, c.role, c.email, c.mobile, c.phone, c.fax, c.web, c.linkedin, c.address, c.city, c.country, c.piva, c.cf, c.logo_description, c.notes, c.createdAt].map(csvEsc)
     );
     const csv = '\ufeff' + [headers.join(',')].concat(rows.map(r => r.join(','))).join('\n');
     downloadFile(csv, 'contatti.csv', 'text/csv');
@@ -2493,13 +3265,25 @@ function contactToVcard(c) {
   if (c.company) lines.push('ORG:' + c.company);
   if (c.role) lines.push('TITLE:' + c.role);
   if (c.email) c.email.split(',').map(e => e.trim()).forEach(e => lines.push('EMAIL;TYPE=WORK:' + e));
+  if (c.mobile) c.mobile.split(',').map(p => p.trim()).forEach(p => lines.push('TEL;TYPE=CELL:' + p));
   if (c.phone) c.phone.split(',').map(p => p.trim()).forEach(p => lines.push('TEL;TYPE=WORK,VOICE:' + p));
   if (c.fax) lines.push('TEL;TYPE=WORK,FAX:' + c.fax);
   if (c.web) lines.push('URL:' + c.web);
-  if (c.address) lines.push('ADR;TYPE=WORK:;;' + c.address + ';;;;');
+  if (c.linkedin) lines.push('URL;TYPE=LINKEDIN:' + c.linkedin);
+  // ADR format: PO;ext;street;city;region;zip;country
+  const adrParts = [
+    '', '', // PO box, ext address
+    c.address || '',
+    c.city || '',
+    '', // region
+    '', // zip
+    c.country || '',
+  ];
+  if (c.address || c.city || c.country) lines.push('ADR;TYPE=WORK:' + adrParts.join(';'));
   const notes = [];
   if (c.piva) notes.push('P.IVA: ' + c.piva);
   if (c.cf) notes.push('C.F.: ' + c.cf);
+  if (c.logo_description) notes.push('Logo: ' + c.logo_description);
   if (c.notes) notes.push(c.notes);
   if (notes.length) lines.push('NOTE:' + notes.join(' | '));
   lines.push('END:VCARD');
