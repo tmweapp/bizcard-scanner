@@ -190,8 +190,8 @@ body { min-height: 100dvh; display: flex; flex-direction: column; overflow: hidd
     },
     debug: 0,
   };
-  const MAX_IMAGE_WIDTH = 1200;    // Smaller than desktop for WebRTC transfer
-  const JPEG_QUALITY = 0.75;       // Lower quality for faster transfer
+  const MAX_IMAGE_WIDTH = 1920;    // Full resolution — same as desktop for equal OCR quality
+  const JPEG_QUALITY = 0.85;       // High quality for accurate OCR
   const MAX_RETRIES = 12;
   const CHUNK_SIZE = 64 * 1024;    // 64KB chunks for reliable transfer
 

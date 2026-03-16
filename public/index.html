@@ -555,6 +555,8 @@ let peerConn = null;
 let sessionId = '';
 let peerRetries = 0;
 const MAX_PEER_RETRIES = 10;
+let phoneConnected = false;
+let lastPhotoDataUrl = null; // Store photo with contact
 let detectedBlocks = []; // [{ text, type, confidence }]
 
 // ─── DOM HELPERS ──────────────────────────────────────────────
@@ -908,20 +910,25 @@ function setupPeer() {
     peerConn = conn;
     $('qrDot').className = 'dot connected';
     $('qrStatusText').textContent = '✅ Telefono connesso!';
-    toast('📱 Telefono connesso!', 'success');
+    // Only show toast on first connection, not reconnections
+    if (!phoneConnected) {
+      toast('📱 Telefono connesso!', 'success');
+      phoneConnected = true;
+    }
 
     conn.on('data', (data) => {
       if (data && data.type === 'photo') {
         try { conn.send({ type: 'ack' }); } catch (e) {}
-        processOCR(data.image, 'data:image/jpeg;base64,' + data.image);
-        toast('📸 Foto ricevuta dal telefono', 'success');
+        // Preprocess remote photo same as local for equal OCR quality
+        processRemotePhoto(data.image);
       }
     });
 
     conn.on('close', () => {
       $('qrDot').className = 'dot waiting';
-      $('qrStatusText').textContent = '📱 Telefono disconnesso — in attesa...';
+      $('qrStatusText').textContent = '📱 Telefono disconnesso — in attesa di riconnessione...';
       peerConn = null;
+      // Don't reset phoneConnected so reconnection won't spam toasts
     });
   });
 
@@ -941,6 +948,38 @@ function setupPeer() {
 function cleanupPeer() {
   if (peerConn) { try { peerConn.close(); } catch (e) {} peerConn = null; }
   if (peer) { try { peer.destroy(); } catch (e) {} peer = null; }
+  phoneConnected = false;
+}
+
+// ─── PROCESS REMOTE PHOTO (same quality as local) ─────────────
+function processRemotePhoto(base64) {
+  toast('📸 Foto ricevuta — elaborazione...', 'info');
+
+  // Load base64 into Image, then draw to canvas for preprocessing
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    // Use FULL resolution from phone (don't downscale further)
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+
+    // Apply SAME preprocessing as local capture
+    if (!useServerOCR) preprocessImage(ctx, canvas.width, canvas.height);
+
+    // Re-encode at same quality as local
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+    const newBase64 = dataUrl.split(',')[1];
+
+    processOCR(newBase64, dataUrl);
+  };
+  img.onerror = () => {
+    // Fallback: use raw base64 without preprocessing
+    const dataUrl = 'data:image/jpeg;base64,' + base64;
+    processOCR(base64, dataUrl);
+  };
+  img.src = 'data:image/jpeg;base64,' + base64;
 }
 
 // ─── OCR PROCESSING ───────────────────────────────────────────
@@ -950,6 +989,7 @@ async function processOCR(base64, dataUrl) {
   os.className = 'ocr-status processing';
   $('ocrStatusText').textContent = 'Analisi OCR in corso...';
   $('ocrProgress').style.width = '0';
+  lastPhotoDataUrl = dataUrl; // Store for saving with contact
   $('photoPreview').src = dataUrl;
   $('photoPreview').classList.remove('zoomed');
   $('resultSection').style.display = 'block';
@@ -1298,7 +1338,21 @@ function saveContact() {
   const contact = {
     id: Date.now().toString(36) + Math.random().toString(36).substring(2, 7),
     createdAt: new Date().toISOString(),
+    source: currentMode, // 'local', 'remote', or 'upload'
   };
+
+  // Store photo thumbnail (compressed to ~50KB for localStorage)
+  if (lastPhotoDataUrl) {
+    try {
+      const thumbCanvas = document.createElement('canvas');
+      const thumbImg = $('photoPreview');
+      const thumbScale = Math.min(400 / thumbImg.naturalWidth, 400 / thumbImg.naturalHeight, 1);
+      thumbCanvas.width = Math.round(thumbImg.naturalWidth * thumbScale);
+      thumbCanvas.height = Math.round(thumbImg.naturalHeight * thumbScale);
+      thumbCanvas.getContext('2d').drawImage(thumbImg, 0, 0, thumbCanvas.width, thumbCanvas.height);
+      contact.photo = thumbCanvas.toDataURL('image/jpeg', 0.6);
+    } catch (e) { /* photo save failed, continue without it */ }
+  }
 
   FIELD_TYPES.forEach(ft => {
     if (ft.key === 'other' || ft.key === 'ignore') return;
@@ -1347,6 +1401,7 @@ function findDuplicate(contact) {
 
 function resetScan() {
   detectedBlocks = [];
+  lastPhotoDataUrl = null;
   $('resultSection').style.display = 'none';
   $('ocrStatus').style.display = 'none';
 }
@@ -1378,11 +1433,15 @@ function renderContacts() {
     const initials = (c.name || c.email || '?').substring(0, 2).toUpperCase();
     const color = AVATAR_COLORS[Math.abs(hashCode(c.id)) % AVATAR_COLORS.length];
     const detail = [c.role, c.company].filter(Boolean).join(' — ') || c.email || c.phone || '';
+    const sourceIcon = c.source === 'remote' ? '📱' : c.source === 'upload' ? '📁' : '📷';
 
     return `<div class="contact-item" role="listitem">
-      <div class="contact-avatar" style="background:${color}">${esc(initials)}</div>
+      ${c.photo
+        ? `<img src="${c.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0" alt="">`
+        : `<div class="contact-avatar" style="background:${color}">${esc(initials)}</div>`
+      }
       <div class="contact-info">
-        <div class="name">${esc(c.name || 'Senza nome')}</div>
+        <div class="name">${esc(c.name || 'Senza nome')} <span style="font-size:.7rem;opacity:.5">${sourceIcon}</span></div>
         <div class="detail">${esc(detail)}</div>
       </div>
       <div class="contact-actions">
