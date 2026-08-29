@@ -105,8 +105,14 @@ function setupPeer() {
     conn.on('data', (data) => {
       if (data && data.type === 'photo') {
         try { conn.send({ type: 'ack' }); } catch (e) {}
-        // Preprocess remote photo same as local for equal OCR quality
-        processRemotePhoto(data.image);
+        // Route to the active multi-page score collector when present.
+        // Otherwise preserve the original business-card flow.
+        if (typeof scoreCaptureActive !== 'undefined' && scoreCaptureActive && typeof acceptRemoteScorePage === 'function') {
+          acceptRemoteScorePage(data.image);
+        } else {
+          processRemotePhoto(data.image);
+        }
+        if (typeof scoreUpdateRemoteStatus === 'function') scoreUpdateRemoteStatus();
       }
     });
 
@@ -114,6 +120,7 @@ function setupPeer() {
       $('qrDot').className = 'dot waiting';
       $('qrStatusText').textContent = '📱 Telefono disconnesso — in attesa di riconnessione...';
       peerConn = null;
+      if (typeof scoreUpdateRemoteStatus === 'function') scoreUpdateRemoteStatus();
       // Don't reset phoneConnected so reconnection won't spam toasts
     });
   });
@@ -166,6 +173,12 @@ function initPhoneBridge() {
 
   // Connect to the desktop peer
   connectPhoneBridge(remoteSession);
+
+  // The phone becomes a clean remote shutter: one tap sends one page/photo.
+  const scanLabel = $('btnScanLabel');
+  if (scanLabel) scanLabel.textContent = 'Scatta e invia';
+  const remoteTab = document.querySelector('[data-mode="remote"]');
+  if (remoteTab) remoteTab.style.display = 'none';
 }
 
 function connectPhoneBridge(remoteSession, retries = 0) {
@@ -468,4 +481,3 @@ async function finishRemoteSmartScan() {
     $('smartScanOverlay').style.display = 'none';
   }
 }
-

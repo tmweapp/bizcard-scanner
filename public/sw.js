@@ -3,7 +3,7 @@
 //  Handles: offline caching, PWA install, background sync
 // ═══════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'bizcard-v5.2';
+const CACHE_NAME = 'bizcard-v5.4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -16,6 +16,7 @@ const STATIC_ASSETS = [
   '/js/ocr-pipeline.js',
   '/js/contacts.js',
   '/js/export.js',
+  '/js/scores.js',
   '/js/ui-init.js',
   '/manifest.json',
   '/icon-192x192.png',
