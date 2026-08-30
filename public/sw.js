@@ -3,7 +3,7 @@
 //  Handles: offline caching, PWA install, background sync
 // ═══════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'bizcard-v5.5';
+const CACHE_NAME = 'bizcard-v5.6';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

@@ -489,7 +489,7 @@ function clearScoreDraftPages() {
 // ─── REMOTE PHONE ROUTING ────────────────────────────────────
 function ensureScoreRemoteConnection() {
   if (!sessionId) sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
-  const url = location.origin + '/phone?s=' + sessionId;
+  const url = getPhoneBridgeUrl(sessionId);
   $('scoreRemoteCode').textContent = sessionId;
   const canvas = $('scoreQrCanvas');
   renderQRCode(canvas, url, 180);

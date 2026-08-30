@@ -1,4 +1,10 @@
 // ─── REMOTE PHONE (QR + PeerJS) ──────────────────────────────
+const PUBLIC_PHONE_BRIDGE_ORIGIN = 'https://bizcard-scanner.vercel.app';
+
+function getPhoneBridgeUrl(remoteSession) {
+  return `${PUBLIC_PHONE_BRIDGE_ORIGIN}/phone?s=${encodeURIComponent(remoteSession)}`;
+}
+
 function initRemoteMode() {
   // KEEP existing session if peer is alive — don't regenerate!
   if (peer && !peer.destroyed && sessionId) {
@@ -11,7 +17,7 @@ function initRemoteMode() {
     sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
   }
   $('sessionCode').textContent = sessionId;
-  const baseUrl = location.origin + '/phone?s=' + sessionId;
+  const baseUrl = getPhoneBridgeUrl(sessionId);
   $('qrUrl').textContent = baseUrl;
 
   generateQR(baseUrl);
