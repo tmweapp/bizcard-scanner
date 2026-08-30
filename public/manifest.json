@@ -1,7 +1,7 @@
 {
   "name": "BizCard Scanner",
   "short_name": "BizCard",
-  "description": "Scansiona biglietti da visita con OCR professionale — AI, multi-lingua, export vCard/CSV/JSON",
+  "description": "Scansiona biglietti da visita e spartiti multipagina con AI, archivio, studio guidato ed export",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

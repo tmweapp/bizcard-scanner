@@ -45,15 +45,19 @@ async function initTesseractFallback() {
 function initTabs() {
   $$('nav button').forEach(btn => {
     btn.addEventListener('click', () => {
+      const targetTab = btn.dataset.tab;
       $$('nav button').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
       $$('.panel').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       btn.setAttribute('aria-selected', 'true');
-      $('panel-' + btn.dataset.tab).classList.add('active');
+      $('panel-' + targetTab).classList.add('active');
 
-      if (btn.dataset.tab === 'contacts') renderContacts();
-      if (btn.dataset.tab === 'export') updateExportState();
-      if (btn.dataset.tab === 'settings') updateStats();
+      if (targetTab === 'contacts') renderContacts();
+      if (targetTab === 'export') updateExportState();
+      if (targetTab === 'settings') updateStats();
+      if (targetTab === 'scores' && typeof scoreOnTabOpen === 'function') scoreOnTabOpen();
+      if (targetTab !== 'scores' && typeof scoreOnTabClose === 'function') scoreOnTabClose();
+      if (targetTab === 'scanner' && currentMode === 'local' && !currentStream) startCamera();
     });
   });
 }
@@ -292,4 +296,3 @@ function preprocessImage(ctx, w, h) {
 
   ctx.putImageData(imageData, 0, 0);
 }
-

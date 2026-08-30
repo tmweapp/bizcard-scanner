@@ -13,6 +13,14 @@ let smartScanActive = false;
 let smartScanAborted = false;
 
 async function startSmartScan() {
+  // In phone-bridge mode the main action sends one full-resolution page
+  // to the connected desktop. The desktop decides whether it is a contact
+  // photo or a page in an active music-score acquisition.
+  if (isPhoneBridge && typeof captureBridgePage === 'function') {
+    captureBridgePage();
+    return;
+  }
+
   const video = $('video');
   if (!video.srcObject || video.videoWidth === 0) {
     // No camera — suggest alternatives
@@ -892,4 +900,3 @@ async function arShowCompletion() {
     stopARScan();
   }, 5500);
 }
-

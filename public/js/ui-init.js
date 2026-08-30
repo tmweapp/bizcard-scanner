@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initExport();
   initSettings();
   initAdvancedExport();
+  initScores();
   initApiKeyBar();
   checkOcrApi();
   initTesseractFallback();

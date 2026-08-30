@@ -24,7 +24,7 @@
 <header>
   <h1>
     <svg class="header-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--lilac)" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M4 18c0-2 2.5-3.5 5-3.5s5 1.5 5 3.5"/><line x1="15" y1="9" x2="20" y2="9"/><line x1="15" y1="12" x2="19" y2="12"/></svg>
-    BizCard <span class="version-badge">v5.2</span>
+    BizCard <span class="version-badge">v5.6</span>
   </h1>
 </header>
 
@@ -53,6 +53,10 @@
   <button data-tab="export" role="tab" aria-selected="false" aria-controls="panel-export">
     <svg class="nav-ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     <span class="nav-label">Esporta</span>
+  </button>
+  <button data-tab="scores" role="tab" aria-selected="false" aria-controls="panel-scores">
+    <svg class="nav-ico" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    <span class="nav-label">Spartito</span>
   </button>
   <button data-tab="settings" role="tab" aria-selected="false" aria-controls="panel-settings">
     <svg class="nav-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -413,6 +417,191 @@
     </div>
   </div>
 
+  <!-- ═══ MUSIC SCORE TAB ═══ -->
+  <div class="panel" id="panel-scores" role="tabpanel">
+    <div class="score-shell">
+      <section id="scoreLibraryView">
+        <div class="score-heading">
+          <div>
+            <div class="score-kicker">ARCHIVIO MUSICALE</div>
+            <h2>Spartiti</h2>
+            <p>Acquisisci più pagine, riconosci il brano e studialo per sezioni.</p>
+          </div>
+          <button class="btn btn-primary" id="btnNewScore">＋ Nuovo spartito</button>
+        </div>
+        <div class="score-library" id="scoreLibrary"></div>
+        <div class="score-empty" id="scoreEmpty">
+          <div class="score-empty-icon">♫</div>
+          <h3>Nessuno spartito salvato</h3>
+          <p>Inizia fotografando le pagine con questa camera oppure con il telefono remoto.</p>
+          <button class="btn btn-primary" id="btnNewScoreEmpty">Acquisisci il primo spartito</button>
+        </div>
+      </section>
+
+      <section id="scoreCaptureView" style="display:none">
+        <div class="score-heading compact">
+          <button class="btn btn-secondary btn-small" id="btnScoreCancel">← Archivio</button>
+          <div class="score-capture-title">
+            <div class="score-kicker">ACQUISIZIONE MULTIPAGINA</div>
+            <h2>Nuovo spartito</h2>
+          </div>
+          <span class="score-page-counter" id="scorePageCounter">0 pagine</span>
+        </div>
+
+        <div class="score-metadata-form">
+          <label>Titolo, se conosciuto<input id="scoreTitleInput" type="text" placeholder="Es. Notturno in do diesis minore"></label>
+          <label>Compositore, se conosciuto<input id="scoreComposerInput" type="text" placeholder="Es. Fryderyk Chopin"></label>
+        </div>
+
+        <div class="score-capture-grid">
+          <div class="score-source-card">
+            <div class="score-source-head"><span>📷</span><div><strong>Camera</strong><small>Fotografa una pagina alla volta</small></div></div>
+            <div class="score-camera-wrap">
+              <video id="scoreVideo" autoplay playsinline muted></video>
+              <div class="score-camera-guide"><span>Allinea la pagina</span></div>
+              <div class="score-camera-placeholder" id="scoreCameraPlaceholder">Attiva la fotocamera per iniziare</div>
+            </div>
+            <div class="score-source-actions">
+              <button class="btn btn-secondary btn-small" id="btnScoreCamera">Attiva camera</button>
+              <button class="btn btn-primary btn-small" id="btnScoreCapture" disabled>📸 Acquisisci pagina</button>
+            </div>
+          </div>
+
+          <div class="score-source-card">
+            <div class="score-source-head"><span>📱</span><div><strong>Telefono remoto</strong><small>Ogni foto diventa una nuova pagina</small></div></div>
+            <canvas id="scoreQrCanvas" width="180" height="180" aria-label="QR per collegare il telefono"></canvas>
+            <div class="score-remote-code" id="scoreRemoteCode">------</div>
+            <div class="score-remote-status" id="scoreRemoteStatus"><span class="dot waiting"></span> Preparazione collegamento…</div>
+          </div>
+
+          <div class="score-source-card score-upload-card">
+            <div class="score-source-head"><span>📁</span><div><strong>File o scansioni</strong><small>Seleziona più immagini insieme</small></div></div>
+            <label class="score-upload-drop" for="scoreFileInput">
+              <span>＋</span>
+              <strong>Aggiungi pagine</strong>
+              <small>JPG, PNG, HEIC compatibile con il dispositivo</small>
+            </label>
+            <input id="scoreFileInput" type="file" accept="image/*" multiple hidden>
+          </div>
+        </div>
+
+        <div class="score-pages-head">
+          <div><strong>Pagine acquisite</strong><small>Riordina o elimina prima dell’elaborazione</small></div>
+          <button class="btn btn-secondary btn-small" id="btnScoreClearPages">Svuota</button>
+        </div>
+        <div class="score-pages-grid" id="scoreDraftPages"></div>
+
+        <div class="score-save-bar">
+          <div class="score-save-note" id="scoreSaveNote">Le immagini rimangono archiviate sul dispositivo.</div>
+          <button class="btn btn-secondary" id="btnScoreSaveOnly" disabled>Salva senza riconoscere</button>
+          <button class="btn btn-accent" id="btnScoreRecognize" disabled>✨ Riconosci ed elabora</button>
+        </div>
+        <div class="score-processing" id="scoreProcessing" style="display:none">
+          <div class="spinner"></div><span id="scoreProcessingText">Analisi dello spartito…</span>
+        </div>
+      </section>
+
+      <section id="scoreViewerView" style="display:none">
+        <div class="score-viewer-head">
+          <button class="btn btn-secondary btn-small" id="btnScoreBack">← Spartiti</button>
+          <div class="score-viewer-title">
+            <h2 id="scoreViewerTitle">Spartito</h2>
+            <div id="scoreViewerMeta"></div>
+          </div>
+          <button class="btn btn-secondary btn-small" id="btnScoreDelete">🗑 Elimina</button>
+        </div>
+
+        <div class="score-viewer-layout">
+          <aside class="score-thumbs" id="scoreThumbs"></aside>
+          <div class="score-page-column">
+            <div class="score-page-toolbar">
+              <button class="btn btn-secondary btn-small" id="btnScorePrev">←</button>
+              <span id="scorePageLabel">Pagina 1 di 1</span>
+              <button class="btn btn-secondary btn-small" id="btnScoreNext">→</button>
+              <label class="score-zoom">Zoom <input id="scoreZoom" type="range" min="60" max="240" value="100"></label>
+              <button class="btn btn-accent btn-small" id="btnScoreSelect">▣ Seleziona una parte</button>
+            </div>
+            <div class="score-page-scroll" id="scorePageScroll">
+              <div class="score-page-stage" id="scorePageStage">
+                <img id="scorePageImage" alt="Pagina dello spartito" draggable="false">
+                <div class="score-selection-layer" id="scoreSelectionLayer">
+                  <div class="score-selection-box" id="scoreSelectionBox" style="display:none"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="score-study-panel">
+            <div class="score-study-intro">
+              <div class="score-kicker">MAESTRO AI</div>
+              <h3>Interpreta la sezione</h3>
+              <p>Trascina un riquadro sulla parte da studiare. Per il Leggio seleziona due righi consecutivi.</p>
+            </div>
+            <div class="score-selection-preview" id="scoreSelectionPreview">
+              <span>Nessuna parte selezionata</span>
+            </div>
+            <div class="score-question-chips">
+              <button data-score-question="Come devo interpretare musicalmente questa sezione?">Interpretazione</button>
+              <button data-score-question="Spiegami note, ritmo e alterazioni di questa sezione.">Note e ritmo</button>
+              <button data-score-question="Spiegami separatamente cosa fanno mano destra e mano sinistra.">Due mani</button>
+              <button data-score-question="Suggerisci diteggiatura, pedale e metodo di studio.">Come studiarla</button>
+            </div>
+            <textarea id="scoreQuestion" rows="3" placeholder="Es. Cosa indicano queste due linee verticali?"></textarea>
+            <button class="btn btn-primary" id="btnScoreExplain" disabled>Chiedi spiegazione</button>
+            <div class="score-processing compact" id="scoreExplainProcessing" style="display:none"><div class="spinner"></div><span>Sto leggendo la sezione…</span></div>
+            <div class="score-explanation" id="scoreExplanation" style="display:none"></div>
+            <div class="score-playback" id="scorePlayback" style="display:none">
+              <div><strong>Riproduzione didattica</strong><small id="scorePlaybackNote">Ricostruzione indicativa della sezione</small></div>
+              <button class="btn btn-accent btn-small" id="btnScorePlay">▶ Ascolta</button>
+              <button class="btn btn-secondary btn-small" id="btnScoreStop">■ Stop</button>
+              <button class="btn btn-primary btn-small" id="btnScorePractice">🎹 Leggio</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ═══ LIVE SCORE FOLLOWER ═══ -->
+  <div class="score-practice-overlay" id="scorePracticeOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="scorePracticeTitle">
+    <div class="score-practice-head">
+      <div>
+        <div class="score-kicker">LEGGIO INTELLIGENTE</div>
+        <h2 id="scorePracticeTitle">Esecuzione guidata</h2>
+      </div>
+      <div class="score-practice-stats">
+        <span id="scorePracticeProgress">0%</span>
+        <span class="practice-ok">✓ <b id="scorePracticeCorrect">0</b></span>
+        <span class="practice-error">✕ <b id="scorePracticeErrors">0</b></span>
+      </div>
+      <button class="btn btn-secondary" id="btnScorePracticeClose">Chiudi</button>
+    </div>
+
+    <div class="score-practice-message" id="scorePracticeMessage">Scegli come ascoltare ciò che suoni.</div>
+    <div class="score-practice-rows" id="scorePracticeRows">
+      <div class="score-practice-row active" data-practice-row="0">
+        <img id="scorePracticeRow0" alt="Rigo corrente">
+        <div class="score-practice-markers" id="scorePracticeMarkers0"></div>
+        <span class="score-practice-row-label">ORA</span>
+      </div>
+      <div class="score-practice-row" data-practice-row="1">
+        <img id="scorePracticeRow1" alt="Rigo successivo">
+        <div class="score-practice-markers" id="scorePracticeMarkers1"></div>
+        <span class="score-practice-row-label">DOPO</span>
+      </div>
+    </div>
+
+    <div class="score-milestones" id="scoreMilestones" aria-label="Punti miliari"></div>
+    <div class="score-practice-controls">
+      <button class="btn btn-primary" id="btnPracticeMidi">🎹 Tastiera MIDI</button>
+      <button class="btn btn-accent" id="btnPracticeMic">🎙 Microfono</button>
+      <button class="btn btn-secondary" id="btnPracticeRestart">↺ Ricomincia</button>
+      <button class="btn btn-secondary" id="btnPracticePause" disabled>⏸ Pausa</button>
+      <span class="score-practice-input" id="scorePracticeInput">In attesa</span>
+    </div>
+    <p class="score-practice-help">MIDI riconosce anche gli accordi ed è la modalità più precisa. Il microfono funziona come supporto per una nota alla volta e non invia audio a server esterni.</p>
+  </div>
+
   <!-- ═══ SETTINGS TAB ═══ -->
   <div class="panel" id="panel-settings" role="tabpanel">
     <div class="settings-section">
@@ -489,7 +678,7 @@
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <!-- App Modules (order matters — globals shared) -->
 <script src="/js/app-config.js"></script>
@@ -500,6 +689,7 @@
 <script src="/js/ocr-pipeline.js"></script>
 <script src="/js/contacts.js"></script>
 <script src="/js/export.js"></script>
+<script src="/js/scores.js"></script>
 <script src="/js/ui-init.js"></script>
 </body>
 </html>

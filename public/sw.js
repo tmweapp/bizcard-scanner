@@ -3,7 +3,7 @@
 //  Handles: offline caching, PWA install, background sync
 // ═══════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'bizcard-v5.2';
+const CACHE_NAME = 'bizcard-v5.6';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -16,13 +16,14 @@ const STATIC_ASSETS = [
   '/js/ocr-pipeline.js',
   '/js/contacts.js',
   '/js/export.js',
+  '/js/scores.js',
   '/js/ui-init.js',
   '/manifest.json',
   '/icon-192x192.png',
   '/icon-512x512.png',
   'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',
   'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js',
-  'https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
 ];
 
