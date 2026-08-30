@@ -492,16 +492,7 @@ function ensureScoreRemoteConnection() {
   const url = location.origin + '/phone?s=' + sessionId;
   $('scoreRemoteCode').textContent = sessionId;
   const canvas = $('scoreQrCanvas');
-  if (window.QRCode?.toCanvas) {
-    QRCode.toCanvas(canvas, url, { width: 180, margin: 2, color: { dark: '#000', light: '#fff' } }, err => {
-      if (err) console.warn('[Scores] QR:', err);
-    });
-  } else {
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 180, 180);
-    ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.font = '12px sans-serif';
-    ctx.fillText('Apri dal telefono', 90, 80); ctx.fillText(url, 90, 102);
-  }
+  renderQRCode(canvas, url, 180);
   if (typeof Peer === 'undefined') {
     $('scoreRemoteStatus').innerHTML = '<span class="dot"></span> Collegamento remoto non disponibile';
     return;

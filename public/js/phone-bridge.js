@@ -19,49 +19,83 @@ function initRemoteMode() {
 }
 
 function generateQR(url) {
-  const canvas = $('qrCanvas');
-  const opts = { width: 200, margin: 2, color: { dark: '#000000', light: '#ffffff' }, errorCorrectionLevel: 'M' };
+  renderQRCode($('qrCanvas'), url, 200);
+}
 
-  // Primary: use preloaded QRCode library
-  if (window.QRCode && typeof QRCode.toCanvas === 'function') {
-    QRCode.toCanvas(canvas, url, opts, (err) => {
+// Supports both the "qrcode" package API and qrcode.js. The latter is the
+// browser build loaded by index.html and draws synchronously on a temporary
+// canvas, which is then copied into the app canvas.
+function renderQRCode(canvas, url, size = 200) {
+  if (!canvas) return;
+  const drawSource = (source) => {
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, size, size);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(source, 0, 0, size, size);
+  };
+
+  if (window.QRCode && typeof window.QRCode.toCanvas === 'function') {
+    window.QRCode.toCanvas(canvas, url, {
+      width: size,
+      margin: 2,
+      color: { dark: '#000000', light: '#ffffff' },
+      errorCorrectionLevel: 'M'
+    }, (err) => {
       if (err) {
         console.warn('[BizCard] QRCode.toCanvas failed:', err);
-        generateQRFallback(url);
+        generateQRFallback(canvas, url, size);
       }
     });
     return;
   }
 
-  // Fallback: external QR API
-  generateQRFallback(url);
+  if (typeof window.QRCode === 'function') {
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:fixed;left:-10000px;top:-10000px;width:1px;height:1px;overflow:hidden';
+    document.body.appendChild(holder);
+    try {
+      new window.QRCode(holder, {
+        text: url,
+        width: size,
+        height: size,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: window.QRCode.CorrectLevel?.M
+      });
+      const generatedCanvas = holder.querySelector('canvas');
+      if (!generatedCanvas) throw new Error('QR canvas non generato');
+      drawSource(generatedCanvas);
+      holder.remove();
+      return;
+    } catch (err) {
+      console.warn('[BizCard] qrcode.js failed:', err);
+      holder.remove();
+    }
+  }
+
+  generateQRFallback(canvas, url, size);
 }
 
-function generateQRFallback(url) {
-  const canvas = $('qrCanvas');
+function generateQRFallback(canvas, url, size = 200) {
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.onload = () => {
-    canvas.width = 200;
-    canvas.height = 200;
-    canvas.getContext('2d').drawImage(img, 0, 0, 200, 200);
+    canvas.width = size;
+    canvas.height = size;
+    canvas.getContext('2d').drawImage(img, 0, 0, size, size);
   };
   img.onerror = () => {
-    // Last resort: draw text on canvas
     const ctx = canvas.getContext('2d');
-    canvas.width = 200; canvas.height = 200;
-    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 200, 200);
+    canvas.width = size; canvas.height = size;
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
     ctx.fillStyle = '#333'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('QR non disponibile', 100, 85);
-    ctx.fillText('Usa il link sotto:', 100, 105);
-    ctx.font = '9px monospace';
-    ctx.fillStyle = '#0066cc';
-    // Word wrap the URL
-    const words = url.split('/');
-    let y = 125;
-    words.forEach(w => { if (w) { ctx.fillText(w, 100, y); y += 14; } });
+    ctx.fillText('QR non disponibile', size / 2, size / 2 - 8);
+    ctx.fillText('Usa il codice qui sotto', size / 2, size / 2 + 12);
   };
-  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}`;
 }
 
 function setupPeer() {
